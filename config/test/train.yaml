@@ -1,0 +1,28 @@
+# train.yaml
+# Modèle
+model: resnet50  # Architecture à utiliser
+pretrained: true  # Ne pas utiliser de modèle pré-entraîné
+
+# Dataset
+dataset: torch/CIFAR10
+data_dir: ./data  # Emplacement où télécharger mnist
+dataset_download: true  # Active le téléchargement automatique
+num_classes: 10  # CIFAR-10 a 10 classes
+
+# Hyperparamètres d'entraînement
+batch_size: 128
+epochs: 1
+lr: 0.001  # Learning rate
+momentum: 0.9
+weight_decay: 0.0001
+
+# Optimiseur et scheduler
+opt: sgd  # Stochastic Gradient Descent
+sched: step  # Scheduler de LR (Step Decay)
+decay_epochs: 10  # Réduction du LR tous les 10 epochs
+decay_rate: 0.1  # Facteur de réduction du LR
+
+# Augmentation et régularisation
+mixup: 0.2  # Mixup pour augmenter la robustesse
+cutmix: 1.0  # CutMix (échange de patchs entre images)
+drop_rate: 0.2  # Dropout

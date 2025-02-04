@@ -17,6 +17,7 @@ from sys import maxsize
 import numpy as np
 import pandas as pd
 import torch
+import yaml
 
 from timm.data import create_dataset, create_loader, resolve_data_config, ImageNetInfo, infer_imagenet_subset
 from timm.layers import apply_test_time_pool
@@ -50,7 +51,12 @@ torch.backends.cudnn.benchmark = True
 _logger = logging.getLogger('inference')
 
 
+config_parser = parser = argparse.ArgumentParser(description='PyTorch ImageNet Inference')
+parser.add_argument('-c', '--config', default='', type=str, metavar='FILE',
+                    help='YAML config file specifying default arguments')
+
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Inference')
+
 parser.add_argument('data', nargs='?', metavar='DIR', const=None,
                     help='path to dataset (*deprecated*, use --data-dir)')
 parser.add_argument('--data-dir', metavar='DIR',
@@ -152,10 +158,25 @@ parser.add_argument('--exclude-output', action='store_true', default=False,
 parser.add_argument('--no-console-results', action='store_true', default=False,
                     help='disable printing the inference results to the console')
 
+def _parse_args():
+    # Do we have a config file to parse?
+    args_config, remaining = config_parser.parse_known_args()
+    if args_config.config:
+        with open(args_config.config, 'r') as f:
+            cfg = yaml.safe_load(f)
+            parser.set_defaults(**cfg)
+
+    # The main arg parser parses the rest of the args, the usual
+    # defaults will have been overridden if config file specified.
+    args = parser.parse_args(remaining)
+
+    # Cache the args as a text string to save them in the output dir later
+    args_text = yaml.safe_dump(args.__dict__, default_flow_style=False)
+    return args, args_text
 
 def main():
     setup_default_logging()
-    args = parser.parse_args()
+    args, _ = _parse_args()
     # might as well try to do something useful...
     args.pretrained = args.pretrained or not args.checkpoint
 
@@ -250,7 +271,6 @@ def main():
         img_dtype=model_dtype or torch.float32,
         **data_config,
     )
-
     to_label = None
     if args.label_type in ('name', 'description', 'detail'):
         imagenet_subset = infer_imagenet_subset(model)
@@ -275,7 +295,6 @@ def main():
     use_probs = args.output_type == 'prob'
     with torch.no_grad():
         for batch_idx, (input, _) in enumerate(loader):
-
             with amp_autocast():
                 output = model(input)
 
