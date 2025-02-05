@@ -1,4 +1,4 @@
-def Get_H_matrix(path_to_csv_tree, verbose=False):
+def get_H_matrix(path_to_csv_tree, verbose=False):
   import pandas as pd
   import numpy as np
 
