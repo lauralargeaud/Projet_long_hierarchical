@@ -4,7 +4,7 @@ model: resnet50.a1_in1k
 pretrained: true 
 
 # Dataset
-dataset: "data/small-collomboles/dataset"
+data_dir: "data/small-collomboles/dataset"
 class_map: "data/small-collomboles/class_mapping.txt"
 num_classes: 79
 
