@@ -11,17 +11,22 @@ from logic_seg_utils import get_H_matrix
 class DRuleLoss(nn.Module):
     def __init__(self, path_to_csv_tree):
         super(DRuleLoss, self).__init__()
-        self.H = H
-        self.branches = torch.minimum(torch.sum(H, dim=1), torch.tensor(1))
+        self.H = get_H_matrix(path_to_csv_tree)
+        self.branches = torch.minimum(torch.sum(self.H, dim=1), torch.tensor(1))
         self.branch_count = torch.sum(self.branches)
 
     def forward(self, y_pred: torch.Tensor, y_true: torch.Tensor) -> torch.Tensor:
 
-        s_branch = self.branches * y_pred
+        batch_size = y_pred.size(0) # nombre d'images dans le batch
+        n = y_pred.size(1) # nombre de noeuds dans l'arbre
 
-        n = y_pred.size(0)
-        S = y_pred.repeat(n, 1)
+        S = y_pred.unsqueeze(2).repeat(1, 1, n)  # shape [batch_size, N, N]
+        H_batch = self.H.unsqueeze(0).repeat(batch_size, 1, 1,)
 
-        loss = (torch.sum(s_branch) + torch.sum(s_branch*torch.max(S*self.H, dim=1), dim=0))/self.branch_count
+        branches = self.branches.T.repeat(batch_size, 1)
+        s_branch = branches * y_pred
 
+        losses = (torch.sum(s_branch, dim=1) + torch.sum(s_branch*torch.max(S*H_batch, dim=2), dim=1))/self.branch_count
+        
+        loss = sum(losses,0)
         return loss
