@@ -28,4 +28,6 @@ class DRuleLoss(nn.Module):
 
         losses = (torch.sum(s_branch, dim=1) - torch.sum(s_branch*max_values, dim=1))/self.branch_count
         
-        return losses
+        total_loss = torch.sum(losses) / batch_size
+
+        return total_loss

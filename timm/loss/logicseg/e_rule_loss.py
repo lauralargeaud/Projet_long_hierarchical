@@ -18,22 +18,6 @@ class ERuleLoss(nn.Module):
         K = torch.div(K, M_exp)
         K = y_pred @ K
         K = K.diagonal()
-        losses = K / N # shape (batch_size)
-        # total_loss = torch.sum(losses, dim=1)
-        return losses
-    
-    # OLD
-    # # In rest of lib, y_pred is written as x, and y_true as target
-    # def forward(self, y_pred: torch.Tensor, y_true: torch.Tensor) -> torch.Tensor:
-    #     batch_size = y_pred.shape[0]
-    #     N = y_pred.shape[1] # number of nodes in the tree
-    #     S = y_pred.unsqueeze(2).repeat(1, 1, N)  # shape [batch_size, N, N]
-    #     P_exp = self.P.unsqueeze(0).repeat(batch_size, 1, 1)
-    #     A = S * P_exp
-    #     As = A @ y_pred.T
-    #     As = As[torch.arange(N), torch.arange(N), :] # [N, batch_size]
-    #     M_exp = self.M.unsqueeze(2).repeat(1, 1, batch_size)
-    #     batch_losses =  (torch.sum(torch.div(As, M_exp), dim=0) / N).T # shape = [batch_size, 1]
-    #     # total_loss = torch.sum(batch_losses, dim=0) / batch_size
-    #     total_loss = torch.sum(batch_losses, dim=0)
-    #     return total_loss
+        losses = K / N # shape (batch_size,)
+        total_loss = torch.sum(losses) / batch_size
+        return total_loss
