@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from logicseg.c_rule_loss import CRuleLoss
 from logicseg.d_rule_loss import DRuleLoss
@@ -20,12 +21,22 @@ class LogicSegLoss(nn.Module):
         self.e_rule = ERuleLoss(P_raw, M_raw)
         self.alpha_e = alpha_e
 
-        self.bce = BinaryCrossEntropy()
+        # self.bce = BinaryCrossEntropy()
         self.alpha_bce = alpha_bce
   
     def forward(self, y_pred: torch.Tensor, y_true: torch.Tensor) -> torch.Tensor:
+        
+        with_print = False
+        if with_print:
+            print("L_c =", self.c_rule(y_pred, y_true))
+            print("L_d =", self.d_rule(y_pred, y_true))
+            print("L_e =", self.e_rule(y_pred, y_true))
+            # print(self.bce(y_pred, y_true))
+            print("L_BCE =", F.binary_cross_entropy(y_pred, y_true))
+
+        batch_size = y_pred.shape[0]
         batch_losses = self.alpha_c * self.c_rule(y_pred, y_true) + \
                        self.alpha_d * self.d_rule(y_pred, y_true) + \
                        self.alpha_e * self.e_rule(y_pred, y_true) + \
-                       self.alpha_bce * self.bce(y_pred, y_true)
+                       self.alpha_bce * (F.binary_cross_entropy(y_pred, y_true) / batch_size)
         return batch_losses

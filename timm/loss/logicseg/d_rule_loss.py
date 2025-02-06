@@ -11,7 +11,6 @@ class DRuleLoss(nn.Module):
         sum = torch.sum(self.H, dim=1).unsqueeze(1)
         self.branches = torch.minimum(sum, one_tensor).to(device)
         self.branch_count = torch.sum(self.branches).to(device)
-        # BON jusque là
 
     def forward(self, y_pred: torch.Tensor, y_true: torch.Tensor) -> torch.Tensor:
 
