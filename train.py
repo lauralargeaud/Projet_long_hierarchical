@@ -35,11 +35,13 @@ from torch.nn.parallel import DistributedDataParallel as NativeDDP
 from timm import utils
 from timm.data import create_dataset, create_loader, resolve_data_config, Mixup, FastCollateMixup, AugMixDataset
 from timm.layers import convert_splitbn_model, convert_sync_batchnorm, set_fast_norm
-from timm.loss import JsdCrossEntropy, SoftTargetCrossEntropy, BinaryCrossEntropy, LabelSmoothingCrossEntropy, Dloss
+from timm.loss import JsdCrossEntropy, SoftTargetCrossEntropy, BinaryCrossEntropy, LabelSmoothingCrossEntropy, LogicSegLoss
 from timm.models import create_model, safe_model_name, resume_checkpoint, load_checkpoint, model_parameters
 from timm.optim import create_optimizer_v2, optimizer_kwargs
 from timm.scheduler import create_scheduler_v2, scheduler_kwargs
 from timm.utils import ApexScaler, NativeScaler
+
+from scripts.logic_seg_utils import *
 
 try:
     from apex import amp
@@ -334,10 +336,19 @@ group.add_argument('--drop-block', type=float, default=None, metavar='PCT',
                    help='Drop block rate (default: None)')
 
 # Custom loss
-group.add_argument('--drule-loss', action='store_true', default=False,
-                   help='Enable hierarchical Dloss.')
+group.add_argument('--logicseg', action='store_true', default=False,
+                   help='Enable LogicSeg loss.')
 group.add_argument('--csv-tree', action='store_true', default=False,
                    help='path to csv describing the tree structure of the labels.')
+# The following arguments are for implemented this way to facilitate testing, they might change in the future
+group.add_argument('--crule-loss-weight', action='store_true', default=False,
+                   help='Set the weight of the Closs.')
+group.add_argument('--drule-loss-weight', action='store_true', default=False,
+                   help='Set the weight of the Dloss.')
+group.add_argument('--erule-loss-weight', action='store_true', default=False,
+                   help='Set the weight of the Eloss.')
+group.add_argument('--bce-loss-weight', action='store_true', default=False,
+                   help='Set the weight of the Bce.')
 
 # Batch norm parameters (only works with gen_efficientnet based models currently)
 group = parser.add_argument_group('Batch norm parameters', 'Only works with gen_efficientnet based models currently.')
@@ -780,9 +791,9 @@ def main():
         )
 
     # setup loss function
-    if args.drule_loss: #FIXME: no mixup/label_smoothing management
-        train_loss_fn = Dloss(args.csv_tree)
-
+    if args.logicseg: #FIXME: no mixup/label_smoothing management
+        H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree)
+        train_loss_fn = LogicSegLoss(H_raw, P_raw, M_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.bce_loss_weight)
     elif args.jsd_loss:
         assert num_aug_splits > 1  # JSD only valid with aug splits set
         train_loss_fn = JsdCrossEntropy(num_splits=num_aug_splits, smoothing=args.smoothing)

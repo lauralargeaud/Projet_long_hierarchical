@@ -4,4 +4,4 @@ from .cross_entropy import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
 from .jsd import JsdCrossEntropy
 
 # Custom loss functions import
-from .Dloss import DRuleLoss
+from .logicseg_loss import LogicSegLoss
