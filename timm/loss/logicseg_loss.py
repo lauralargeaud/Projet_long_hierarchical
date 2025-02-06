@@ -25,14 +25,14 @@ class LogicSegLoss(nn.Module):
         self.alpha_bce = alpha_bce
   
     def forward(self, y_pred: torch.Tensor, y_true: torch.Tensor) -> torch.Tensor:
-        
+
         with_print = False
         if with_print:
-            print("L_c =", self.c_rule(y_pred, y_true))
-            print("L_d =", self.d_rule(y_pred, y_true))
-            print("L_e =", self.e_rule(y_pred, y_true))
+            print("L_c =", self.c_rule(y_pred, y_true).item())
+            print("L_d =", self.d_rule(y_pred, y_true).item())
+            print("L_e =", self.e_rule(y_pred, y_true).item())
             # print(self.bce(y_pred, y_true))
-            print("L_BCE =", F.binary_cross_entropy(y_pred, y_true))
+            print("L_BCE =", F.binary_cross_entropy(y_pred, y_true).item())
 
         batch_size = y_pred.shape[0]
         batch_losses = self.alpha_c * self.c_rule(y_pred, y_true) + \

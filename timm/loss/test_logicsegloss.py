@@ -37,6 +37,6 @@ def test_loss_forward():
     # Vérification des valeurs attendues (exemple avec valeurs pré-calculées si possible)
     assert torch.isfinite(loss).all(), "La perte ne doit contenir que des valeurs finies"
 
-    print("loss_totale =", loss)
+    print("loss_totale =", loss.item())
 
 test_loss_forward()
