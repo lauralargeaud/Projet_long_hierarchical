@@ -23,4 +23,7 @@ def get_tree_matrices(path_to_csv_tree, verbose=False):
 
   peer_matrix = np.matmul(H.T,H)
   peer_matrix = np.maximum(peer_matrix - np.eye(n),0)
-  return H, peer_matrix
+
+  M = np.sum(peer_matrix, axis=0) # peer_matrix est symétrique donc l'axe n'est pas important
+  
+  return H, peer_matrix, M
