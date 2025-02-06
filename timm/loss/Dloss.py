@@ -11,7 +11,7 @@ from logic_seg_utils import *
 class DRuleLoss(nn.Module):
     def __init__(self, path_to_csv_tree):
         super(DRuleLoss, self).__init__()
-        self.H = get_H_matrix(path_to_csv_tree)
+        self.H,_,_ = get_tree_matrix(path_to_csv_tree)
         self.branches = torch.minimum(torch.sum(self.H, dim=1), torch.tensor(1))
         self.branch_count = torch.sum(self.branches)
 
