@@ -1,4 +1,4 @@
-def get_H_matrix(path_to_csv_tree, verbose=False):
+def get_tree_matrices(path_to_csv_tree, verbose=False):
   import pandas as pd
   import numpy as np
 
@@ -11,6 +11,7 @@ def get_H_matrix(path_to_csv_tree, verbose=False):
   n = len(unique_nodes)
   H = np.zeros((n, n), dtype=int)
 
+  # On parcours le csv lignes par lignes (donc chemin par chemin dans l'arbre)
   for _, row in csv.iterrows():
       for parent, child in zip(row[:-1], row[1:]):
           if pd.notna(parent) and pd.notna(child):
@@ -20,4 +21,6 @@ def get_H_matrix(path_to_csv_tree, verbose=False):
     print("Nodes:", unique_nodes)
     print("H:\n", H)
 
-  return H
+  peer_matrix = np.matmul(H.T,H)
+  peer_matrix = np.maximum(peer_matrix - np.eye(n),0)
+  return H, peer_matrix

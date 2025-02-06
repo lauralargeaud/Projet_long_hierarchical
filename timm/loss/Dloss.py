@@ -6,7 +6,7 @@ import math
 import pandas as pd
 import numpy as np
 
-from logic_seg_utils import get_H_matrix
+from logic_seg_utils import *
 
 class DRuleLoss(nn.Module):
     def __init__(self, path_to_csv_tree):
