@@ -333,6 +333,12 @@ group.add_argument('--drop-path', type=float, default=None, metavar='PCT',
 group.add_argument('--drop-block', type=float, default=None, metavar='PCT',
                    help='Drop block rate (default: None)')
 
+# Custom loss
+group.add_argument('--Drule-loss', action='store_true', default=False,
+                   help='Enable hierarchical Dloss.')
+group.add_argument('--path-to-csv-tree', action='store_true', default=False,
+                   help='path to csv describing the tree structure of the labels.')
+
 # Batch norm parameters (only works with gen_efficientnet based models currently)
 group = parser.add_argument_group('Batch norm parameters', 'Only works with gen_efficientnet based models currently.')
 group.add_argument('--bn-momentum', type=float, default=None,
@@ -774,7 +780,10 @@ def main():
         )
 
     # setup loss function
-    if args.jsd_loss:
+    if args.hierarchical_loss: #FIXME: no mixup/label_smoothing management
+        train_loss_fn = Dloss(args.epochs, args.sigma)
+
+    elif args.jsd_loss:
         assert num_aug_splits > 1  # JSD only valid with aug splits set
         train_loss_fn = JsdCrossEntropy(num_splits=num_aug_splits, smoothing=args.smoothing)
     elif mixup_active:
