@@ -338,16 +338,16 @@ group.add_argument('--drop-block', type=float, default=None, metavar='PCT',
 # Custom loss
 group.add_argument('--logicseg', action='store_true', default=False,
                    help='Enable LogicSeg loss.')
-group.add_argument('--csv-tree', action='store_true', default=False,
+group.add_argument('--csv-tree', action='store_true', default=None,
                    help='path to csv describing the tree structure of the labels.')
 # The following arguments are for implemented this way to facilitate testing, they might change in the future
-group.add_argument('--crule-loss-weight', action='store_true', default=False,
+group.add_argument('--crule-loss-weight', action='store_true', default=0.2,
                    help='Set the weight of the Closs.')
-group.add_argument('--drule-loss-weight', action='store_true', default=False,
+group.add_argument('--drule-loss-weight', action='store_true', default=0.2,
                    help='Set the weight of the Dloss.')
-group.add_argument('--erule-loss-weight', action='store_true', default=False,
+group.add_argument('--erule-loss-weight', action='store_true', default=0.2,
                    help='Set the weight of the Eloss.')
-group.add_argument('--bce-loss-weight', action='store_true', default=False,
+group.add_argument('--bce-loss-weight', action='store_true', default=1,
                    help='Set the weight of the Bce.')
 
 # Batch norm parameters (only works with gen_efficientnet based models currently)
