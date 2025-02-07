@@ -279,7 +279,7 @@ def main():
         **data_config,
     )
     to_label = None
-    if args.label_type in ('name', 'description', 'detail'):
+    if args.label_type in ('name', 'description', 'detail', 'especes'):
         imagenet_subset = infer_imagenet_subset(model)
         if imagenet_subset is not None:
             dataset_info = ImageNetInfo(imagenet_subset)
