@@ -669,6 +669,10 @@ def main():
     else:
         input_img_mode = args.input_img_mode
 
+    # If logicSeg is used we create the class map file just before creating the dataset
+    if args.logicseg:
+        create_class_to_labels(args.csv_tree, args.class_map)
+        
     dataset_train = create_dataset(
         args.dataset,
         root=args.data_dir,
