@@ -794,10 +794,12 @@ def main():
             use_prefetcher=args.prefetcher,
         )
 
+    validate_loss_fn = nn.CrossEntropyLoss().to(device=device)
     # setup loss function
     if args.logicseg: #FIXME: no mixup/label_smoothing management
         H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=True)
         train_loss_fn = LogicSegLoss(H_raw, P_raw, M_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.bce_loss_weight)
+        validate_loss_fn = LogicSegLoss(H_raw, P_raw, M_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.bce_loss_weight)
     elif args.jsd_loss:
         assert num_aug_splits > 1  # JSD only valid with aug splits set
         train_loss_fn = JsdCrossEntropy(num_splits=num_aug_splits, smoothing=args.smoothing)
@@ -824,7 +826,7 @@ def main():
     else:
         train_loss_fn = nn.CrossEntropyLoss()
     train_loss_fn = train_loss_fn.to(device=device)
-    validate_loss_fn = nn.CrossEntropyLoss().to(device=device)
+    #validate_loss_fn = nn.CrossEntropyLoss().to(device=device)
 
     # setup checkpoint saver and eval metric tracking
     eval_metric = args.eval_metric if loader_eval is not None else 'loss'
