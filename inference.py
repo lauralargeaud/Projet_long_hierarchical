@@ -24,6 +24,8 @@ from timm.layers import apply_test_time_pool
 from timm.models import create_model
 from timm.utils import AverageMeter, setup_default_logging, set_jit_fuser, ParseKwargs
 
+from scripts.logic_seg_utils import *
+
 try:
     from apex import amp
     has_apex = True
@@ -118,6 +120,10 @@ parser.add_argument('--fuser', default='', type=str,
 parser.add_argument('--model-kwargs', nargs='*', default={}, action=ParseKwargs)
 parser.add_argument('--torchcompile-mode', type=str, default=None,
                     help="torch.compile mode (default: None).")
+
+# Custom parameter for LogicSeg
+parser.add_argument('--logicseg', action='store_true', default=False,
+                   help='Apply logicseg processing to output.')
 
 scripting_group = parser.add_mutually_exclusive_group()
 scripting_group.add_argument('--torchscript', default=False, action='store_true',
@@ -280,6 +286,8 @@ def main():
                 to_label = lambda x: dataset_info.index_to_label_name(x)
             elif args.label_type == 'detail':
                 to_label = lambda x: dataset_info.index_to_description(x, detailed=True)
+            elif args.label_type == 'especes':
+                to_label = lambda x, class_to_label: get_label_branches(x, class_to_label)
             else:
                 to_label = lambda x: dataset_info.index_to_description(x)
             to_label = np.vectorize(to_label)
@@ -301,7 +309,21 @@ def main():
             if use_probs:
                 output = output.softmax(-1)
 
-            if top_k:
+            if args.logicseg:
+                # appliquer la sigmoid
+                output = torch.sigmoid(output)
+                label_matrix, _, index_to_node = get_label_matrix(args.path_to_csv_tree)
+                probas_branches = get_predicted_branches(output, label_matrix) # taille (nb_feuilles,)
+                output, indices_branches = probas_branches.topk(top_k)
+                np_indices_branches = indices_branches.cpu().numpy()
+                if args.include_index:
+                    all_indices.append(np_indices_branches)
+                if to_label is not None:
+                    class_to_label = get_class_to_label(label_matrix, index_to_node)
+                    np_labels_branches = to_label(np_indices_branches, class_to_label)
+                    all_labels.append(np_labels_branches)
+
+            if top_k and not args.logicseg:
                 output, indices = output.topk(top_k)
                 np_indices = indices.cpu().numpy()
                 if args.include_index:
