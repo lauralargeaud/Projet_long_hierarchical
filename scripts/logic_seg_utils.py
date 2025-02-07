@@ -80,7 +80,8 @@ def get_predicted_branches(pred, label_matrix):
   device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
   label_matrix = torch.tensor(label_matrix, dtype=torch.float32).to(device) #torch tensor
   nb_feuilles = label_matrix.shape[0]
-  pred_rep = pred.unsqueeze(0).repeat(nb_feuilles, 1)
+  print("pred", pred.shape)
+  pred_rep = pred.repeat(nb_feuilles, 1)
   print("pred_rep", pred_rep.shape)
   print("label_matrix", label_matrix.shape)
   probas_branches = torch.sum(pred_rep*label_matrix, dim=1)
