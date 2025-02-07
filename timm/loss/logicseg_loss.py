@@ -24,9 +24,11 @@ class LogicSegLoss(nn.Module):
         # self.bce = BinaryCrossEntropy()
         self.alpha_bce = alpha_bce
   
-    def forward(self, y_pred: torch.Tensor, y_true: torch.Tensor) -> torch.Tensor:
+    def forward(self, y_pred: torch.Tensor, y_true: torch.Tensor, with_print: bool = False) -> torch.Tensor:
 
-        with_print = True
+        # apply the sigmoid function in order to compute the nb_nodes probabilities for each image
+        y_pred = torch.sigmoid(y_pred)
+        
         if with_print:
             print("L_c =", self.c_rule(y_pred, y_true).item())
             print("L_d =", self.d_rule(y_pred, y_true).item())

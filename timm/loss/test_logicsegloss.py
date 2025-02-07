@@ -22,22 +22,22 @@ def test_loss_forward():
     # cas de prédictions parfaites
     y_pred = torch.tensor([[1.0, 1.0, 0, 1.0, 0, 0, 0], [1.0, 0, 1.0, 0, 0, 1.0, 0]], dtype=torch.float32)
     print("Cas de préditions parfaites:")
-    loss = criterion.forward(y_pred, y_true)
+    loss = criterion.forward(y_pred, y_true, True)
 
     # En dégradant les prédictions pour Lc 
     y_pred = torch.tensor([[1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0]], dtype=torch.float32)
     print("Dégradation Lc:")
-    loss = criterion.forward(y_pred, y_true)
+    loss = criterion.forward(y_pred, y_true, True)
 
     # En dégradant les prédictions pour Ld
     y_pred = torch.tensor([[1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]], dtype=torch.float32)
     print("Dégradation Ld:")
-    loss = criterion.forward(y_pred, y_true)
+    loss = criterion.forward(y_pred, y_true, True)
 
     # En dégradant les prédictions pour Le
     y_pred = torch.tensor([[1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0]], dtype=torch.float32)
     print("Dégradation Le:")
-    loss = criterion.forward(y_pred, y_true)
+    loss = criterion.forward(y_pred, y_true, True)
 
     # Vérification des valeurs attendues (exemple avec valeurs pré-calculées si possible)
     # assert torch.isfinite(loss).all(), "La perte ne doit contenir que des valeurs finies"
