@@ -72,6 +72,7 @@ def get_class_to_label(label_matrix, index_to_node, verbose=False):
   if(verbose):
     print('class_to_labels')
     print(class_to_labels)
+    print("class_to_labels 1", class_to_labels)
   return class_to_labels
 
 # pred: sigmoid(y_pred)
@@ -94,6 +95,7 @@ def get_predicted_branches(pred, label_matrix):
 def get_label_branches(most_probable_branches_indices, class_to_label):
   predicted_classes = np.empty(most_probable_branches_indices.shape, dtype=str)
   classes = list(class_to_label.keys())
+  print("classes keys", classes)
   for p in range(most_probable_branches_indices.shape[0]):
     for i in range(most_probable_branches_indices.shape[1]):
       predicted_classes[p,i] = classes[most_probable_branches_indices[p,i]]
