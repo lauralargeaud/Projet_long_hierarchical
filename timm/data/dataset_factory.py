@@ -41,6 +41,8 @@ _EVAL_SYNONYM = dict(val=None, valid=None, validation=None, eval=None, evaluatio
 
 
 def _search_split(root, split):
+    print("root", root)
+    print("split", split)
     # look for sub-folder with name of split in root and use that if it exists
     split_name = split.split('[')[0]
     try_root = os.path.join(root, split_name)
@@ -57,6 +59,8 @@ def _search_split(root, split):
         root = _try(_TRAIN_SYNONYM)
     elif split_name in _EVAL_SYNONYM:
         root = _try(_EVAL_SYNONYM)
+    print("root", root)
+    print("split", split)
     return root
 
 
