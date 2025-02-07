@@ -26,7 +26,7 @@ class LogicSegLoss(nn.Module):
   
     def forward(self, y_pred: torch.Tensor, y_true: torch.Tensor) -> torch.Tensor:
 
-        with_print = False
+        with_print = True
         if with_print:
             print("L_c =", self.c_rule(y_pred, y_true).item())
             print("L_d =", self.d_rule(y_pred, y_true).item())

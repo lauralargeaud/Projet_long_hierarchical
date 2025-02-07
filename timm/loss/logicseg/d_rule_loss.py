@@ -16,15 +16,13 @@ class DRuleLoss(nn.Module):
 
         batch_size = y_pred.shape[0] # nombre d'images dans le batch
         N = y_pred.shape[1] # nombre de noeuds dans l'arbre
-
         S = y_pred.unsqueeze(2).repeat(1, 1, N)  # shape [batch_size, N, N]
+        S = S.transpose(1, 2) # transposée de toutes les matrices S[i,:,:]
         H_batch = self.H.unsqueeze(0).repeat(batch_size, 1, 1,)
-
         branches = self.branches.T.repeat(batch_size, 1)
         s_branch = branches * y_pred
 
         max_values = torch.max(S*H_batch, dim=2).values
-
         losses = (torch.sum(s_branch, dim=1) - torch.sum(s_branch*max_values, dim=1))/self.branch_count
         
         total_loss = torch.sum(losses) / batch_size
