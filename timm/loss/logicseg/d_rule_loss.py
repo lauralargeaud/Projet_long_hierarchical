@@ -7,7 +7,7 @@ class DRuleLoss(nn.Module):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.H = torch.tensor(H_raw, dtype=torch.float32).to(device)
-        one_tensor = torch.tensor(1).unsqueeze(0).repeat((self.H.shape[0],1))
+        one_tensor = torch.tensor(1).unsqueeze(0).repeat((self.H.shape[0],1)).to(device)
         sum = torch.sum(self.H, dim=1).unsqueeze(1)
         self.branches = torch.minimum(sum, one_tensor).to(device)
         self.branch_count = torch.sum(self.branches).to(device)
