@@ -2,10 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from logicseg.c_rule_loss import CRuleLoss
-from logicseg.d_rule_loss import DRuleLoss
-from logicseg.e_rule_loss import ERuleLoss
-from binary_cross_entropy import BinaryCrossEntropy
+from timm.loss.logicseg.c_rule_loss import CRuleLoss
+from timm.loss.logicseg.d_rule_loss import DRuleLoss
+from timm.loss.logicseg.e_rule_loss import ERuleLoss
 
 class LogicSegLoss(nn.Module):
     def __init__(self, H_raw, P_raw, M_raw, alpha_c, alpha_d, alpha_e, alpha_bce): # H_raw is a np array
