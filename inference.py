@@ -280,7 +280,7 @@ def main():
     )
     to_label = None
     if args.label_type in ('name', 'description', 'detail', 'especes'):
-        if args.label_type != 'especes':
+        if args.label_type == 'especes':
             to_label = lambda x, class_to_label: get_label_branches(x, class_to_label)
         else:
             imagenet_subset = infer_imagenet_subset(model)
