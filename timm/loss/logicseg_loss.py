@@ -38,9 +38,9 @@ class LogicSegLoss(nn.Module):
             print("L_BCE =", F.binary_cross_entropy(y_pred, y_true).item())
 
         batch_size = y_pred.shape[0]
-        '''batch_losses = self.alpha_c * self.c_rule(y_pred, y_true) + \
+        batch_losses = self.alpha_c * self.c_rule(y_pred, y_true) + \
                        self.alpha_d * self.d_rule(y_pred, y_true) + \
                        self.alpha_e * self.e_rule(y_pred, y_true) + \
                        self.alpha_bce * (F.binary_cross_entropy(y_pred, y_true) / batch_size)
-        return batch_losses'''
-        return self.alpha_bce * (F.binary_cross_entropy(y_pred, y_true) / batch_size)
+        return batch_losses
+        # return self.alpha_bce * (F.binary_cross_entropy(y_pred, y_true) / batch_size)
