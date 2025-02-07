@@ -99,4 +99,5 @@ def get_label_branches(most_probable_branches_indices, class_to_label):
   for p in range(most_probable_branches_indices.shape[0]):
     for i in range(most_probable_branches_indices.shape[1]):
       predicted_classes[p,i] = classes[most_probable_branches_indices[p,i]]
+  print("predicted_classes", predicted_classes)
   return predicted_classes
