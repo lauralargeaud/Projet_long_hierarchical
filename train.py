@@ -690,7 +690,7 @@ def main():
         trust_remote_code=args.dataset_trust_remote_code,
     )
 
-    if args.val_split:
+    if False:# if args.val_split:
         dataset_eval = create_dataset(
             args.dataset,
             root=args.data_dir,
@@ -772,7 +772,7 @@ def main():
     )
 
     loader_eval = None
-    if args.val_split:
+    if False:# if args.val_split:
         eval_workers = args.workers
         if args.distributed and ('tfds' in args.dataset or 'wds' in args.dataset):
             # FIXME reduces validation padding issues when using TFDS, WDS w/ workers and distributed training
