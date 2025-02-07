@@ -28,7 +28,7 @@ def get_tree_matrices(path_to_csv_tree, verbose=False):
   
   return H, peer_matrix, M
 
-def create_class_to_labels(path_to_csv_tree, path_to_temporary_class_to_labels_file):
+def create_class_to_labels(path_to_csv_tree, path_to_temporary_class_to_labels_file, verbose=False):
   import pandas as pd
   import numpy as np
   import pickle
@@ -41,19 +41,23 @@ def create_class_to_labels(path_to_csv_tree, path_to_temporary_class_to_labels_f
 
   label_matrix = np.zeros((len(csv),n), dtype=int)
 
+  index_to_node = {v: k for k, v in node_to_index.items()}
+  class_to_labels={}
   # On parcours le csv lignes par lignes (donc chemin par chemin dans l'arbre)
   for i, row in csv.iterrows():
       for node in row:
         label_matrix[i,node_to_index[node]] = 1
-        
-  index_to_node = {v: k for k, v in node_to_index.items()}
-  label_count = label_matrix.shape[0]
-  class_to_labels={}
-  for i in range(label_count):
-    current_branch = label_matrix[i]
-    class_index = np.where(current_branch == 1)[0][-1]
-    class_name = index_to_node[class_index]
-    class_to_labels[class_name] = current_branch.tolist()
+
+      current_branch = label_matrix[i]
+      class_index = np.where(current_branch == 1)[0][-1]
+      class_name = index_to_node[class_index]
+      class_to_labels[class_name] = current_branch.tolist()
+  
+  if(verbose):
+    print('labels_matrix')
+    print(label_matrix)
+    print('class_to_labels')
+    print(class_to_labels)
 
   # Sauvegarder dans un fichier .pkl
   with open(path_to_temporary_class_to_labels_file, "wb") as f:
