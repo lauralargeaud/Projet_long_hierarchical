@@ -671,7 +671,7 @@ def main():
 
     # If logicSeg is used we create the class map file just before creating the dataset
     if args.logicseg:
-        create_class_to_labels(args.csv_tree, args.class_map)
+        create_class_to_labels(args.csv_tree, args.class_map, verbose=True)
         
     dataset_train = create_dataset(
         args.dataset,
@@ -796,7 +796,7 @@ def main():
 
     # setup loss function
     if args.logicseg: #FIXME: no mixup/label_smoothing management
-        H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree)
+        H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=True)
         train_loss_fn = LogicSegLoss(H_raw, P_raw, M_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.bce_loss_weight)
     elif args.jsd_loss:
         assert num_aug_splits > 1  # JSD only valid with aug splits set
