@@ -1222,6 +1222,10 @@ def validate(
                     target = target[0:target.size(0):reduce_factor]
 
                 loss = loss_fn(output, target)
+            print("output")
+            print(output)
+            print("target")
+            print(target)
             acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
 
             if args.distributed:
