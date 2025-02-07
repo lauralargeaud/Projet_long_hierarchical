@@ -318,8 +318,8 @@ def main():
                 output = torch.sigmoid(output)
                 label_matrix, _, index_to_node = get_label_matrix(args.path_to_csv_tree)
                 print("label_matrix", label_matrix)
-                probas_branches = get_predicted_branches(output, label_matrix) # taille (nb_feuilles,)
-                output, indices_branches = probas_branches.topk(top_k)
+                probas_branches = get_predicted_branches(output, label_matrix) # taille (nb_pred, nb_feuilles)
+                output, indices_branches = probas_branches.topk(top_k, dim=1) # (nb_pred, top_k), (nb_pred, top_k)
                 np_indices_branches = indices_branches.cpu().numpy()
                 if args.include_index:
                     all_indices.append(np_indices_branches)

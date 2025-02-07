@@ -76,23 +76,25 @@ def get_class_to_label(label_matrix, index_to_node, verbose=False):
 
 # pred: sigmoid(y_pred)
 # on veut: tenseur de taille (nb_branches,) contenant les probas de toutes les branches
+# sortie: shape = (nb_pred, nb_branches)
 def get_predicted_branches(pred, label_matrix):
   device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
   label_matrix = torch.tensor(label_matrix, dtype=torch.float32).to(device) #torch tensor
+  nb_pred = pred.shape[0]
   nb_feuilles = label_matrix.shape[0]
-  print("pred", pred.shape)
-  pred_rep = pred.repeat(nb_feuilles, 1)
-  print("pred_rep", pred_rep.shape)
-  print("label_matrix", label_matrix.shape)
-  probas_branches = torch.sum(pred_rep*label_matrix, dim=1)
+  probas_branches = torch.empty(size=(nb_pred, nb_feuilles), dtype=torch.float32)
+  for i in range(nb_pred):
+    pred_rep = pred[i,:].repeat(nb_feuilles, 1)
+    probas_branches[i,:] = torch.sum(pred_rep*label_matrix, dim=1)
   return probas_branches
 
 # most_probables_branches: indices des k branches les plus probables dans l'ordre décroissant de probabilité
 # return: les k labels textuels associés
+# most (nb_pred, top_k)
 def get_label_branches(most_probable_branches_indices, class_to_label):
-  predicted_classes = []
+  predicted_classes = torch.empty(most_probable_branches_indices.shape)
   classes = list(class_to_label.keys())
-  for i in most_probable_branches_indices:
-    predicted_classes.append(classes[i])
-
+  for p in range(most_probable_branches_indices.shape[0]):
+    for i in most_probable_branches_indices:
+      predicted_classes[p,i] = classes[i]
   return predicted_classes
