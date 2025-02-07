@@ -256,7 +256,7 @@ def main():
     if args.num_gpu > 1:
         model = torch.nn.DataParallel(model, device_ids=list(range(args.num_gpu)))
 
-    root_dir = args.data or args.data_dir
+    root_dir = args.data_dir# args.data or args.data_dir
     dataset = create_dataset(
         root=root_dir,
         name=args.dataset,
