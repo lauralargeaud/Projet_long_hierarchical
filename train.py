@@ -671,7 +671,7 @@ def main():
 
     # If logicSeg is used we create the class map file just before creating the dataset
     if args.logicseg:
-        create_class_to_labels(args.csv_tree, args.class_map, verbose=True)
+        create_class_to_labels(args.csv_tree, args.class_map, verbose=False)
         
     dataset_train = create_dataset(
         args.dataset,
@@ -690,7 +690,7 @@ def main():
         trust_remote_code=args.dataset_trust_remote_code,
     )
 
-    if False:# if args.val_split:
+    if args.val_split:
         dataset_eval = create_dataset(
             args.dataset,
             root=args.data_dir,
@@ -772,7 +772,7 @@ def main():
     )
 
     loader_eval = None
-    if False:# if args.val_split:
+    if args.val_split:
         eval_workers = args.workers
         if args.distributed and ('tfds' in args.dataset or 'wds' in args.dataset):
             # FIXME reduces validation padding issues when using TFDS, WDS w/ workers and distributed training
@@ -797,7 +797,7 @@ def main():
     validate_loss_fn = nn.CrossEntropyLoss().to(device=device)
     # setup loss function
     if args.logicseg: #FIXME: no mixup/label_smoothing management
-        H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=True)
+        H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=False)
         train_loss_fn = LogicSegLoss(H_raw, P_raw, M_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.bce_loss_weight)
         validate_loss_fn = LogicSegLoss(H_raw, P_raw, M_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.bce_loss_weight)
     elif args.jsd_loss:
