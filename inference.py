@@ -280,20 +280,23 @@ def main():
     )
     to_label = None
     if args.label_type in ('name', 'description', 'detail', 'especes'):
-        imagenet_subset = infer_imagenet_subset(model)
-        if imagenet_subset is not None:
-            dataset_info = ImageNetInfo(imagenet_subset)
-            if args.label_type == 'name':
-                to_label = lambda x: dataset_info.index_to_label_name(x)
-            elif args.label_type == 'detail':
-                to_label = lambda x: dataset_info.index_to_description(x, detailed=True)
-            elif args.label_type == 'especes':
-                to_label = lambda x, class_to_label: get_label_branches(x, class_to_label)
-            else:
-                to_label = lambda x: dataset_info.index_to_description(x)
-            to_label = np.vectorize(to_label)
+        if args.label_type != 'especes':
+            to_label = lambda x, class_to_label: get_label_branches(x, class_to_label)
         else:
-            _logger.error("Cannot deduce ImageNet subset from model, no labelling will be performed.")
+            imagenet_subset = infer_imagenet_subset(model)
+            if imagenet_subset is not None :
+                dataset_info = ImageNetInfo(imagenet_subset)
+                if args.label_type == 'name':
+                    to_label = lambda x: dataset_info.index_to_label_name(x)
+                elif args.label_type == 'detail':
+                    to_label = lambda x: dataset_info.index_to_description(x, detailed=True)
+                # elif args.label_type == 'especes':
+                    # to_label = lambda x, class_to_label: get_label_branches(x, class_to_label)
+                else:
+                    to_label = lambda x: dataset_info.index_to_description(x)
+                to_label = np.vectorize(to_label)
+            else:
+                _logger.error("Cannot deduce ImageNet subset from model, no labelling will be performed.")
 
     top_k = min(args.topk, args.num_classes)
     batch_time = AverageMeter()
