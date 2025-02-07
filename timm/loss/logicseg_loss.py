@@ -25,6 +25,8 @@ class LogicSegLoss(nn.Module):
   
     def forward(self, y_pred: torch.Tensor, y_true: torch.Tensor, with_print: bool = False) -> torch.Tensor:
 
+        y_pred, y_true = y_pred.float(), y_true.float()
+
         # apply the sigmoid function in order to compute the nb_nodes probabilities for each image
         y_pred = torch.sigmoid(y_pred)
         
