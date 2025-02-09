@@ -1,0 +1,35 @@
+from scripts.hierarchy_better_mistakes_utils import *
+from timm.loss.hierarchical_cross_entropy import HierarchicalCrossEntropy
+import torch
+
+if __name__ == "__main__":
+    hierarchy_filename = "data/small-collomboles/hierarchy_test.csv"
+    hierarchy_lines = read_csv(hierarchy_filename)
+    hierarchy_lines_without_names = hierarchy_lines[1:]
+    
+    tree = build_tree(hierarchy_lines)
+    print("============= Tree =============")
+    print_tree(tree)
+    print("================================")
+
+    nodes, leafs, nodes_to_id, leafs_to_id = get_id_from_nodes(hierarchy_lines_without_names)
+    print("nodes:", nodes_to_id)    
+    print("leafs:", leafs_to_id)
+
+    L = compute_L(hierarchy_lines_without_names, nodes_to_id, leafs_to_id)
+    paths = get_path_from_leafs(hierarchy_lines_without_names, nodes_to_id)
+    for i in range(len(L)):
+        print(L[i,:], nodes[i])
+
+    
+    hxe_loss = HierarchicalCrossEntropy(L, paths, alpha=0.1, h=len(hierarchy_lines[0]))
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    logits = torch.randn(4, 9).to(device)
+    targets = torch.tensor([0, 2, 5, 7]).to(device)
+    # Initialisation et calcul de la perte
+    loss_value = hxe_loss.forward(logits, targets)
+
+    print("Valeur de la perte HXE :", loss_value.item())
+
+
+

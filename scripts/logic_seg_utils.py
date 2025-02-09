@@ -1,6 +1,7 @@
+import pandas as pd
+import numpy as np
+
 def Get_H_matrix(path_to_csv_tree, verbose=False):
-  import pandas as pd
-  import numpy as np
 
   csv = pd.read_csv(path_to_csv_tree)
 
