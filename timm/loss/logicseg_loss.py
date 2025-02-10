@@ -38,9 +38,24 @@ class LogicSegLoss(nn.Module):
             print("L_BCE =", F.binary_cross_entropy(y_pred, y_true).item())
 
         batch_size = y_pred.shape[0]
-        batch_losses = self.alpha_c * self.c_rule(y_pred, y_true) + \
-                       self.alpha_d * self.d_rule(y_pred, y_true) + \
-                       self.alpha_e * self.e_rule(y_pred, y_true) + \
-                       self.alpha_bce * (F.binary_cross_entropy(y_pred, y_true) / batch_size)
+        print("initial Y_pred shape", y_pred.shape)
+        print("initial Y_true shape", y_true.shape)
+        
+        batch_losses = batch_losses + self.alpha_c * self.c_rule(y_pred, y_true)
+        print("Y_pred shape after c rule", y_pred.shape)
+        print("Y_true shape after c rule", y_true.shape)
+
+        batch_losses = batch_losses + self.alpha_d * self.d_rule(y_pred, y_true)
+        print("Y_pred shape after d rule", y_pred.shape)
+        print("Y_true shape after d rule", y_true.shape)
+
+        batch_losses = batch_losses + self.alpha_e * self.e_rule(y_pred, y_true)
+        print("Y_pred shape after e rule", y_pred.shape)
+        print("Y_true shape after e rule", y_true.shape)
+
+        print("Y_pred after e rule", y_pred)
+        print("Y_true after e rule", y_true)
+
+        batch_losses = batch_losses + self.alpha_bce * (F.binary_cross_entropy(y_pred, y_true) / batch_size)
         return batch_losses
         # return self.alpha_bce * (F.binary_cross_entropy(y_pred, y_true) / batch_size)

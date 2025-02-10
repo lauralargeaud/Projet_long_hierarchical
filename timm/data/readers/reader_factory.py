@@ -35,7 +35,6 @@ def create_reader(
         kwargs.pop('download', False)
         reader = ReaderWds(root=root, name=name, split=split, **kwargs)
     else:
-        print("root", root)
         assert os.path.exists(root)
         # default fallback path (backwards compat), use image tar if root is a .tar file, otherwise image folder
         # FIXME support split here or in reader?
