@@ -8,7 +8,7 @@ class ERuleLoss(nn.Module):
 
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.P = torch.tensor(P_raw, dtype=torch.float32).to(device)
-        self.M = torch.tensor(M_raw, dtype=torch.float32).to(device)
+        self.M = torch.maximum(torch.tensor(M_raw, dtype=torch.float32), torch.tensor(1)).to(device)
   
     def forward(self, y_pred: torch.Tensor, y_true: torch.Tensor) -> torch.Tensor:
         batch_size = y_pred.shape[0]
