@@ -42,21 +42,17 @@ class LogicSegLoss(nn.Module):
         print("Y_pred init", y_pred)
         print("Y_true init", y_true)
         
-        batch_losses = self.alpha_c * self.c_rule(y_pred, y_true)
+        '''batch_losses = self.alpha_c * self.c_rule(y_pred, y_true)
 
         print("Y_pred after c rule", y_pred)
-        print("Y_true after c rule", y_true)
+        print("Y_true after c rule", y_true)'''
 
-        '''batch_losses = batch_losses + self.alpha_d * self.d_rule(y_pred, y_true)
-        print("Y_pred shape after d rule", y_pred.shape)
-        print("Y_true shape after d rule", y_true.shape)
+        batch_losses = self.alpha_d * self.d_rule(y_pred, y_true)
 
         print("Y_pred after d rule", y_pred)
         print("Y_true after d rule", y_true)
 
-        batch_losses = batch_losses + self.alpha_e * self.e_rule(y_pred, y_true)
-        print("Y_pred shape after e rule", y_pred.shape)
-        print("Y_true shape after e rule", y_true.shape)
+        '''batch_losses = batch_losses + self.alpha_e * self.e_rule(y_pred, y_true)
 
         print("Y_pred after e rule", y_pred)
         print("Y_true after e rule", y_true)
