@@ -45,18 +45,18 @@ class LogicSegLoss(nn.Module):
         '''batch_losses = self.alpha_c * self.c_rule(y_pred, y_true)
 
         print("Y_pred after c rule", y_pred)
-        print("Y_true after c rule", y_true)'''
+        print("Y_true after c rule", y_true)
 
-        batch_losses = self.alpha_d * self.d_rule(y_pred, y_true)
+        batch_losses = batch_losses + self.alpha_d * self.d_rule(y_pred, y_true)
 
         print("Y_pred after d rule", y_pred)
-        print("Y_true after d rule", y_true)
+        print("Y_true after d rule", y_true)'''
 
-        '''batch_losses = batch_losses + self.alpha_e * self.e_rule(y_pred, y_true)
+        batch_losses = self.alpha_e * self.e_rule(y_pred, y_true)
 
         print("Y_pred after e rule", y_pred)
         print("Y_true after e rule", y_true)
 
-        batch_losses = batch_losses + self.alpha_bce * (F.binary_cross_entropy(y_pred, y_true) / batch_size)'''
+        #batch_losses = batch_losses + self.alpha_bce * (F.binary_cross_entropy(y_pred, y_true) / batch_size)
         return batch_losses
         # return self.alpha_bce * (F.binary_cross_entropy(y_pred, y_true) / batch_size)
