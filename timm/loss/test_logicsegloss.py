@@ -16,26 +16,26 @@ def test_loss_forward():
     alpha_bce = 1
     criterion = LogicSegLoss(H_raw, P_raw, M_raw, alpha_c, alpha_d, alpha_e, alpha_bce)
     
-    y_true = torch.tensor([[1.0, 1.0, 0, 1.0, 0, 0, 0], [1.0, 0, 1.0, 0, 0, 1.0, 0]], dtype=torch.float32)
+    y_true = torch.tensor([[1.0, 1.0, 0.01, 1.0, 0.01, 0.01, 0.01], [1.0, 0.01, 1.0, 0.01, 0.01, 1.0, 0.01]], dtype=torch.float32)
 
 
     # cas de prédictions parfaites
-    y_pred = torch.tensor([[1.0, 1.0, 0, 1.0, 0, 0, 0], [1.0, 0, 1.0, 0, 0, 1.0, 0]], dtype=torch.float32)
+    y_pred = torch.tensor([[0.99, 0.99, 0.01, 0.99, 0.01, 0.01, 0.01], [0.99, 0.01, 0.99, 0.01, 0.01, 0.99, 0.01]], dtype=torch.float32)
     print("Cas de préditions parfaites:")
     loss = criterion.forward(y_pred, y_true, True)
 
     # En dégradant les prédictions pour Lc 
-    y_pred = torch.tensor([[1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0]], dtype=torch.float32)
+    y_pred = torch.tensor([[0.99, 0.99, 0.01, 0.99, 0.01, 0.01, 0.01], [0.99, 0.01, 0.99, 0.99, 0.01, 0.99, 0.01]], dtype=torch.float32)
     print("Dégradation Lc:")
     loss = criterion.forward(y_pred, y_true, True)
 
     # En dégradant les prédictions pour Ld
-    y_pred = torch.tensor([[1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0]], dtype=torch.float32)
+    y_pred = torch.tensor([[0.99, 0.99, 0.01, 0.99, 0.01, 0.01, 0.01], [0.99, 0.01, 0.99, 0.01, 0.01, 0.01, 0.01]], dtype=torch.float32)
     print("Dégradation Ld:")
     loss = criterion.forward(y_pred, y_true, True)
 
     # En dégradant les prédictions pour Le
-    y_pred = torch.tensor([[1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0]], dtype=torch.float32)
+    y_pred = torch.tensor([[0.99, 0.99, 0.01, 0.99, 0.01, 0.01, 0.01], [0.99, 0.01, 0.99, 0.01, 0.01, 0.99, 0.99]], dtype=torch.float32)
     print("Dégradation Le:")
     loss = criterion.forward(y_pred, y_true, True)
 
