@@ -906,6 +906,10 @@ def main():
 
     results = []
     try:
+        label_matrix = None
+        if args.logicseg:
+            label_matrix, _, _ = get_label_matrix(args.path_to_csv_tree)
+            
         for epoch in range(start_epoch, num_epochs):
             if hasattr(dataset_train, 'set_epoch'):
                 dataset_train.set_epoch(epoch)
@@ -928,6 +932,7 @@ def main():
                 model_ema=model_ema,
                 mixup_fn=mixup_fn,
                 num_updates_total=num_epochs * updates_per_epoch,
+                label_matrix=label_matrix,
             )
 
             if args.distributed and args.dist_bn in ('broadcast', 'reduce'):
@@ -1030,6 +1035,7 @@ def train_one_epoch(
         model_ema=None,
         mixup_fn=None,
         num_updates_total=None,
+        label_matrix=None,
 ):
     if args.mixup_off_epoch and epoch >= args.mixup_off_epoch:
         if args.prefetcher and loader.mixup_enabled:
@@ -1072,13 +1078,20 @@ def train_one_epoch(
         # multiply by accum steps to get equivalent for full update
         data_time_m.update(accum_steps * (time.time() - data_start_time))
 
-        def _forward():
+        def _forward(args=None):
+            acc_train = None
             with amp_autocast():
                 output = model(input)
                 loss = loss_fn(output, target)
+                # compute the accuracy on the training data of the current batch
+                if args.logicseg:
+                    # appliquer la sigmoid
+                    output = torch.sigmoid(output, target, label_matrix)
+                    acc_train = accuracy_logicseg(output, target, label_matrix())
+                    
             if accum_steps > 1:
                 loss /= accum_steps
-            return loss
+            return loss, acc_train
 
         def _backward(_loss):
             if loss_scaler is not None:
@@ -1104,10 +1117,10 @@ def train_one_epoch(
 
         if has_no_sync and not need_update:
             with model.no_sync():
-                loss = _forward()
+                loss, acc_train = _forward(args)
                 _backward(loss)
         else:
-            loss = _forward()
+            loss, acc_train = _forward(args)
             _backward(loss)
 
         losses_m.update(loss.item() * accum_steps, input.size(0))
@@ -1147,6 +1160,7 @@ def train_one_epoch(
                     f'Train: {epoch} [{update_idx:>4d}/{updates_per_epoch} '
                     f'({100. * (update_idx + 1) / updates_per_epoch:>3.0f}%)]  '
                     f'Loss: {loss_now:#.3g} ({loss_avg:#.3g})  '
+                    f'Accuracy on training data: {acc_train:#.3g}'
                     f'Time: {update_time_m.val:.3f}s, {update_sample_count / update_time_m.val:>7.2f}/s  '
                     f'({update_time_m.avg:.3f}s, {update_sample_count / update_time_m.avg:>7.2f}/s)  '
                     f'LR: {lr:.3e}  '
