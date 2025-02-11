@@ -280,23 +280,20 @@ def main():
     )
     to_label = None
     if args.label_type in ('name', 'description', 'detail', 'especes'):
-        if args.label_type == 'especes':
-            to_label = lambda x, class_to_label: get_label_branches(x, class_to_label)
-        else:
-            imagenet_subset = infer_imagenet_subset(model)
-            if imagenet_subset is not None :
-                dataset_info = ImageNetInfo(imagenet_subset)
-                if args.label_type == 'name':
-                    to_label = lambda x: dataset_info.index_to_label_name(x)
-                elif args.label_type == 'detail':
-                    to_label = lambda x: dataset_info.index_to_description(x, detailed=True)
-                # elif args.label_type == 'especes':
-                    # to_label = lambda x, class_to_label: get_label_branches(x, class_to_label)
-                else:
-                    to_label = lambda x: dataset_info.index_to_description(x)
-                to_label = np.vectorize(to_label)
+        imagenet_subset = infer_imagenet_subset(model)
+        if imagenet_subset is not None :
+            dataset_info = ImageNetInfo(imagenet_subset)
+            if args.label_type == 'name':
+                to_label = lambda x: dataset_info.index_to_label_name(x)
+            elif args.label_type == 'detail':
+                to_label = lambda x: dataset_info.index_to_description(x, detailed=True)
+            # elif args.label_type == 'especes':
+                # to_label = lambda x, class_to_label: get_label_branches(x, class_to_label)
             else:
-                _logger.error("Cannot deduce ImageNet subset from model, no labelling will be performed.")
+                to_label = lambda x: dataset_info.index_to_description(x)
+            to_label = np.vectorize(to_label)
+        else:
+            _logger.error("Cannot deduce ImageNet subset from model, no labelling will be performed.")
 
     top_k = min(args.topk, args.num_classes)
     batch_time = AverageMeter()
@@ -306,7 +303,7 @@ def main():
     all_outputs = []
     use_probs = args.output_type == 'prob'
     with torch.no_grad():
-        for batch_idx, (input, _) in enumerate(loader):
+        for batch_idx, (input, target) in enumerate(loader):
             with amp_autocast():
                 output = model(input)
 
@@ -317,15 +314,18 @@ def main():
                 # appliquer la sigmoid
                 output = torch.sigmoid(output)
                 label_matrix, _, index_to_node = get_label_matrix(args.path_to_csv_tree)
-                probas_branches = get_predicted_branches(output, label_matrix) # taille (nb_pred, nb_feuilles)
-                output, indices_branches = probas_branches.topk(top_k, dim=1) # (nb_pred, top_k), (nb_pred, top_k)
-                np_indices_branches = indices_branches.cpu().numpy()
+                probas_branches_input = get_predicted_branches(output, label_matrix) # taille (nb_pred, nb_feuilles)
+                probas_branches_target = get_predicted_branches(target, label_matrix)
+                output_in, indices_branches_in = probas_branches_input.topk(top_k, dim=1) # (nb_pred, top_k), (nb_pred, top_k)
+                output_target, indices_branches_target = probas_branches_target.topk(top_k, dim=1) # (nb_pred, top_k), (nb_pred, top_k)
+                np_indices_branches_in = indices_branches_in.cpu().numpy()
+                np_indices_branches_target = indices_branches_target.cpu().numpy()
                 if args.include_index:
-                    all_indices.append(np_indices_branches)
-                if to_label is not None:
-                    class_to_label = get_class_to_label(label_matrix, index_to_node)
-                    np_labels_branches = to_label(np_indices_branches, class_to_label)
-                    all_labels.append(np_labels_branches)
+                    all_indices.append(np_indices_branches_in)
+                
+                class_to_label = get_class_to_label(label_matrix, index_to_node)
+                np_labels_branches = get_label_branches(np_indices_branches_in, np_indices_branches_target, class_to_label)
+                all_labels.append(np_labels_branches)
 
             if top_k and not args.logicseg:
                 output, indices = output.topk(top_k)

@@ -92,11 +92,11 @@ def get_predicted_branches(pred, label_matrix):
 # most_probables_branches: indices des k branches les plus probables dans l'ordre décroissant de probabilité
 # return: les k labels textuels associés
 # most (nb_pred, top_k)
-def get_label_branches(most_probable_branches_indices, class_to_label):
-  predicted_classes = np.empty(most_probable_branches_indices.shape, dtype=object)
+def get_label_branches(most_probable_branches_indices_in, most_probable_branches_indices_target, class_to_label):
+  predicted_classes = np.empty(most_probable_branches_indices_in.shape, dtype=object)
   classes = list(class_to_label.keys())
 
-  for p in range(most_probable_branches_indices.shape[0]):
-    for i in range(most_probable_branches_indices.shape[1]):
-      predicted_classes[p,i] = classes[most_probable_branches_indices[p,i]]
+  for p in range(most_probable_branches_indices_in.shape[0]):
+    for i in range(most_probable_branches_indices_in.shape[1]):
+      predicted_classes[p,i] = "pred: " + classes[most_probable_branches_indices_in[p,i]] + ", label:  " + classes[most_probable_branches_indices_target[p,i]]
   return predicted_classes
