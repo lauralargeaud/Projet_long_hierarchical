@@ -75,6 +75,17 @@ def compute_L(hierarchy_lines, nodes_to_id, leafs_to_id):
             L[node_id, leaf_id] = 1
     return L
 
+def compute_full_L(hierarchy_lines, nodes_to_id, leafs_to_id):
+    h = len(hierarchy_lines[0])
+    L = np.zeros((len(nodes_to_id)+len(leafs_to_id), len(leafs_to_id)))
+    for line in hierarchy_lines:
+        leaf_id = leafs_to_id[line[h-1]]
+        for node in line[:-1]:
+            node_id = nodes_to_id[node]
+            L[node_id, leaf_id] = 1
+        L[leaf_id+len(nodes_to_id),leaf_id] = 1
+    return L
+
 def get_path_from_leafs(hierarchy_lines, nodes_to_id):
     """
     Get path from each leafs to root.
