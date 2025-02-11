@@ -42,6 +42,7 @@ from timm.scheduler import create_scheduler_v2, scheduler_kwargs
 from timm.utils import ApexScaler, NativeScaler
 
 from scripts.logic_seg_utils import *
+from scripts.metrics_logicseg import *
 
 try:
     from apex import amp
@@ -777,7 +778,7 @@ def main():
         if args.distributed and ('tfds' in args.dataset or 'wds' in args.dataset):
             # FIXME reduces validation padding issues when using TFDS, WDS w/ workers and distributed training
             eval_workers = min(2, args.workers)
-        loader_eval = create_loader(
+            loader_eval = create_loader(
             dataset_eval,
             input_size=data_config['input_size'],
             batch_size=args.validation_batch_size or args.batch_size,
@@ -1226,7 +1227,11 @@ def validate(
             print(output)
             print("target")
             print(target)
-            acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
+
+            if (args.logicseg):
+                acc1, acc5 = metrics_logicseq.accuracy(output, target, topk=(1, 5))
+            else:
+                acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
 
             if args.distributed:
                 reduced_loss = utils.reduce_tensor(loss.data, args.world_size)
