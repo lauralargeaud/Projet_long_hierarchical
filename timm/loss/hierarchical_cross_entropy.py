@@ -9,12 +9,14 @@ import numpy as np
 
 class HierarchicalCrossEntropy(nn.Module):
     
-    def __init__(self, L, path_to_root, alpha, h):
+    def __init__(self, L, alpha, h):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.L = torch.tensor(L, dtype=int).to(device)
-        self.path_to_root = torch.tensor(path_to_root, dtype=int).to(device)
+        hc = torch.tensor([i for i in range(h, 0, -1)]).to(device)
+        print(hc)
+        self.L = torch.tensor(L, dtype=torch.float32).to(device)
         self.alpha = torch.tensor(alpha).to(device)
         self.h = torch.tensor(h).to(device)
+        self.lam = torch.exp(-self.alpha * hc).to(device)
 
     def forward(self, logits, target_classes):
         """
@@ -24,18 +26,29 @@ class HierarchicalCrossEntropy(nn.Module):
         """
         batch_size = logits.shape[0]
         loss = 0.0
-
-        log_probs = F.log_softmax(logits, dim=1)  # Convertir les logits en log-probabilités
+        log_probs = F.softmax(logits, dim=1)  # Convertir les logits en log-probabilités
 
         for i in range(batch_size):
             target = target_classes[i].item()
-            path = self.path_to_root[target]
-            print(path)
+            probs = torch.unsqueeze(log_probs[i,:], 0)
+            print(target)
+            print(torch.unsqueeze(logits[i,:], 0))
+            print(probs)
 
-            for i in range(self.h - 2):
-                lambda_weight = torch.exp(-self.alpha * (self.h - i - 1))
-                print(self.L.size(), logits[i,:].size())
-                log_p = (self.L[path[i], :] * logits[i,:]) / ((self.L[path[i+1], :] * logits[i,:]))
-                loss -= lambda_weight * log_p
-                
+            LS = self.L @ torch.transpose(probs, 0, 1)
+
+            target_parent = self.L[:, target]
+
+            P = torch.mul(target_parent, torch.transpose(LS, 0, 1))
+
+            PP = P[torch.unsqueeze(target_parent, 0) != 0]
+
+            num = PP[1:]
+            den = PP[:-1]
+
+            log = torch.log(num / den)
+            term_sum = - self.lam * log
+            print(f"loss: {torch.sum(term_sum)}")
+            loss += torch.sum(term_sum)
+
         return loss / batch_size  # Moyenne sur le batch

@@ -52,42 +52,51 @@ if __name__ == "__main__":
 
     paths = get_path_from_leafs(hierarchy_lines_without_names, nodes_to_id)
     L = compute_full_L(hierarchy_lines_without_names, nodes_to_id, leafs_to_id)
-    print("============= L =============")
-    for i in range(len(L)):
-        print(L[i,:], nodes_leafs[i])
+    # print("============= L =============")
+    # for i in range(len(L)):
+    #     print(L[i,:], nodes_leafs[i])
 
-    alpha = torch.tensor(0.1)
-    n = torch.tensor([i for i in range(len(hierarchy_lines[0])-1, 0, -1)])
-    print("============= Lam =============")
-    lam = torch.exp(-2*n*alpha)
-    print(n)
-    print(lam)
+    # alpha = torch.tensor(0.1)
+    # n = torch.tensor([i for i in range(len(hierarchy_lines[0])-1, 0, -1)])
+    # print("============= Lam =============")
+    # lam = torch.exp(-2*n*alpha)
+    # print(n)
+    # print(lam)
 
-    L = torch.tensor(L, dtype=torch.float32)
+    # L = torch.tensor(L, dtype=torch.float32)
     
-    logits = torch.zeros(1, 9, dtype=torch.float32)
-    logits[0,0] = 0.9
-    logits[0,1] = 0.0
-    logits[0,3] = 0.1
-    targets = torch.tensor(0, dtype=torch.int)
-    test(L, logits, targets, lam)
+    # logits = torch.zeros(1, 9, dtype=torch.float32)
+    # logits[0,0] = 0.9
+    # logits[0,1] = 0.0
+    # logits[0,3] = 0.1
+    # targets = torch.tensor(0, dtype=torch.int)
+    # test(L, logits, targets, lam)
 
 
-    logits = torch.zeros(1, 9, dtype=torch.float32)
-    logits[0,0] = 0.8
-    logits[0,1] = 0.1
-    logits[0,8] = 0.000001
-    targets = torch.tensor(8, dtype=torch.int)
-    test(L, logits, targets, lam)
+    # logits = torch.zeros(1, 9, dtype=torch.float32)
+    # logits[0,0] = 0.8
+    # logits[0,1] = 0.1
+    # logits[0,8] = 0.000001
+    # targets = torch.tensor(8, dtype=torch.int)
+    # test(L, logits, targets, lam)
 
-    # hxe_loss = HierarchicalCrossEntropy(L, paths, alpha=0.1, h=len(hierarchy_lines[0]))
-    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # logits = torch.randn(4, 9).to(device)
-    # targets = torch.tensor([0, 2, 5, 7]).to(device)
-    # # Initialisation et calcul de la perte
-    # loss_value = hxe_loss.forward(logits, targets)
+    hxe_loss = HierarchicalCrossEntropy(L, alpha=0.1, h=len(hierarchy_lines[0])-1)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    logits = torch.mul(torch.ones(4, 9), -10).to(device)
+    logits[0, 0] = 10
+    logits[1, 0] = 10
+    logits[2, 0] = 5
+    logits[2, 1] = 5
+    logits[2, 2] = 5
+    logits[3, 3] = -10
+    logits[3, 7] = 10
+    logits[3, 8] = -10
 
-    # print("Valeur de la perte HXE :", loss_value.item())
+    targets = torch.tensor([0, 8, 1, 8]).to(device)
+    # Initialisation et calcul de la perte
+    loss_value = hxe_loss.forward(logits, targets)
+# 
+    print("Valeur de la perte HXE :", loss_value.item())
 
 
 
