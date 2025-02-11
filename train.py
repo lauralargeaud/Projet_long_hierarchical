@@ -42,7 +42,7 @@ from timm.scheduler import create_scheduler_v2, scheduler_kwargs
 from timm.utils import ApexScaler, NativeScaler
 
 from scripts.logic_seg_utils import *
-from scripts.metrics_logicseg import *
+from scripts.metrics_logicseg import accuracy_logicseg
 
 try:
     from apex import amp
@@ -1229,7 +1229,7 @@ def validate(
             print(target)
 
             if (args.logicseg):
-                acc1, acc5 = metrics_logicseq.accuracy(output, target, topk=(1, 5))
+                acc1, acc5 = accuracy_logicseg(output, target, topk=(1, 5))
             else:
                 acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
 
