@@ -9,7 +9,7 @@ class_map: "data/small-collomboles/class_mapping.txt"
 num_classes: 79
 
 # Hyperparameter
-epochs: 100 
+epochs: 100
 b: 32 
 vb: 64 
 j: 8 
