@@ -794,6 +794,16 @@ def main():
             device=device,
             use_prefetcher=args.prefetcher,
         )
+    elif args.logicseg:
+        loader_eval = create_loader(
+        dataset_eval,
+        batch_size=args.batch_size,
+        use_prefetcher=True,
+        num_workers=eval_workers,
+        device=device,
+        img_dtype=model_dtype or torch.float32,
+        **data_config,
+    )
 
     validate_loss_fn = nn.CrossEntropyLoss().to(device=device)
     # setup loss function
