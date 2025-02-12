@@ -906,7 +906,7 @@ def main():
         else:
             lr_scheduler.step(start_epoch)
 
-    if utils.is_primary(args):
+    if utils.is_primary(args) and lr_scheduler is not None:
         if args.warmup_prefix:
             sched_explain = '(warmup_epochs + epochs + cooldown_epochs). Warmup added to total when warmup_prefix=True'
         else:
