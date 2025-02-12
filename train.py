@@ -1180,7 +1180,7 @@ def train_one_epoch(
                 )
                 if args.logicseg:
                     _logger.info(
-                        f'Top 1 accuracy on training data: {acc1.item():#.3g},/s'
+                        f'Top 1 accuracy on training data: {acc1.item():#.3g}, '
                         f'Top 5 accuracy on training data: {acc5.item():#.3g}'
                     )
 
@@ -1226,9 +1226,6 @@ def validate(
         log_suffix='',
         label_matrix=None
 ):
-    print("entered validation")
-    print("eval loader:", loader)
-    print("Len eval loader:", len(loader))
     batch_time_m = utils.AverageMeter()
     losses_m = utils.AverageMeter()
     top1_m = utils.AverageMeter()
@@ -1261,10 +1258,7 @@ def validate(
                 loss = loss_fn(output, target)
 
             if (args.logicseg):
-                print("output")
-                print(torch.sigmoid(output))
-                print("target")
-                print(target)
+                print("sigmoid(output_val[0,:]) = ", torch.sigmoid(output[0,:]).item())
                 acc1, acc5 = accuracy_logicseg(torch.sigmoid(output), target, label_matrix=label_matrix, topk=(1, 5))
             else:
                 acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
