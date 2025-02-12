@@ -1258,7 +1258,7 @@ def validate(
                 loss = loss_fn(output, target)
 
             if (args.logicseg):
-                print("sigmoid(output_val[0,:]) = ", torch.sigmoid(output[0,:]).item())
+                print("sigmoid(output_val[0,:]) = ", torch.sigmoid(output[0,:]))
                 acc1, acc5 = accuracy_logicseg(torch.sigmoid(output), target, label_matrix=label_matrix, topk=(1, 5))
             else:
                 acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
