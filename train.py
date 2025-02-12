@@ -1180,8 +1180,8 @@ def train_one_epoch(
                 )
                 if args.logicseg:
                     _logger.info(
-                        f'Top 1 accuracy on training data: {acc1:#.3g}'
-                        f'Top 5 accuracy on training data: {acc5:#.3g}'
+                        f'Top 1 accuracy on training data: {acc1.item():#.3g},/s'
+                        f'Top 5 accuracy on training data: {acc5.item():#.3g}'
                     )
 
 

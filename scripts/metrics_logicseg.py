@@ -19,4 +19,4 @@ def accuracy_logicseg(output, target, label_matrix, topk=(1,)):
     _, indices_branches_in = probas_branches_input.topk(5, dim=1) # (nb_pred, top_k), (nb_pred, top_k)
     _, indices_branches_target = probas_branches_target.topk(5, dim=1) # (nb_pred, top_k), (nb_pred, top_k)
     acc5 = (indices_branches_in == indices_branches_target).sum().item() / indices_branches_in.size(0)
-    return acc1, acc5 
+    return torch.tensor(acc1), torch.tensor(acc5) 
