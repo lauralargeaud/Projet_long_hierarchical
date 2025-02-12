@@ -918,7 +918,7 @@ def main():
     try:
         label_matrix = None
         if args.logicseg:
-            label_matrix, _, _ = get_label_matrix(args.path_to_csv_tree)
+            label_matrix, _, _ = get_label_matrix(args.csv_tree)
             
         for epoch in range(start_epoch, num_epochs):
             if hasattr(dataset_train, 'set_epoch'):
