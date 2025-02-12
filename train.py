@@ -799,7 +799,7 @@ def main():
         dataset_eval,
         batch_size=args.batch_size,
         use_prefetcher=True,
-        num_workers=eval_workers,
+        num_workers=args.workers,
         device=device,
         img_dtype=model_dtype or torch.float32,
         **data_config,
