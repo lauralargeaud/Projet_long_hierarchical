@@ -1096,8 +1096,8 @@ def train_one_epoch(
                 # compute the accuracy on the training data of the current batch
                 if args.logicseg:
                     # appliquer la sigmoid
-                    output = torch.sigmoid(output, target, label_matrix)
-                    acc_train = accuracy_logicseg(output, target, label_matrix())
+                    output = torch.sigmoid(output)
+                    acc_train = accuracy_logicseg(output, target, label_matrix)
                     
             if accum_steps > 1:
                 loss /= accum_steps
