@@ -960,6 +960,7 @@ def main():
                     device=device,
                     amp_autocast=amp_autocast,
                     model_dtype=model_dtype,
+                    label_matrix=label_matrix
                 )
 
                 if model_ema is not None and not args.model_ema_force_cpu:
@@ -1220,7 +1221,8 @@ def validate(
         device=torch.device('cuda'),
         amp_autocast=suppress,
         model_dtype=None,
-        log_suffix=''
+        log_suffix='',
+        label_matrix=None
 ):
     print("entered validation")
     print("eval loader:", loader)
@@ -1255,13 +1257,13 @@ def validate(
                     target = target[0:target.size(0):reduce_factor]
 
                 loss = loss_fn(output, target)
-            print("output")
-            print(output)
-            print("target")
-            print(target)
 
             if (args.logicseg):
-                acc1, acc5 = accuracy_logicseg(output, target, topk=(1, 5))
+                print("output")
+                print(torch.sigmoid(output))
+                print("target")
+                print(target)
+                acc1, acc5 = accuracy_logicseg(torch.sigmoid(output), target, label_matrix=label_matrix, topk=(1, 5))
             else:
                 acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
 
