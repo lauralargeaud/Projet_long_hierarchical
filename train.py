@@ -1091,7 +1091,8 @@ def train_one_epoch(
         data_time_m.update(accum_steps * (time.time() - data_start_time))
 
         def _forward(args=None):
-            acc_train = None
+            acc1 = None
+            acc5 = None
             with amp_autocast():
                 output = model(input)
                 loss = loss_fn(output, target)
@@ -1099,11 +1100,11 @@ def train_one_epoch(
                 if args.logicseg:
                     # appliquer la sigmoid
                     output = torch.sigmoid(output)
-                    acc_train = accuracy_logicseg(output, target, label_matrix)
+                    acc1, acc5 = accuracy_logicseg(output, target, label_matrix)
                     
             if accum_steps > 1:
                 loss /= accum_steps
-            return loss, acc_train
+            return loss, acc1, acc5
 
         def _backward(_loss):
             if loss_scaler is not None:
@@ -1129,10 +1130,10 @@ def train_one_epoch(
 
         if has_no_sync and not need_update:
             with model.no_sync():
-                loss, acc_train = _forward(args)
+                loss, acc1, acc5 = _forward(args)
                 _backward(loss)
         else:
-            loss, acc_train = _forward(args)
+            loss, acc1, acc5 = _forward(args)
             _backward(loss)
 
         losses_m.update(loss.item() * accum_steps, input.size(0))
@@ -1179,7 +1180,8 @@ def train_one_epoch(
                 )
                 if args.logicseg:
                     _logger.info(
-                        f'Accuracy on training data: {acc_train:#.3g}'
+                        f'Top 1 accuracy on training data: {acc1:#.3g}'
+                        f'Top 5 accuracy on training data: {acc5:#.3g}'
                     )
 
 
