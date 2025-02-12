@@ -804,6 +804,7 @@ def main():
         img_dtype=model_dtype or torch.float32,
         **data_config,
     )
+        print("loader_eval != None")
 
     validate_loss_fn = nn.CrossEntropyLoss().to(device=device)
     # setup loss function
@@ -1221,6 +1222,9 @@ def validate(
         model_dtype=None,
         log_suffix=''
 ):
+    print("entered validation")
+    print("eval loader:", loader)
+    print("Len eval loader:", len(loader))
     batch_time_m = utils.AverageMeter()
     losses_m = utils.AverageMeter()
     top1_m = utils.AverageMeter()
