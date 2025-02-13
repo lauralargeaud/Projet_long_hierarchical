@@ -35,13 +35,14 @@ from torch.nn.parallel import DistributedDataParallel as NativeDDP
 from timm import utils
 from timm.data import create_dataset, create_loader, resolve_data_config, Mixup, FastCollateMixup, AugMixDataset
 from timm.layers import convert_splitbn_model, convert_sync_batchnorm, set_fast_norm
-from timm.loss import JsdCrossEntropy, SoftTargetCrossEntropy, BinaryCrossEntropy, LabelSmoothingCrossEntropy, LogicSegLoss
+from timm.loss import JsdCrossEntropy, SoftTargetCrossEntropy, BinaryCrossEntropy, LabelSmoothingCrossEntropy, LogicSegLoss, HierarchicalCrossEntropy
 from timm.models import create_model, safe_model_name, resume_checkpoint, load_checkpoint, model_parameters
 from timm.optim import create_optimizer_v2, optimizer_kwargs
 from timm.scheduler import create_scheduler_v2, scheduler_kwargs
 from timm.utils import ApexScaler, NativeScaler
 
 from scripts.logic_seg_utils import *
+from scripts.hierarchy_better_mistakes_utils import get_hce_tree_data
 from scripts.metrics_logicseg import accuracy_logicseg
 
 try:
@@ -339,6 +340,8 @@ group.add_argument('--drop-block', type=float, default=None, metavar='PCT',
 # Custom loss
 group.add_argument('--logicseg', action='store_true', default=False,
                    help='Enable LogicSeg loss.')
+group.add_argument('--hce-loss', action='store_true', default=False,
+                   help="Enable Hierarchical Cross Entropy loss.")
 group.add_argument('--csv-tree', default=None,
                    help='path to csv describing the tree structure of the labels.')
 # The following arguments are for implemented this way to facilitate testing, they might change in the future
@@ -350,6 +353,8 @@ group.add_argument('--erule-loss-weight', type=float, default=0.2,
                    help='Set the weight of the Eloss.')
 group.add_argument('--bce-loss-weight', type=float, default=1,
                    help='Set the weight of the Bce.')
+group.add_argument('--hce-alpha', type=float, default=0.1,
+                   help='Set the alpha of the hce loss.')
 
 # Batch norm parameters (only works with gen_efficientnet based models currently)
 group = parser.add_argument_group('Batch norm parameters', 'Only works with gen_efficientnet based models currently.')
@@ -811,6 +816,9 @@ def main():
         H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=False)
         train_loss_fn = LogicSegLoss(H_raw, P_raw, M_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.bce_loss_weight)
         validate_loss_fn = LogicSegLoss(H_raw, P_raw, M_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.bce_loss_weight)
+    elif args.hce_loss:
+        L, h = get_hce_tree_data(args.csv_tree)
+        train_loss_fn = HierarchicalCrossEntropy(L, alpha=args.hce_alpha, h=h)
     elif args.jsd_loss:
         assert num_aug_splits > 1  # JSD only valid with aug splits set
         train_loss_fn = JsdCrossEntropy(num_splits=num_aug_splits, smoothing=args.smoothing)
@@ -837,7 +845,7 @@ def main():
     else:
         train_loss_fn = nn.CrossEntropyLoss()
     train_loss_fn = train_loss_fn.to(device=device)
-    #validate_loss_fn = nn.CrossEntropyLoss().to(device=device)
+    validate_loss_fn = nn.CrossEntropyLoss().to(device=device)
 
     # setup checkpoint saver and eval metric tracking
     eval_metric = args.eval_metric if loader_eval is not None else 'loss'

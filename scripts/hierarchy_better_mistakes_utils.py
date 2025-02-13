@@ -98,6 +98,14 @@ def get_path_from_leafs(hierarchy_lines, nodes_to_id):
         paths.append(path)
     return paths
 
+def get_hce_tree_data(tree_filename):
+    tree_lines = read_csv(tree_filename)
+    tree_lines_without_names = tree_lines[1:]
+    _, _, nodes_to_id, leafs_to_id = get_id_from_nodes(tree_lines_without_names)
+    L = compute_full_L(tree_lines_without_names, nodes_to_id, leafs_to_id)
+    h = len(tree_lines[0]) - 1
+    return L, h
+
 if __name__ == "__main__":
     hierarchy_filename = "data/small-collomboles/hierarchy_test.csv"
     hierarchy_lines = read_csv(hierarchy_filename)

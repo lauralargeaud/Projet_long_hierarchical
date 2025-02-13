@@ -1,0 +1,4 @@
+model: resnet50
+checkpoint: "output/train/HCE-resnet50_a1_in1k/model_best.pth.tar"
+data_dir: "data/small-collomboles/dataset/test"
+num_classes: 79

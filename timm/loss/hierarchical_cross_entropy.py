@@ -10,6 +10,7 @@ import numpy as np
 class HierarchicalCrossEntropy(nn.Module):
     
     def __init__(self, L, alpha, h):
+        super(HierarchicalCrossEntropy, self).__init__()
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         hc = torch.tensor([i for i in range(h, 0, -1)]).to(device)
         self.L = torch.tensor(L, dtype=torch.float32).to(device)    # Matrice des feuilles associés à un noeud
@@ -27,13 +28,12 @@ class HierarchicalCrossEntropy(nn.Module):
         batch_size = logits.shape[0]
         loss = 0.0
         S = F.softmax(logits, dim=1)
-
         # L * S
         LS = self.L @ torch.transpose(S, 0, 1)
         LS = torch.reshape(torch.transpose(LS, 0, 1), (batch_size, self.n))
 
         # Récupère les parents pour chaque classes
-        target_parent = self.L[:, target_classes]
+        target_parent = self.L[:, torch.argmax(target_classes, dim=1)]
         target_parent = torch.reshape(torch.transpose(target_parent, 0, 1), (batch_size, self.n))
 
         # Proba de tout les noeuds
@@ -53,7 +53,7 @@ class HierarchicalCrossEntropy(nn.Module):
 
         # lambda * log
         term_sum = - self.lam * log
-        print(torch.sum(term_sum, 1))
+        # print(torch.sum(term_sum, 1))
 
         loss = torch.sum(term_sum)
 

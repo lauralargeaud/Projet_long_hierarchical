@@ -4,24 +4,24 @@ import torch
 import time
 
 if __name__ == "__main__":
-    hierarchy_filename = "data/small-collomboles/hierarchy_test.csv"
-    hierarchy_lines = read_csv(hierarchy_filename)
-    hierarchy_lines_without_names = hierarchy_lines[1:]
+    tree_filename = "data/small-collomboles/hierarchy_test.csv"
+    tree_lines = read_csv(tree_filename)
+    tree_lines_without_names = tree_lines[1:]
     
-    tree = build_tree(hierarchy_lines)
+    tree = build_tree(tree_lines)
     print("============= Tree =============")
     print_tree(tree)
     print("================================")
 
-    nodes, leafs, nodes_to_id, leafs_to_id = get_id_from_nodes(hierarchy_lines_without_names)
+    nodes, leafs, nodes_to_id, leafs_to_id = get_id_from_nodes(tree_lines_without_names)
     nodes_leafs = nodes + leafs
     print("nodes:", nodes_to_id)    
     print("leafs:", leafs_to_id)
 
-    paths = get_path_from_leafs(hierarchy_lines_without_names, nodes_to_id)
-    L = compute_full_L(hierarchy_lines_without_names, nodes_to_id, leafs_to_id)
+    paths = get_path_from_leafs(tree_lines_without_names, nodes_to_id)
+    L = compute_full_L(tree_lines_without_names, nodes_to_id, leafs_to_id)
 
-    hxe_loss = HierarchicalCrossEntropy(L, alpha=0.1, h=len(hierarchy_lines[0])-1)
+    hxe_loss = HierarchicalCrossEntropy(L, alpha=0.1, h=len(tree_lines[0])-1)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logits = torch.mul(torch.ones(4, 9), -10).to(device)
     logits[0, 0] = 10
