@@ -784,31 +784,42 @@ def main():
             # FIXME reduces validation padding issues when using TFDS, WDS w/ workers and distributed training
             eval_workers = min(2, args.workers)
             loader_eval = create_loader(
-            dataset_eval,
-            input_size=data_config['input_size'],
-            batch_size=args.validation_batch_size or args.batch_size,
-            is_training=False,
-            interpolation=data_config['interpolation'],
-            mean=data_config['mean'],
-            std=data_config['std'],
-            num_workers=eval_workers,
-            distributed=args.distributed,
-            crop_pct=data_config['crop_pct'],
-            pin_memory=args.pin_mem,
-            img_dtype=model_dtype or torch.float32,
-            device=device,
-            use_prefetcher=args.prefetcher,
-        )
+                dataset_eval,
+                input_size=data_config['input_size'],
+                batch_size=args.validation_batch_size or args.batch_size,
+                is_training=False,
+                interpolation=data_config['interpolation'],
+                mean=data_config['mean'],
+                std=data_config['std'],
+                num_workers=eval_workers,
+                distributed=args.distributed,
+                crop_pct=data_config['crop_pct'],
+                pin_memory=args.pin_mem,
+                img_dtype=model_dtype or torch.float32,
+                device=device,
+                use_prefetcher=args.prefetcher,
+            )
+        else:
+            loader_eval = create_loader(
+                dataset_eval,
+                batch_size=args.batch_size,
+                use_prefetcher=True,
+                num_workers=eval_workers,
+                device=device,
+                img_dtype=model_dtype or torch.float32,
+                **data_config,
+            )
     elif args.logicseg:
         loader_eval = create_loader(
-        dataset_eval,
-        batch_size=args.batch_size,
-        use_prefetcher=True,
-        num_workers=eval_workers,
-        device=device,
-        img_dtype=model_dtype or torch.float32,
-        **data_config,
-    )
+            dataset_eval,
+            batch_size=args.batch_size,
+            use_prefetcher=True,
+            num_workers=eval_workers,
+            device=device,
+            img_dtype=model_dtype or torch.float32,
+            **data_config,
+        )
+
 
     validate_loss_fn = nn.CrossEntropyLoss().to(device=device)
     # setup loss function
@@ -1259,10 +1270,6 @@ def validate(
                     target = target[0:target.size(0):reduce_factor]
 
                 loss = loss_fn(output, target)
-            print("output")
-            print(output)
-            print("target")
-            print(target)
 
             if (args.logicseg):
                 acc1, acc5 = accuracy_logicseg(output, target, topk=(1, 5))

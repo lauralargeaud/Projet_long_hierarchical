@@ -1,9 +1,10 @@
 from scripts.hierarchy_better_mistakes_utils import *
+from scripts.hce_results import *
 from timm.loss.hierarchical_cross_entropy import HierarchicalCrossEntropy
 import torch
 import time
 
-if __name__ == "__main__":
+def test_hce():
     tree_filename = "data/small-collomboles/hierarchy_test.csv"
     tree_lines = read_csv(tree_filename)
     tree_lines_without_names = tree_lines[1:]
@@ -14,7 +15,6 @@ if __name__ == "__main__":
     print("================================")
 
     nodes, leafs, nodes_to_id, leafs_to_id = get_id_from_nodes(tree_lines_without_names)
-    nodes_leafs = nodes + leafs
     print("nodes:", nodes_to_id)    
     print("leafs:", leafs_to_id)
 
@@ -46,5 +46,12 @@ if __name__ == "__main__":
 # 
     print("Valeur de la perte HXE :", loss_value.item())
 
+def print_result():
+    filename_cce = "output/train/CCE-resnet50_a1_in1k/summary.csv"
+    filename_hce = "output/train/HCE-resnet50_a1_in1k/summary.csv"
+    show_results_from_csv_summary_cce_hce(filename_cce, filename_hce)
 
+if __name__ == "__main__":
+    # test_hce()
+    print_result()
 
