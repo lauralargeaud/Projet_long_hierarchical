@@ -22,7 +22,7 @@ sched: "cosine"
 weight_decay: 0.01 
 warmup_epochs: 5 
 hce_loss: true
-
+hce_alpha: 0.5
 # Log
 log-interval: 200 
 

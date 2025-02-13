@@ -48,8 +48,9 @@ def test_hce():
 
 def print_result():
     filename_cce = "output/train/CCE-resnet50_a1_in1k/summary.csv"
-    filename_hce = "output/train/HCE-resnet50_a1_in1k/summary.csv"
-    show_results_from_csv_summary_cce_hce(filename_cce, filename_hce)
+    filename_hce_0_1 = "output/train/HCE-a0.1-resnet50_a1_in1k/summary.csv"
+    filename_hce_0_5 = "output/train/HCE-a0.5-resnet50_a1_in1k/summary.csv"
+    show_results_from_csv_summary_cce_hce_alpha(filename_cce, filename_hce_0_1, filename_hce_0_5)
 
 if __name__ == "__main__":
     # test_hce()
