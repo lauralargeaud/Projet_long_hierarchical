@@ -51,14 +51,25 @@ def print_result():
     # filename_hce_0_1 = "output/train/HCE-a0.1-resnet50_a1_in1k/summary.csv"
     # filename_hce_0_5 = "output/train/HCE-a0.5-resnet50_a1_in1k/summary.csv"
     # show_results_from_csv_summary_cce_hce_alpha(filename_cce, filename_hce_0_1, filename_hce_0_5)
-    filename_cce = "output/test/cce/confusion_matrix.out"
-    filename_hce_0_1 = "output/test/hce_0_1/confusion_matrix.out"
-    filename_hce_0_5 = "output/test/hce_0_5/confusion_matrix.out"
+    output_folder_cce = "output/test/cce"
+    output_folder_hce_0_1 = "output/test/hce_0_1"
+    output_folder_hce_0_5 = "output/test/hce_0_5"
+    filename_cce = os.path.join(output_folder_cce, "confusion_matrix.out")
+    filename_hce_0_1 = os.path.join(output_folder_hce_0_1, "confusion_matrix.out")
+    filename_hce_0_5 = os.path.join(output_folder_hce_0_5, "confusion_matrix.out")
     filename_classes = "data/small-collomboles/class_mapping.txt"
     classes = load_classnames(filename_classes)
-    save_confusion_matrix(filename_cce, "confusion_matrix_cce.png", classes)
-    save_confusion_matrix(filename_hce_0_1, "confusion_matrix_hce_0_1.png", classes)
-    save_confusion_matrix(filename_hce_0_5, "confusion_matrix_hce_0_5.png", classes)
+    cm_cce = load_confusion_matrix(filename_cce)
+    cm_hce_0_1 = load_confusion_matrix(filename_hce_0_1)
+    cm_hce_0_5 = load_confusion_matrix(filename_hce_0_5)
+    save_confusion_matrix(cm_cce, "confusion_matrix_cce.png", classes)
+    save_confusion_matrix(cm_hce_0_1, "confusion_matrix_hce_0_1.png", classes)
+    save_confusion_matrix(cm_hce_0_5, "confusion_matrix_hce_0_5.png", classes)
+
+    cm_cce = save_metrics(cm_cce, output_folder_cce, classes)
+    cm_hce_0_1 = save_metrics(cm_hce_0_1, output_folder_hce_0_1, classes)
+    cm_hce_0_5 = save_metrics(cm_hce_0_5, output_folder_hce_0_5, classes)
+
 
 if __name__ == "__main__":
     # test_hce()

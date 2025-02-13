@@ -104,9 +104,12 @@ def show_results_from_csv_summary_cce_hce_alpha(filename_cce, filename_hce_0_1, 
 
     plt.show()
 
-def save_confusion_matrix(filename, output_filename, classes, folder="output/img"):
+def load_confusion_matrix(filename):
     cm = np.loadtxt(filename)
     cm = cm.astype(int)
+    return cm
+
+def save_confusion_matrix(cm, output_filename, classes, folder="output/img"):
     plt.figure(figsize=(50, 50))
     sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=classes, yticklabels=classes)
     plt.xlabel("Prédictions")
@@ -115,6 +118,8 @@ def save_confusion_matrix(filename, output_filename, classes, folder="output/img
     plt.xticks(rotation=90, fontsize=8)
     plt.yticks(rotation=0, fontsize=8)
     plt.savefig(os.path.join(folder, output_filename))
+    
+    return cm
 
 def load_classnames(filename):
     classes = []
@@ -123,3 +128,29 @@ def load_classnames(filename):
         for line in data:
             classes.append(line.replace('\n', ''))
     return classes
+
+def calculate_metrics(cm):
+    TP = np.diag(cm)    
+    FP = np.sum(cm, axis=0) - TP    
+    FN = np.sum(cm, axis=1) - TP    
+    precision = np.divide(TP, TP + FP, where=(TP + FP) != 0)    
+    recall = np.divide(TP, TP + FN, where=(TP + FN) != 0)    
+    f1_score = np.divide(2 * precision * recall, precision + recall, where=(precision + recall) != 0)
+    return precision, recall, f1_score
+
+def save_metrics(cm, folder, classes):
+    precision, recall, f1_score = calculate_metrics(cm)
+
+    # Création d'un DataFrame Pandas
+    df = pd.DataFrame({
+        "Classe": classes, 
+        "Précision": precision, 
+        "Rappel": recall, 
+        "F1-score": f1_score
+    })
+
+    # Ajout des moyennes globales
+    df.loc["Moyenne Macro"] = ["Moyenne Feuille", np.mean(precision), np.mean(recall), np.mean(f1_score)]
+
+    # Sauvegarde en CSV
+    df.to_csv(os.path.join(folder, "metrics.csv"), index=False)
