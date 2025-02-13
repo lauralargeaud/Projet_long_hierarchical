@@ -24,37 +24,32 @@ class LogicSegLoss(nn.Module):
         self.user_bce = use_bce
         self.alpha_bce = alpha_bce
   
-    def forward(self, y_pred: torch.Tensor, y_true: torch.Tensor, with_print: bool = False) -> torch.Tensor:
+    def forward(self, y_pred: torch.Tensor, y_true: torch.Tensor, verbose: bool = False) -> torch.Tensor:
 
         y_pred, y_true = y_pred.float(), y_true.float()
 
         # apply the sigmoid function in order to compute the nb_nodes probabilities for each image
         y_pred_sigmoid = torch.sigmoid(y_pred)
-        
-        if with_print:
-            print("L_c =", self.c_rule(y_pred_sigmoid, y_true).item())
-            print("L_d =", self.d_rule(y_pred_sigmoid, y_true).item())
-            print("L_e =", self.e_rule(y_pred_sigmoid, y_true).item())
-            # print(self.bce(y_pred_sigmoid, y_true))
-            print("L_BCE =", F.binary_cross_entropy(y_pred_sigmoid, y_true).item())
-
-        batch_size = y_pred_sigmoid.shape[0]
 
         batch_c_losses = self.c_rule(y_pred_sigmoid, y_true)
-        print("batch_c_losses", batch_c_losses.item())
+        if verbose:
+            print("c_losses", batch_c_losses.item())
 
         batch_d_losses = self.d_rule(y_pred_sigmoid, y_true)
-        print("batch_d_losses", batch_d_losses.item())
+        if verbose:
+            print("d_losses", batch_d_losses.item())
 
         batch_e_losses = self.e_rule(y_pred_sigmoid, y_true)
-        print("batch_e_losses", batch_e_losses.item())
+        if verbose:
+            print("e_losses", batch_e_losses.item())
 
         batch_bce_ce_losses = 0
         if self.user_bce:
             batch_bce_ce_losses = F.binary_cross_entropy(y_pred_sigmoid, y_true)
         else:
             batch_bce_ce_losses = F.cross_entropy(y_pred, y_true)
-        print("batch_bce_losses", batch_bce_ce_losses.item())
+        if verbose:
+            print("bce_losses", batch_bce_ce_losses.item())
 
         return self.alpha_c * batch_c_losses + \
             self.alpha_d * batch_d_losses + \

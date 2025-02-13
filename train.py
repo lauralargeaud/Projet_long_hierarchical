@@ -1092,7 +1092,7 @@ def train_one_epoch(
         # multiply by accum steps to get equivalent for full update
         data_time_m.update(accum_steps * (time.time() - data_start_time))
 
-        def _forward(args=None):
+        def _forward(args=None, last_batch=False):
             acc1 = None
             acc5 = None
             with amp_autocast():
@@ -1100,6 +1100,7 @@ def train_one_epoch(
                 loss = loss_fn(output, target)
                 # compute the accuracy on the training data of the current batch
                 if args.logicseg:
+                    loss = loss_fn(output, target, last_batch)
                     # appliquer la sigmoid
                     output = torch.sigmoid(output)
                     acc1, acc5 = accuracy_logicseg(output, target, label_matrix)
@@ -1132,10 +1133,10 @@ def train_one_epoch(
 
         if has_no_sync and not need_update:
             with model.no_sync():
-                loss, acc1, acc5 = _forward(args)
+                loss, acc1, acc5 = _forward(args, last_batch)
                 _backward(loss)
         else:
-            loss, acc1, acc5 = _forward(args)
+            loss, acc1, acc5 = _forward(args, last_batch)
             _backward(loss)
 
         losses_m.update(loss.item() * accum_steps, input.size(0))
