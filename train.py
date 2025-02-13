@@ -339,6 +339,8 @@ group.add_argument('--drop-block', type=float, default=None, metavar='PCT',
 # Custom loss
 group.add_argument('--logicseg', action='store_true', default=False,
                    help='Enable LogicSeg loss.')
+group.add_argument('--logicseg-bce', action='store_true', default=True,
+                   help='Use bce in LogicSeg loss if true , use ce if false.')
 group.add_argument('--csv-tree', default=None,
                    help='path to csv describing the tree structure of the labels.')
 # The following arguments are for implemented this way to facilitate testing, they might change in the future
@@ -810,8 +812,8 @@ def main():
     # setup loss function
     if args.logicseg: #FIXME: no mixup/label_smoothing management
         H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=False)
-        train_loss_fn = LogicSegLoss(H_raw, P_raw, M_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.bce_loss_weight)
-        validate_loss_fn = LogicSegLoss(H_raw, P_raw, M_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.bce_loss_weight)
+        train_loss_fn = LogicSegLoss(H_raw, P_raw, M_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.bce_loss_weight, args.logicseg_bce)
+        validate_loss_fn = LogicSegLoss(H_raw, P_raw, M_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.bce_loss_weight, args.logicseg_bce)
     elif args.jsd_loss:
         assert num_aug_splits > 1  # JSD only valid with aug splits set
         train_loss_fn = JsdCrossEntropy(num_splits=num_aug_splits, smoothing=args.smoothing)
@@ -1259,6 +1261,7 @@ def validate(
 
             if (args.logicseg):
                 print("sigmoid(output_val[0,:]) = ", torch.sigmoid(output[0,:]))
+                print("Target[0,:] = ", target[0,:])
                 acc1, acc5 = accuracy_logicseg(torch.sigmoid(output), target, label_matrix=label_matrix, topk=(1, 5))
             else:
                 acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))

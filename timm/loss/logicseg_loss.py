@@ -7,7 +7,7 @@ from timm.loss.logicseg.d_rule_loss import DRuleLoss
 from timm.loss.logicseg.e_rule_loss import ERuleLoss
 
 class LogicSegLoss(nn.Module):
-    def __init__(self, H_raw, P_raw, M_raw, alpha_c, alpha_d, alpha_e, alpha_bce): # H_raw is a np array
+    def __init__(self, H_raw, P_raw, M_raw, alpha_c, alpha_d, alpha_e, alpha_bce, use_bce = True): # H_raw is a np array
         super(LogicSegLoss, self).__init__()
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
@@ -21,6 +21,7 @@ class LogicSegLoss(nn.Module):
         self.alpha_e = alpha_e
 
         # self.bce = BinaryCrossEntropy()
+        self.user_bce = use_bce
         self.alpha_bce = alpha_bce
   
     def forward(self, y_pred: torch.Tensor, y_true: torch.Tensor, with_print: bool = False) -> torch.Tensor:
@@ -48,11 +49,14 @@ class LogicSegLoss(nn.Module):
         batch_e_losses = self.e_rule(y_pred_sigmoid, y_true)
         #print("batch_e_losses", batch_e_losses.item())
 
-        # batch_bce_losses = F.binary_cross_entropy(y_pred_sigmoid, y_true)
-        batch_ce_losses = F.cross_entropy(y_pred, y_true)
+        batch_bce_ce_losses = 0
+        if self.user_bce:
+            batch_bce_ce_losses = F.binary_cross_entropy(y_pred_sigmoid, y_true)
+        else:
+            batch_bce_ce_losses = F.cross_entropy(y_pred, y_true)
         #print("batch_bce_losses", batch_bce_losses.item())
 
         return self.alpha_c * batch_c_losses + \
             self.alpha_d * batch_d_losses + \
             self.alpha_e * batch_e_losses + \
-            self.alpha_bce * batch_ce_losses
+            self.alpha_bce * batch_bce_ce_losses
