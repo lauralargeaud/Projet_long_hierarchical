@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 import torch
 import yaml
+from sklearn.metrics import confusion_matrix
 
 from timm.data import create_dataset, create_loader, resolve_data_config, ImageNetInfo, infer_imagenet_subset
 from timm.layers import apply_test_time_pool
@@ -121,6 +122,9 @@ parser.add_argument('--model-kwargs', nargs='*', default={}, action=ParseKwargs)
 parser.add_argument('--torchcompile-mode', type=str, default=None,
                     help="torch.compile mode (default: None).")
 
+parser.add_argument('--conf-matrix', action='store_true', default=False,
+                    help="Make confusion matrix.")
+
 # Custom parameter for LogicSeg
 parser.add_argument('--logicseg', action='store_true', default=False,
                    help='Apply logicseg processing to output.')
@@ -142,6 +146,8 @@ parser.add_argument('--results-format', type=str, nargs='+', default=['csv'],
                     help='results format (one of "csv", "json", "json-split", "parquet")')
 parser.add_argument('--results-separate-col', action='store_true', default=False,
                     help='separate output columns per result index.')
+parser.add_argument('--create-dir', action='store_true', default=True,
+                    help='Create results-dir if the directory don\'t exist.')
 parser.add_argument('--topk', default=1, type=int,
                     metavar='N', help='Top-k to output to CSV')
 parser.add_argument('--fullname', action='store_true', default=False,
@@ -301,6 +307,8 @@ def main():
     all_indices = []
     all_labels = []
     all_outputs = []
+    cm_all_preds = []
+    cm_all_labels = []
     use_probs = args.output_type == 'prob'
     with torch.no_grad():
         for batch_idx, (input, target) in enumerate(loader):
@@ -309,6 +317,11 @@ def main():
 
             if use_probs:
                 output = output.softmax(-1)
+
+            if args.conf_matrix:
+                _, preds = torch.max(output, 1)
+                cm_all_preds.append(preds.cpu().numpy())
+                cm_all_labels.append(target.cpu().numpy())
 
             if args.logicseg:
                 # appliquer la sigmoid
@@ -350,6 +363,17 @@ def main():
     all_labels = np.concatenate(all_labels, axis=0) if all_labels else None
     all_outputs = np.concatenate(all_outputs, axis=0).astype(np.float32)
     filenames = loader.dataset.filenames(basename=not args.fullname)
+
+    if args.create_dir:
+        if not os.path.exists(args.results_dir):
+            os.makedirs(args.results_dir)
+
+    if args.conf_matrix:
+        cm_all_preds = np.concatenate(cm_all_preds, axis=0)
+        cm_all_labels = np.concatenate(cm_all_labels, axis=0)
+        cm = confusion_matrix(cm_all_labels, cm_all_preds)
+        np.savetxt(os.path.join(args.results_dir, "confusion_matrix.out"), cm)
+
 
     output_col = args.output_col or ('prob' if use_probs else 'logit')
     data_dict = {args.filename_col: filenames}

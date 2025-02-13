@@ -3,6 +3,8 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
+import seaborn as sns
+import numpy as np
 
 def show_results_from_csv_summary(filename):
     matplotlib.use('TkAgg')
@@ -101,3 +103,23 @@ def show_results_from_csv_summary_cce_hce_alpha(filename_cce, filename_hce_0_1, 
     fig.savefig(os.path.join(folder, f"acc_summary_cce_hce"))
 
     plt.show()
+
+def save_confusion_matrix(filename, output_filename, classes, folder="output/img"):
+    cm = np.loadtxt(filename)
+    cm = cm.astype(int)
+    plt.figure(figsize=(50, 50))
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=classes, yticklabels=classes)
+    plt.xlabel("Prédictions")
+    plt.ylabel("Vérités")
+    plt.title("Matrice de Confusion")
+    plt.xticks(rotation=90, fontsize=8)
+    plt.yticks(rotation=0, fontsize=8)
+    plt.savefig(os.path.join(folder, output_filename))
+
+def load_classnames(filename):
+    classes = []
+    with open(filename, 'r') as f:
+        data = f.readlines()
+        for line in data:
+            classes.append(line.replace('\n', ''))
+    return classes

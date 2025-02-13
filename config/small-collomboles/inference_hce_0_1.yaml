@@ -1,9 +1,9 @@
 model: resnet50
-checkpoint: "output/train/CCE-resnet50_a1_in1k/model_best.pth.tar"
+checkpoint: "output/train/HCE-a0.1-resnet50_a1_in1k/model_best.pth.tar"
 data_dir: "data/small-collomboles/dataset/test"
 num_classes: 79
 
-results_dir: "output/test/cce"
+results_dir: "output/test/hce_0_1"
 results_file: "test_cce"
 
 conf_matrix: True
