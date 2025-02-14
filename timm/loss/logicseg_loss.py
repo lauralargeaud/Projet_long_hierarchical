@@ -45,9 +45,9 @@ class LogicSegLoss(nn.Module):
 
         batch_bce_ce_losses = 0
         if self.user_ce:
-            batch_bce_ce_losses = F.cross_entropy(y_pred_sigmoid, y_true)
+            batch_bce_ce_losses = F.cross_entropy(y_pred, y_true)
         else:
-            batch_bce_ce_losses = F.binary_cross_entropy(y_pred, y_true)
+            batch_bce_ce_losses = F.binary_cross_entropy(y_pred_sigmoid, y_true)
         if verbose:
             print("bce_losses", batch_bce_ce_losses.item())
 
