@@ -1,8 +1,11 @@
+import json
+import time
+
+import torch
+
 from scripts.hierarchy_better_mistakes_utils import *
 from scripts.hce_results import *
 from timm.loss.hierarchical_cross_entropy import HierarchicalCrossEntropy
-import torch
-import time
 
 def test_hce():
     tree_filename = "data/small-collomboles/hierarchy_test.csv"
@@ -71,13 +74,63 @@ def save_confusion_matrix_and_metrics(output_folder, name, classes, parents, hie
     filename_cm_leaves = os.path.join(output_folder, "confusion_matrix.out")
     cm_leaves = load_confusion_matrix(filename_cm_leaves)
     save_confusion_matrix(cm_leaves, f"confusion_matrix_{hierarchy_names[0]}.png", classes, folder=output_folder)
-    save_metrics(cm_leaves, output_folder, f"metrics_{hierarchy_names[0]}.csv", classes, hierarchy_names[0])
+    df = save_metrics(cm_leaves, output_folder, f"metrics_{hierarchy_names[0]}.csv", classes, hierarchy_names[0])
     next_cm = cm_leaves
     next_classes = classes
     for i in range(1, len(hierarchy_names)):
         next_cm, next_classes = get_parent_confusion_matrix(next_cm, next_classes, parents)
         save_confusion_matrix(next_cm, f"confusion_matrix_{hierarchy_names[i]}.png", next_classes, folder=output_folder)
-        save_metrics(next_cm, output_folder, f"metrics_{hierarchy_names[i]}.csv", next_classes, hierarchy_names[i])
+        next_df = save_metrics(next_cm, output_folder, f"metrics_{hierarchy_names[i]}.csv", next_classes, hierarchy_names[i])
+        df = pd.concat([df, next_df])
+    
+    df.to_csv(os.path.join(output_folder, "metrics_all.csv"), index=False)
+    tree = create_tree_json(df, parents)
+    with open(os.path.join(output_folder, "tree.json"), "w") as outfile: 
+        json.dump(tree, outfile)
+
+def create_tree_json(df, parents):
+    childrens = {}
+    for k, v in parents.items():
+        if v not in childrens:
+            childrens[v] = [k]
+        else:
+            childrens[v].append(k)
+
+    root_row = df.iloc[-2]
+    root = {
+        "name": root_row["Classe"], 
+        "pred": root_row["Pred"], 
+        "true": root_row["True"], 
+        "tp": root_row["TP"], 
+        "fp": root_row["FP"], 
+        "fn": root_row["FN"], 
+        "precision": root_row["Précision"], 
+        "recall": root_row["Rappel"], 
+        "f1-score": root_row["F1-score"], 
+        "children": []
+    }
+    for child in childrens[root_row["Classe"]]:
+        create_tree(df, child, root, childrens)
+    return root
+    
+def create_tree(df, name, root, childrens):
+    row = df[df["Classe"] == name]
+    node = {
+        "name": row["Classe"].values[0], 
+        "pred": row["Pred"].values[0], 
+        "true": row["True"].values[0], 
+        "tp": row["TP"].values[0], 
+        "fp": row["FP"].values[0], 
+        "fn": row["FN"].values[0], 
+        "precision": row["Précision"].values[0], 
+        "recall": row["Rappel"].values[0], 
+        "f1-score": row["F1-score"].values[0], 
+        "children": []
+    }
+    root["children"].append(node)
+    if name in childrens:
+        for child in childrens[name]:
+            create_tree(df, child, node, childrens)
 
 if __name__ == "__main__":
     # test_hce()

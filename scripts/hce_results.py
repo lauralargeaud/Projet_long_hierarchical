@@ -161,28 +161,36 @@ def calculate_metrics(cm):
     precision = np.divide(TP, TP + FP, where=(TP + FP) != 0)
     recall = np.divide(TP, TP + FN, where=(TP + FN) != 0)    
     f1_score = np.divide(2 * precision * recall, precision + recall, where=(precision + recall) != 0)
-    return precision, recall, f1_score
+    tot_pred = np.sum(cm, axis=0)    
+    tot_true = np.sum(cm, axis=1)
+    return precision, recall, f1_score, tot_pred, tot_true, TP, FP, FN
 
 def save_metrics(cm, folder, filename, classes, hierarchy_name):
     """
     Save metrics from a confusion matrix in a file.
     """
-    precision, recall, f1_score = calculate_metrics(cm)
+    precision, recall, f1_score, tot_pred, tot_true, TP, FP, FN = calculate_metrics(cm)
 
     # Création d'un DataFrame Pandas
     df = pd.DataFrame({
         "Classe": classes, 
         "Etage": [hierarchy_name for i in range(len(classes))],
+        "Pred": tot_pred,
+        "True": tot_true,
+        "TP": TP,
+        "FP": FP,
+        "FN": FN,
         "Précision": precision, 
-        "Rappel": recall, 
+        "Rappel": recall,
         "F1-score": f1_score
     })
 
     # Ajout des moyennes globales
-    df.loc["Moyenne Macro"] = ["Moyenne Feuille", hierarchy_name, np.mean(precision), np.mean(recall), np.mean(f1_score)]
+    df.loc["Moyenne Macro"] = ["Moyenne", hierarchy_name, np.mean(tot_pred), np.mean(tot_true), np.mean(TP), np.mean(FP), np.mean(FN), np.mean(precision), np.mean(recall), np.mean(f1_score)]
 
     # Sauvegarde en CSV
     df.to_csv(os.path.join(folder, filename), index=False)
+    return df
 
 def get_id_from_nodes(hierarchy_lines):
     """
