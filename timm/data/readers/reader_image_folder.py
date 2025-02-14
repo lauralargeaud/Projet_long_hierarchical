@@ -38,9 +38,11 @@ def find_images_and_targets(
     labels = []
     filenames = []
     for root, subdirs, files in os.walk(folder, topdown=False, followlinks=True):
+        print("root", root)
         rel_path = os.path.relpath(root, folder) if (root != folder) else ''
         label = os.path.basename(rel_path) if leaf_name_only else rel_path.replace(os.path.sep, '_')
         for f in files:
+            print("files", files)
             base, ext = os.path.splitext(f)
             if ext.lower() in types:
                 filenames.append(os.path.join(root, f))
