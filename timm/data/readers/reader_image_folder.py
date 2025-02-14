@@ -41,14 +41,10 @@ def find_images_and_targets(
         rel_path = os.path.relpath(root, folder) if (root != folder) else ''
         label = os.path.basename(rel_path) if leaf_name_only else rel_path.replace(os.path.sep, '_')
         for f in files:
-            print("file", f)
             base, ext = os.path.splitext(f)
             if ext.lower() in types:
-                print("added", f)
                 filenames.append(os.path.join(root, f))
                 labels.append(label)
-                print("filenames", filenames)
-                print("labels", labels)
     if class_to_idx is None:
         # building class index
         unique_labels = set(labels)
