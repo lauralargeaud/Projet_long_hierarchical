@@ -128,6 +128,8 @@ class PrefetchLoader:
             stream = None
             stream_context = suppress
 
+        print("\nLoader.py")
+        print("loader", self.loader)
         for next_input, next_target in self.loader:
             print("next_input, next_target", next_input, next_target)
             with stream_context():
