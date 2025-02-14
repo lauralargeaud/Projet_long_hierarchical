@@ -38,7 +38,6 @@ def find_images_and_targets(
     labels = []
     filenames = []
     for root, subdirs, files in os.walk(folder, topdown=False, followlinks=True):
-        print("root", root)
         rel_path = os.path.relpath(root, folder) if (root != folder) else ''
         label = os.path.basename(rel_path) if leaf_name_only else rel_path.replace(os.path.sep, '_')
         for f in files:
@@ -59,6 +58,7 @@ def find_images_and_targets(
     images_and_targets = [(f, class_to_idx[l]) for f, l in zip(filenames, labels) if l in class_to_idx]
     if sort:
         images_and_targets = sorted(images_and_targets, key=lambda k: natural_key(k[0]))
+    print("images_and_targets", images_and_targets)
     return images_and_targets, class_to_idx
 
 
