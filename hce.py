@@ -46,32 +46,39 @@ def test_hce():
 # 
     print("Valeur de la perte HXE :", loss_value.item())
 
-def print_result():
+def print_results():
     # filename_cce = "output/train/CCE-resnet50_a1_in1k/summary.csv"
     # filename_hce_0_1 = "output/train/HCE-a0.1-resnet50_a1_in1k/summary.csv"
     # filename_hce_0_5 = "output/train/HCE-a0.5-resnet50_a1_in1k/summary.csv"
     # show_results_from_csv_summary_cce_hce_alpha(filename_cce, filename_hce_0_1, filename_hce_0_5)
+    filename_classes = "data/small-collomboles/class_mapping.txt"
+    classes = load_classnames(filename_classes)
+
+    hierarchy_filename = "data/small-collomboles/hierarchy.csv"
+    hierarchy_lines = read_csv(hierarchy_filename)
+    hierarchy_lines_without_names = hierarchy_lines[1:]
+    parents = get_parents(hierarchy_lines_without_names)
+    hierarchy_names = hierarchy_lines[0]
+    hierarchy_names.reverse()
     output_folder_cce = "output/test/cce"
     output_folder_hce_0_1 = "output/test/hce_0_1"
     output_folder_hce_0_5 = "output/test/hce_0_5"
-    filename_cce = os.path.join(output_folder_cce, "confusion_matrix.out")
-    filename_hce_0_1 = os.path.join(output_folder_hce_0_1, "confusion_matrix.out")
-    filename_hce_0_5 = os.path.join(output_folder_hce_0_5, "confusion_matrix.out")
-    filename_classes = "data/small-collomboles/class_mapping.txt"
-    classes = load_classnames(filename_classes)
-    cm_cce = load_confusion_matrix(filename_cce)
-    cm_hce_0_1 = load_confusion_matrix(filename_hce_0_1)
-    cm_hce_0_5 = load_confusion_matrix(filename_hce_0_5)
-    save_confusion_matrix(cm_cce, "confusion_matrix_cce.png", classes)
-    save_confusion_matrix(cm_hce_0_1, "confusion_matrix_hce_0_1.png", classes)
-    save_confusion_matrix(cm_hce_0_5, "confusion_matrix_hce_0_5.png", classes)
+    save_confusion_matrix_and_metrics(output_folder_cce, "cce", classes, parents, hierarchy_names)
+    save_confusion_matrix_and_metrics(output_folder_hce_0_1, "hce_0_1", classes, parents, hierarchy_names)
+    save_confusion_matrix_and_metrics(output_folder_hce_0_5, "hce_0_5", classes, parents, hierarchy_names)
 
-    cm_cce = save_metrics(cm_cce, output_folder_cce, classes)
-    cm_hce_0_1 = save_metrics(cm_hce_0_1, output_folder_hce_0_1, classes)
-    cm_hce_0_5 = save_metrics(cm_hce_0_5, output_folder_hce_0_5, classes)
-
+def save_confusion_matrix_and_metrics(output_folder, name, classes, parents, hierarchy_names):
+    filename_cm_leaves = os.path.join(output_folder, "confusion_matrix.out")
+    cm_leaves = load_confusion_matrix(filename_cm_leaves)
+    save_confusion_matrix(cm_leaves, f"confusion_matrix_{hierarchy_names[0]}.png", classes, folder=output_folder)
+    save_metrics(cm_leaves, output_folder, f"metrics_{hierarchy_names[0]}.csv", classes, hierarchy_names[0])
+    next_cm = cm_leaves
+    next_classes = classes
+    for i in range(1, len(hierarchy_names)):
+        next_cm, next_classes = get_parent_confusion_matrix(next_cm, next_classes, parents)
+        save_confusion_matrix(next_cm, f"confusion_matrix_{hierarchy_names[i]}.png", next_classes, folder=output_folder)
+        save_metrics(next_cm, output_folder, f"metrics_{hierarchy_names[i]}.csv", next_classes, hierarchy_names[i])
 
 if __name__ == "__main__":
     # test_hce()
-    print_result()
-
+    print_results()

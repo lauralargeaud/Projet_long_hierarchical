@@ -6,7 +6,12 @@ import matplotlib
 import seaborn as sns
 import numpy as np
 
+from scripts.hierarchy_better_mistakes_utils import *
+
 def show_results_from_csv_summary(filename):
+    """
+    Show results from summary csv produced by TIMM.
+    """
     matplotlib.use('TkAgg')
 
     data = pd.read_csv(filename)
@@ -34,6 +39,9 @@ def show_results_from_csv_summary(filename):
     plt.imsave()
 
 def show_results_from_csv_summary_cce_hce(filename_cce, filename_hce, folder="output/img"):
+    """
+    Show results from summary csv produced by TIMM with HCE and CCE.
+    """
     matplotlib.use('TkAgg')
 
     data_cce = pd.read_csv(filename_cce)
@@ -67,6 +75,9 @@ def show_results_from_csv_summary_cce_hce(filename_cce, filename_hce, folder="ou
     plt.show()
 
 def show_results_from_csv_summary_cce_hce_alpha(filename_cce, filename_hce_0_1, filename_hce_0_5, folder="output/img"):
+    """
+    Show results from summary csv produced by TIMM with HCE and CCE.
+    """
     matplotlib.use('TkAgg')
 
     data_cce = pd.read_csv(filename_cce)
@@ -105,23 +116,34 @@ def show_results_from_csv_summary_cce_hce_alpha(filename_cce, filename_hce_0_1, 
     plt.show()
 
 def load_confusion_matrix(filename):
+    """
+    Load confusion matrix from a txt file.
+    """
     cm = np.loadtxt(filename)
     cm = cm.astype(int)
     return cm
 
 def save_confusion_matrix(cm, output_filename, classes, folder="output/img"):
-    plt.figure(figsize=(50, 50))
+    """
+    Save confusion matrix image.
+    """
+    figsize = len(classes) / 2 if len(classes) > 10 else 5
+    plt.figure(figsize=(figsize, figsize))
     sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=classes, yticklabels=classes)
     plt.xlabel("Prédictions")
     plt.ylabel("Vérités")
     plt.title("Matrice de Confusion")
     plt.xticks(rotation=90, fontsize=8)
     plt.yticks(rotation=0, fontsize=8)
+    plt.tight_layout()
     plt.savefig(os.path.join(folder, output_filename))
     
     return cm
 
 def load_classnames(filename):
+    """
+    Load classnames from a file.
+    """
     classes = []
     with open(filename, 'r') as f:
         data = f.readlines()
@@ -130,27 +152,70 @@ def load_classnames(filename):
     return classes
 
 def calculate_metrics(cm):
+    """
+    Compute F1-score, Precision and Recall from a confusion matrix.
+    """
     TP = np.diag(cm)    
     FP = np.sum(cm, axis=0) - TP    
     FN = np.sum(cm, axis=1) - TP    
-    precision = np.divide(TP, TP + FP, where=(TP + FP) != 0)    
+    precision = np.divide(TP, TP + FP, where=(TP + FP) != 0)
     recall = np.divide(TP, TP + FN, where=(TP + FN) != 0)    
     f1_score = np.divide(2 * precision * recall, precision + recall, where=(precision + recall) != 0)
     return precision, recall, f1_score
 
-def save_metrics(cm, folder, classes):
+def save_metrics(cm, folder, filename, classes, hierarchy_name):
+    """
+    Save metrics from a confusion matrix in a file.
+    """
     precision, recall, f1_score = calculate_metrics(cm)
 
     # Création d'un DataFrame Pandas
     df = pd.DataFrame({
         "Classe": classes, 
+        "Etage": [hierarchy_name for i in range(len(classes))],
         "Précision": precision, 
         "Rappel": recall, 
         "F1-score": f1_score
     })
 
     # Ajout des moyennes globales
-    df.loc["Moyenne Macro"] = ["Moyenne Feuille", np.mean(precision), np.mean(recall), np.mean(f1_score)]
+    df.loc["Moyenne Macro"] = ["Moyenne Feuille", hierarchy_name, np.mean(precision), np.mean(recall), np.mean(f1_score)]
 
     # Sauvegarde en CSV
-    df.to_csv(os.path.join(folder, "metrics.csv"), index=False)
+    df.to_csv(os.path.join(folder, filename), index=False)
+
+def get_id_from_nodes(hierarchy_lines):
+    """
+    Get Nodes and Leafs ID.
+    """
+    h = len(hierarchy_lines[0])
+    nodes = []
+    for i in range(h-1):
+        for line in hierarchy_lines:
+            if line[i] not in nodes:
+                nodes.append(line[i])
+    leafs = []
+    for line in hierarchy_lines:
+        leafs.append(line[h-1])
+    nodes_to_id = {node: i for i, node in enumerate(nodes)}
+    leafs_to_id = {leaf: i for i, leaf in enumerate(leafs)}
+    return nodes, leafs, nodes_to_id, leafs_to_id
+
+def get_parent_confusion_matrix(cm, classes, parents):
+    next_classes = set()
+    for class_ in classes:
+        next_classes.add(parents[class_])
+    next_classes = list(next_classes)
+    next_classes_id = {class_: i for i, class_ in enumerate(next_classes)}
+    
+    next_cm = np.zeros((len(next_classes),len(next_classes)), dtype=int)
+    for i, class_1 in enumerate(classes):
+        for j, class_2 in enumerate(classes):
+            next_class_1 = parents[class_1]
+            next_class_2 = parents[class_2]
+            next_class_1_id = next_classes_id[next_class_1]
+            next_class_2_id = next_classes_id[next_class_2]
+            next_cm[next_class_1_id, next_class_2_id] += cm[i,j]
+
+    return next_cm, next_classes
+

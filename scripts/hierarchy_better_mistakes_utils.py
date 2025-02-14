@@ -98,6 +98,14 @@ def get_path_from_leafs(hierarchy_lines, nodes_to_id):
         paths.append(path)
     return paths
 
+def get_parents(hierarchy_lines):
+    parents = {}
+    for line in hierarchy_lines:
+        for i, node in enumerate(line[1:]):
+            parents[node] = line[i]
+    return parents
+
+
 def get_hce_tree_data(tree_filename):
     tree_lines = read_csv(tree_filename)
     tree_lines_without_names = tree_lines[1:]
