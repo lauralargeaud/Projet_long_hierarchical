@@ -342,6 +342,8 @@ group.add_argument('--logicseg', action='store_true', default=False,
                    help='Enable LogicSeg loss.')
 group.add_argument('--hce-loss', action='store_true', default=False,
                    help="Enable Hierarchical Cross Entropy loss.")
+group.add_argument('--logicseg-ce', action='store_true', default=False,
+                   help='Use ce in LogicSeg loss if true , use bce if false.')
 group.add_argument('--csv-tree', default=None,
                    help='path to csv describing the tree structure of the labels.')
 # The following arguments are for implemented this way to facilitate testing, they might change in the future
@@ -924,7 +926,7 @@ def main():
         else:
             lr_scheduler.step(start_epoch)
 
-    if utils.is_primary(args):
+    if utils.is_primary(args) and lr_scheduler is not None:
         if args.warmup_prefix:
             sched_explain = '(warmup_epochs + epochs + cooldown_epochs). Warmup added to total when warmup_prefix=True'
         else:
@@ -937,7 +939,7 @@ def main():
     try:
         label_matrix = None
         if args.logicseg:
-            label_matrix, _, _ = get_label_matrix(args.path_to_csv_tree)
+            label_matrix, _, _ = get_label_matrix(args.csv_tree)
             
         for epoch in range(start_epoch, num_epochs):
             if hasattr(dataset_train, 'set_epoch'):
@@ -978,6 +980,7 @@ def main():
                     device=device,
                     amp_autocast=amp_autocast,
                     model_dtype=model_dtype,
+                    label_matrix=label_matrix
                 )
 
                 if model_ema is not None and not args.model_ema_force_cpu:
@@ -1107,20 +1110,22 @@ def train_one_epoch(
         # multiply by accum steps to get equivalent for full update
         data_time_m.update(accum_steps * (time.time() - data_start_time))
 
-        def _forward(args=None):
-            acc_train = None
+        def _forward(args=None, last_batch=False):
+            acc1 = None
+            acc5 = None
             with amp_autocast():
                 output = model(input)
                 loss = loss_fn(output, target)
                 # compute the accuracy on the training data of the current batch
                 if args.logicseg:
+                    loss = loss_fn(output, target, last_batch)
                     # appliquer la sigmoid
-                    output = torch.sigmoid(output, target, label_matrix)
-                    acc_train = accuracy_logicseg(output, target, label_matrix())
+                    output = torch.sigmoid(output)
+                    acc1, acc5 = accuracy_logicseg(output, target, label_matrix)
                     
             if accum_steps > 1:
                 loss /= accum_steps
-            return loss, acc_train
+            return loss, acc1, acc5
 
         def _backward(_loss):
             if loss_scaler is not None:
@@ -1146,10 +1151,10 @@ def train_one_epoch(
 
         if has_no_sync and not need_update:
             with model.no_sync():
-                loss, acc_train = _forward(args)
+                loss, acc1, acc5 = _forward(args, last_batch)
                 _backward(loss)
         else:
-            loss, acc_train = _forward(args)
+            loss, acc1, acc5 = _forward(args, last_batch)
             _backward(loss)
 
         losses_m.update(loss.item() * accum_steps, input.size(0))
@@ -1196,7 +1201,8 @@ def train_one_epoch(
                 )
                 if args.logicseg:
                     _logger.info(
-                        f'Accuracy on training data: {acc_train:#.3g}'
+                        f'Top 1 accuracy on training data: {acc1.item():#.3g}, '
+                        f'Top 5 accuracy on training data: {acc5.item():#.3g}'
                     )
 
 
@@ -1238,7 +1244,8 @@ def validate(
         device=torch.device('cuda'),
         amp_autocast=suppress,
         model_dtype=None,
-        log_suffix=''
+        log_suffix='',
+        label_matrix=None
 ):
     batch_time_m = utils.AverageMeter()
     losses_m = utils.AverageMeter()
@@ -1272,7 +1279,9 @@ def validate(
                 loss = loss_fn(output, target)
 
             if (args.logicseg):
-                acc1, acc5 = accuracy_logicseg(output, target, topk=(1, 5))
+                print("sigmoid(output_val[0,:]) = ", torch.sigmoid(output[0,:]))
+                print("Target[0,:] = ", target[0,:])
+                acc1, acc5 = accuracy_logicseg(torch.sigmoid(output), target, label_matrix=label_matrix, topk=(1, 5))
             else:
                 acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
 

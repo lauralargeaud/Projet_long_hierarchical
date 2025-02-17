@@ -50,9 +50,11 @@ def find_images_and_targets(
         unique_labels = set(labels)
         sorted_labels = list(sorted(unique_labels, key=natural_key))
         class_to_idx = {c: idx for idx, c in enumerate(sorted_labels)}
+    print("class_to_idx", class_to_idx)
     images_and_targets = [(f, class_to_idx[l]) for f, l in zip(filenames, labels) if l in class_to_idx]
     if sort:
         images_and_targets = sorted(images_and_targets, key=lambda k: natural_key(k[0]))
+    print("images_and_targets", images_and_targets)
     return images_and_targets, class_to_idx
 
 
