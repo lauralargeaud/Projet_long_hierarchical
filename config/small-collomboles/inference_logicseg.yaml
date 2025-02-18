@@ -1,0 +1,12 @@
+model: resnet50
+checkpoint: "output/train/BCE_LOGICSEQ-resnet50_a1_in1k/model_best.pth.tar"
+data_dir: "data/small-collomboles/dataset/test"
+num_classes: 136
+
+results_dir: "output/test/cce"
+results_file: "test_cce"
+
+conf_matrix: False
+
+path_to_csv_tree: "data/small-collomboles/hierarchy.csv"
+logicseg: True

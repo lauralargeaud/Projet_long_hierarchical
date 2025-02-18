@@ -1,9 +1,9 @@
-import torch
 import numpy as np
+import pickle
+import pandas as pd
+import torch
 
 def get_tree_matrices(path_to_csv_tree, verbose=False):
-  import pandas as pd
-
   csv = pd.read_csv(path_to_csv_tree)
 
   unique_nodes = pd.unique(csv.values.ravel())
@@ -31,8 +31,6 @@ def get_tree_matrices(path_to_csv_tree, verbose=False):
   return H, peer_matrix, M
 
 def create_class_to_labels(path_to_csv_tree, path_to_temporary_class_to_labels_file, verbose=False):
-  import pickle
-
   label_matrix, _, index_to_node = get_label_matrix(path_to_csv_tree, verbose)
 
   class_to_labels = get_class_to_label(label_matrix, index_to_node, verbose)
@@ -42,8 +40,7 @@ def create_class_to_labels(path_to_csv_tree, path_to_temporary_class_to_labels_f
       pickle.dump(class_to_labels, f)  # Écriture binaire
 
 def get_label_matrix(path_to_csv_tree, verbose=False):
-  import pandas as pd
-
+  print(path_to_csv_tree)
   csv = pd.read_csv(path_to_csv_tree)
   unique_nodes = pd.unique(csv.values.ravel())
   unique_nodes = unique_nodes[~pd.isnull(unique_nodes)]  # On enlève les NaN au cas ou

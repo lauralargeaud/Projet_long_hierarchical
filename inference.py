@@ -128,7 +128,7 @@ parser.add_argument('--conf-matrix', action='store_true', default=False,
 # Custom parameter for LogicSeg
 parser.add_argument('--logicseg', action='store_true', default=False,
                    help='Apply logicseg processing to output.')
-parser.add_argument('--path-to-csv-tree', default="./", help="Path to hierarchy csv")
+parser.add_argument('--csv-tree', default="./", help="Path to hierarchy csv")
 
 scripting_group = parser.add_mutually_exclusive_group()
 scripting_group.add_argument('--torchscript', default=False, action='store_true',
