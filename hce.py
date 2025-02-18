@@ -5,6 +5,7 @@ import torch
 
 from scripts.hierarchy_better_mistakes_utils import *
 from scripts.hce_results import *
+from scripts.utils import *
 from timm.loss.hierarchical_cross_entropy import HierarchicalCrossEntropy
 
 def test_hce():
@@ -134,4 +135,7 @@ def create_tree(df, name, root, childrens):
 
 if __name__ == "__main__":
     # test_hce()
-    print_results()
+    # print_results()
+
+    dirname = "data/small-collomboles_small/dataset/train"
+    keep_only_first_image(dirname)
