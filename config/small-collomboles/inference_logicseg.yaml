@@ -8,5 +8,6 @@ results_file: "test_cce"
 
 conf_matrix: False
 
-path_to_csv_tree: "data/small-collomboles/hierarchy.csv"
+csv_tree: "data/small-collomboles/hierarchy.csv"
 logicseg: True
+class_map: "classmap/classmap.pkl"

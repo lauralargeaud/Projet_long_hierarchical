@@ -263,6 +263,10 @@ def main():
     if args.num_gpu > 1:
         model = torch.nn.DataParallel(model, device_ids=list(range(args.num_gpu)))
 
+    # If logicSeg is used we create the class map file just before creating the dataset
+    if args.logicseg:
+        create_class_to_labels(args.csv_tree, args.class_map, verbose=False)
+
     root_dir = args.data_dir# args.data or args.data_dir
     dataset = create_dataset(
         root=root_dir,
@@ -326,7 +330,7 @@ def main():
             if args.logicseg:
                 # appliquer la sigmoid
                 output = torch.sigmoid(output)
-                label_matrix, _, index_to_node = get_label_matrix(args.path_to_csv_tree)
+                label_matrix, _, index_to_node = get_label_matrix(args.csv_tree)
                 probas_branches_input = get_predicted_branches(output, label_matrix) # taille (nb_pred, nb_feuilles)
                 probas_branches_target = get_predicted_branches(target, label_matrix)
                 output_in, indices_branches_in = probas_branches_input.topk(top_k, dim=1) # (nb_pred, top_k), (nb_pred, top_k)
