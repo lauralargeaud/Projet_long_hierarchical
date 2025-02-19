@@ -342,10 +342,11 @@ group.add_argument('--logicseg', action='store_true', default=False,
                    help='Enable LogicSeg loss.')
 group.add_argument('--hce-loss', action='store_true', default=False,
                    help="Enable Hierarchical Cross Entropy loss.")
-group.add_argument('--logicseg-ce', action='store_true', default=False,
-                   help='Use ce in LogicSeg loss if true , use bce if false.')
+group.add_argument('--logicseg-method', default="bce",
+                   help='Set the loss used to compute the error between ouput and target.')
 group.add_argument('--csv-tree', default=None,
                    help='path to csv describing the tree structure of the labels.')
+
 # The following arguments are for implemented this way to facilitate testing, they might change in the future
 group.add_argument('--crule-loss-weight', type=float, default=0.2,
                    help='Set the weight of the Closs.')
@@ -353,8 +354,14 @@ group.add_argument('--drule-loss-weight', type=float, default=0.2,
                    help='Set the weight of the Dloss.')
 group.add_argument('--erule-loss-weight', type=float, default=0.2,
                    help='Set the weight of the Eloss.')
-group.add_argument('--bce-loss-weight', type=float, default=1,
-                   help='Set the weight of the Bce.')
+group.add_argument('--target-loss-weight', type=float, default=1,
+                   help='Set the weight of the loss used to compute the error between output and target.')
+group.add_argument('--asl-gamma-pos', type=float, default=1,
+                   help='Set the gamma_pos coef used for the positive samples in the ASL')
+group.add_argument('--asl-gamma-neg', type=float, default=1,
+                   help='Set the gamma_neg coef used for the negative samples in the ASL')
+group.add_argument('--asl-thresh-shifting', type=float, default=1,
+                   help='Set the threshold coef used for the probability shifting in the ASL')
 group.add_argument('--hce-alpha', type=float, default=0.1,
                    help='Set the alpha of the hce loss.')
 
@@ -827,8 +834,8 @@ def main():
     # setup loss function
     if args.logicseg: #FIXME: no mixup/label_smoothing management
         H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=False)
-        train_loss_fn = LogicSegLoss(H_raw, P_raw, M_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.bce_loss_weight)
-        validate_loss_fn = LogicSegLoss(H_raw, P_raw, M_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.bce_loss_weight)
+        train_loss_fn = LogicSegLoss(args.logicseg_method, H_raw, P_raw, M_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.target_loss_weight, args.asl_gamma_pos, args.asl_gamma_neg, args.asl_thresh_shifting)
+        validate_loss_fn = LogicSegLoss(args.logicseg_method, H_raw, P_raw, M_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.target_loss_weight, args.asl_gamma_pos, args.asl_gamma_neg, args.asl_thresh_shifting)
     elif args.hce_loss:
         L, h = get_hce_tree_data(args.csv_tree)
         train_loss_fn = HierarchicalCrossEntropy(L, alpha=args.hce_alpha, h=h)

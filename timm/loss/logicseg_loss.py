@@ -5,9 +5,10 @@ import torch.nn.functional as F
 from timm.loss.logicseg.c_rule_loss import CRuleLoss
 from timm.loss.logicseg.d_rule_loss import DRuleLoss
 from timm.loss.logicseg.e_rule_loss import ERuleLoss
+from timm.loss.logicseg.asym_loss import ASL
 
 class LogicSegLoss(nn.Module):
-    def __init__(self, H_raw, P_raw, M_raw, alpha_c, alpha_d, alpha_e, alpha_bce, use_ce = False): # H_raw is a np array
+    def __init__(self, method, H_raw, P_raw, M_raw, alpha_c, alpha_d, alpha_e, alpha_target_loss, gamma_pos = 1, gamma_neg = 1, thresh_shifting = 0): # H_raw is a np array
         super(LogicSegLoss, self).__init__()
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
@@ -21,8 +22,11 @@ class LogicSegLoss(nn.Module):
         self.alpha_e = alpha_e
 
         # self.bce = BinaryCrossEntropy()
-        self.user_ce = use_ce
-        self.alpha_bce = alpha_bce
+        self.method = method
+        self.alpha_target_loss = alpha_target_loss
+
+        if method == "asl":
+            self.asl = ASL(gamma_pos, gamma_neg, thresh_shifting)
   
     def forward(self, y_pred: torch.Tensor, y_true: torch.Tensor, verbose: bool = False) -> torch.Tensor:
 
@@ -43,15 +47,18 @@ class LogicSegLoss(nn.Module):
         if verbose:
             print("e_losses", batch_e_losses.item())
 
-        batch_bce_ce_losses = 0
-        if self.user_ce:
-            batch_bce_ce_losses = F.cross_entropy(y_pred, y_true)
-        else:
-            batch_bce_ce_losses = F.binary_cross_entropy(y_pred_sigmoid, y_true)
+        target_loss = 0
+        match self.method:
+            case "ce":
+                target_loss = F.cross_entropy(y_pred, y_true)
+            case "bce":
+                target_loss = F.binary_cross_entropy(y_pred_sigmoid, y_true)
+            case "asl":
+                target_loss = self.ASL(y_pred_sigmoid, y_true)
         if verbose:
-            print("bce_losses", batch_bce_ce_losses.item())
+            print("bce_losses", target_loss.item())
 
         return self.alpha_c * batch_c_losses + \
             self.alpha_d * batch_d_losses + \
             self.alpha_e * batch_e_losses + \
-            self.alpha_bce * batch_bce_ce_losses
+            self.alpha_target_loss * target_loss
