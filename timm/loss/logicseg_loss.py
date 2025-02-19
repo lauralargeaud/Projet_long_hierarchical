@@ -54,7 +54,7 @@ class LogicSegLoss(nn.Module):
             case "bce":
                 target_loss = F.binary_cross_entropy(y_pred_sigmoid, y_true)
             case "asl":
-                target_loss = self.ASL(y_pred_sigmoid, y_true)
+                target_loss = self.asl(y_pred_sigmoid, y_true)
         if verbose:
             print("bce_losses", target_loss.item())
 
