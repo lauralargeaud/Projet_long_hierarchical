@@ -23,7 +23,10 @@ def mixup_target(target, num_classes, lam=1., smoothing=0.0):
     off_value = smoothing / num_classes
     on_value = 1. - smoothing + off_value
     y1 = one_hot(target, num_classes, on_value=on_value, off_value=off_value)
+    print("target: ", target)
+    print("y1: ", y1)
     y2 = one_hot(target.flip(0), num_classes, on_value=on_value, off_value=off_value)
+    print("y2: ", y2)
     return y1 * lam + y2 * (1. - lam)
 
 
