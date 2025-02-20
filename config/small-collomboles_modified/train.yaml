@@ -13,8 +13,6 @@ input_size:
 - 224
 - 224 
 
-
-
 # Hyperparameter
 epochs: 100
 b: 32 
@@ -28,11 +26,12 @@ opt: "lamb"
 sched: 'cosine'
 weight_decay: 0.01
 warmup_epochs: 5
-modified_logicseg: True
+logicseg: True
 crule_loss_weight: 0.2
 drule_loss_weight: 0.2
 erule_loss_weight: 0.2
 bce_loss_weight: 1
+logicseg_method: "multi_bce"
 
 no_aug: True
 

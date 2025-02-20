@@ -35,7 +35,7 @@ from torch.nn.parallel import DistributedDataParallel as NativeDDP
 from timm import utils
 from timm.data import create_dataset, create_loader, resolve_data_config, Mixup, FastCollateMixup, AugMixDataset
 from timm.layers import convert_splitbn_model, convert_sync_batchnorm, set_fast_norm
-from timm.loss import JsdCrossEntropy, SoftTargetCrossEntropy, BinaryCrossEntropy, LabelSmoothingCrossEntropy, LogicSegLoss, HierarchicalCrossEntropy, ModifiedLogicSegLoss
+from timm.loss import JsdCrossEntropy, SoftTargetCrossEntropy, BinaryCrossEntropy, LabelSmoothingCrossEntropy, LogicSegLoss, HierarchicalCrossEntropy
 from timm.models import create_model, safe_model_name, resume_checkpoint, load_checkpoint, model_parameters
 from timm.optim import create_optimizer_v2, optimizer_kwargs
 from timm.scheduler import create_scheduler_v2, scheduler_kwargs
@@ -340,14 +340,13 @@ group.add_argument('--drop-block', type=float, default=None, metavar='PCT',
 # Custom loss
 group.add_argument('--logicseg', action='store_true', default=False,
                    help='Enable LogicSeg loss.')
-group.add_argument('--modified-logicseg', action='store_true', default=False,
-                   help='Enable Modified-LogicSeg loss.')
 group.add_argument('--hce-loss', action='store_true', default=False,
                    help="Enable Hierarchical Cross Entropy loss.")
-group.add_argument('--logicseg-ce', action='store_true', default=False,
-                   help='Use ce in LogicSeg loss if true , use bce if false.')
+group.add_argument('--logicseg-method', default="bce",
+                   help='Set the loss used to compute the error between ouput and target (ce, bce, asl, multi_bce).')
 group.add_argument('--csv-tree', default=None,
                    help='path to csv describing the tree structure of the labels.')
+
 # The following arguments are for implemented this way to facilitate testing, they might change in the future
 group.add_argument('--crule-loss-weight', type=float, default=0.2,
                    help='Set the weight of the Closs.')
@@ -357,8 +356,16 @@ group.add_argument('--erule-loss-weight', type=float, default=0.2,
                    help='Set the weight of the Eloss.')
 group.add_argument('--bce-loss-weight', type=float, default=1,
                    help='Set the weight of the Bce.')
-group.add_argument('--alpha_layer', type=float, default=0.1,
+group.add_argument('--alpha-layer', type=float, default=0.1,
                    help='Set the weight of the layer.')
+group.add_argument('--target-loss-weight', type=float, default=1,
+                   help='Set the weight of the loss used to compute the error between output and target.')
+group.add_argument('--asl-gamma-pos', type=float, default=1,
+                   help='Set the gamma_pos coef used for the positive samples in the ASL')
+group.add_argument('--asl-gamma-neg', type=float, default=1,
+                   help='Set the gamma_neg coef used for the negative samples in the ASL')
+group.add_argument('--asl-thresh-shifting', type=float, default=1,
+                   help='Set the threshold coef used for the probability shifting in the ASL')
 group.add_argument('--hce-alpha', type=float, default=0.1,
                    help='Set the alpha of the hce loss.')
 
@@ -682,7 +689,7 @@ def main():
         input_img_mode = args.input_img_mode
 
     # If logicSeg is used we create the class map file just before creating the dataset
-    if args.logicseg or args.modified_logicseg:
+    if args.logicseg:
         create_class_to_labels(args.csv_tree, args.class_map, verbose=False)
 
     dataset_train = create_dataset(
@@ -815,7 +822,7 @@ def main():
                 img_dtype=model_dtype or torch.float32,
                 **data_config,
             )
-    elif args.logicseg or args.modified_logicseg:
+    elif args.logicseg:
         loader_eval = create_loader(
             dataset_eval,
             batch_size=args.batch_size,
@@ -831,13 +838,9 @@ def main():
     # setup loss function
     if args.logicseg: #FIXME: no mixup/label_smoothing management
         H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=False)
-        train_loss_fn = LogicSegLoss(H_raw, P_raw, M_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.bce_loss_weight)
-        validate_loss_fn = LogicSegLoss(H_raw, P_raw, M_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.bce_loss_weight)
-    elif args.modified_logicseg: #FIXME: no mixup/label_smoothing management
-        H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=False)
         La_raw = get_layer_matrix(args.csv_tree, verbose=False)
-        train_loss_fn = ModifiedLogicSegLoss(H_raw, P_raw, M_raw, La_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.bce_loss_weight, args.alpha_layer)
-        validate_loss_fn = ModifiedLogicSegLoss(H_raw, P_raw, M_raw, La_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.bce_loss_weight, args.alpha_layer)
+        train_loss_fn = LogicSegLoss(args.logicseg_method, H_raw, P_raw, M_raw, La_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.target_loss_weight, args.alpha_layer, args.asl_gamma_pos, args.asl_gamma_neg, args.asl_thresh_shifting)
+        validate_loss_fn = LogicSegLoss(args.logicseg_method, H_raw, P_raw, M_raw, La_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.target_loss_weight, args.alpha_layer, args.asl_gamma_pos, args.asl_gamma_neg, args.asl_thresh_shifting)
     elif args.hce_loss:
         L, h = get_hce_tree_data(args.csv_tree)
         train_loss_fn = HierarchicalCrossEntropy(L, alpha=args.hce_alpha, h=h)
@@ -946,7 +949,7 @@ def main():
     results = []
     try:
         label_matrix = None
-        if args.logicseg or args.modified_logicseg:
+        if args.logicseg:
             label_matrix, _, _ = get_label_matrix(args.csv_tree)
             
         for epoch in range(start_epoch, num_epochs):
@@ -1127,7 +1130,7 @@ def train_one_epoch(
                 output = model(input)
                 loss = loss_fn(output, target)
                 # compute the accuracy on the training data of the current batch
-                if args.logicseg or args.modified_logicseg:
+                if args.logicseg:
                     loss = loss_fn(output, target, last_batch)
                     # appliquer la sigmoid
                     output = torch.sigmoid(output)
@@ -1168,7 +1171,7 @@ def train_one_epoch(
             _backward(loss)
 
         losses_m.update(loss.item() * accum_steps, input.size(0))
-        if args.logicseg or args.modified_logicseg:
+        if args.logicseg:
             acc1_m.update(acc1.item() * accum_steps, input.size(0))
             acc5_m.update(acc5.item() * accum_steps, input.size(0))
         update_sample_count += input.size(0)
@@ -1212,7 +1215,7 @@ def train_one_epoch(
                     f'LR: {lr:.3e}  '
                     f'Data: {data_time_m.val:.3f} ({data_time_m.avg:.3f})'
                 )
-                if args.logicseg or args.modified_logicseg:
+                if args.logicseg:
                     _logger.info(
                         f'Top 1 accuracy on training data: {acc1.item():#.3g}, '
                         f'Top 5 accuracy on training data: {acc5.item():#.3g}'
@@ -1246,7 +1249,7 @@ def train_one_epoch(
         # synchronize avg loss, each process keeps its own running avg
         loss_avg = torch.tensor([loss_avg], device=device, dtype=torch.float32)
         loss_avg = utils.reduce_tensor(loss_avg, args.world_size).item()
-    if args.logicseg or args.modified_logicseg:
+    if args.logicseg:
         return OrderedDict([('loss', loss_avg), ('acc1', acc1_m.avg), ('acc5', acc5_m.avg)])
     else: 
         return OrderedDict([('loss', loss_avg)])
@@ -1294,7 +1297,7 @@ def validate(
 
                 loss = loss_fn(output, target)
 
-            if args.logicseg or args.modified_logicseg:
+            if args.logicseg:
                 print("sigmoid(output_val[0,:]) = ", torch.sigmoid(output[0,:]))
                 print("Target[0,:] = ", target[0,:])
                 acc1, acc5 = accuracy_logicseg(torch.sigmoid(output), target, label_matrix=label_matrix, topk=(1, 5))
