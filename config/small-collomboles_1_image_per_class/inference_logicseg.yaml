@@ -1,0 +1,13 @@
+model: resnet50
+checkpoint: "output/train/20250218-170208-resnet50_a1_in1k-224/model_best.pth.tar"
+data_dir: "data/small-collomboles-1image_class/dataset/test"
+num_classes: 136
+
+results_dir: "output/test/cce"
+results_file: "test_cce"
+
+conf_matrix: False
+
+csv_tree: "data/simple/hierarchy_test.csv"
+logicseg: True
+class_map: "classmap/classmap.pkl"

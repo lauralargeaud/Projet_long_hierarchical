@@ -1,0 +1,40 @@
+# Model
+model: resnet50.a1_in1k 
+pretrained: True
+
+# Dataset
+data_dir: "data/small-collomboles/dataset"
+class_map: "classmap/classmap.pkl"
+output: "output/train"
+csv_tree: "data/small-collomboles/hierarchy.csv"
+num_classes: 136
+input_size:
+- 3 
+- 224
+- 224 
+
+
+
+# Hyperparameter
+epochs: 100
+b: 32 
+vb: 64 
+j: 8 
+lr: 3e-4
+batch_size: 32
+
+# Optimizer
+opt: "lamb"
+sched: 'cosine'
+weight_decay: 0.01
+warmup_epochs: 5
+modified_logicseg: True
+crule_loss_weight: 0.2
+drule_loss_weight: 0.2
+erule_loss_weight: 0.2
+bce_loss_weight: 1
+
+no_aug: True
+
+# Device
+# amp: True

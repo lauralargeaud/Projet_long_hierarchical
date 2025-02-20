@@ -1,5 +1,5 @@
 python train.py \
-  --data-dir ./data/small-collomboles_small/dataset \
+  --data-dir ./data/small-collomboles-1image/dataset \
   --input-size 3 224 224 \
   --output ./output/train \
   --logicseg True \
@@ -8,8 +8,8 @@ python train.py \
   --model resnet50.a1_in1k --pretrained \
   --num-classes 136 \
   --workers 2 \
-  --batch-size 32 \
-  --validation-batch-size 64 \
+  --batch-size 2 \
+  --validation-batch-size 2 \
   --sched '' \
   --lr 3e-2 \
   --momentum 0.9 \
@@ -18,5 +18,4 @@ python train.py \
   --drule-loss-weight 0 \
   --erule-loss-weight 0 \
   --bce-loss-weight 1 \
-  --epochs 500 \
-  --no-aug
+  --epochs 500

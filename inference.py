@@ -317,6 +317,7 @@ def main():
         for batch_idx, (input, target) in enumerate(loader):
             with amp_autocast():
                 output = model(input)
+                print("output sans sigmoid", output)
 
             if use_probs:
                 output = output.softmax(-1)

@@ -1,0 +1,25 @@
+data_dir: "data/simple/dataset"
+input_size:
+- 3 
+- 224
+- 224 
+output: "output/train"
+modified_logicseg: True
+csv_tree: "data/simple/hierarchy_test.csv"
+class_map: "classmap/classmap.pkl"
+model: resnet50.a1_in1k 
+pretrained: True
+num_classes: 17
+workers: 2
+batch_size: 2
+validation_batch_size: 64
+sched: ''
+lr: 3e-2
+momentum: 0.9
+weight_decay: 1e-4
+crule_loss_weight: 0.2
+drule_loss_weight: 0.2
+erule_loss_weight: 0.2
+bce_loss_weight: 1
+epochs: 50
+no_aug: True

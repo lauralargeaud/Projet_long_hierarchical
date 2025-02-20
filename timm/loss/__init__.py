@@ -6,3 +6,4 @@ from .jsd import JsdCrossEntropy
 # Custom loss functions import
 from .logicseg_loss import LogicSegLoss
 from .hierarchical_cross_entropy import HierarchicalCrossEntropy
+from .modified_logiqseg_loss import ModifiedLogicSegLoss

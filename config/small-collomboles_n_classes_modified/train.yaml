@@ -1,0 +1,28 @@
+data_dir: "data/small-collomboles-n-classes/dataset_test"
+input_size:
+- 3 
+- 224
+- 224 
+output: "output/train"
+modified_logicseg: True
+csv_tree: "data/small-collomboles/hierarchy.csv"
+class_map: "classmap/classmap.pkl"
+model: resnet50.a1_in1k 
+pretrained: True
+num_classes: 136
+workers: 2
+batch_size: 32
+validation_batch_size: 2
+sched: ''
+lr: 3e-2
+momentum: 0.9
+weight_decay: 1e-4
+crule_loss_weight: 0.2
+drule_loss_weight: 0.2
+erule_loss_weight: 0.2
+bce_loss_weight: 1
+epochs: 500
+# no_aug: True
+# mixup: 0.2 
+# cutmix: 1.0 
+# hflip: 0.5 

@@ -1,14 +1,14 @@
 python train.py \
-  --data-dir ./data/small-collomboles_small/dataset \
+  --data-dir ./data/simple/dataset \
   --input-size 3 224 224 \
   --output ./output/train \
   --logicseg True \
-  --csv-tree ./data/small-collomboles/hierarchy.csv \
+  --csv-tree ./data/simple/hierarchy_test.csv \
   --class-map ./classmap/classmap.pkl \
   --model resnet50.a1_in1k --pretrained \
-  --num-classes 136 \
+  --num-classes 17 \
   --workers 2 \
-  --batch-size 32 \
+  --batch-size 2 \
   --validation-batch-size 64 \
   --sched '' \
   --lr 3e-2 \
@@ -18,5 +18,5 @@ python train.py \
   --drule-loss-weight 0 \
   --erule-loss-weight 0 \
   --bce-loss-weight 1 \
-  --epochs 500 \
+  --epochs 50 \
   --no-aug

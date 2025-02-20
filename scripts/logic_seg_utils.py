@@ -3,9 +3,24 @@ import pickle
 import pandas as pd
 import torch
 
+def get_layer_matrix(path_to_csv_tree, verbose=False):
+  csv = pd.read_csv(path_to_csv_tree)
+  unique_nodes = pd.unique(csv.values.ravel())
+  unique_nodes = unique_nodes[~pd.isnull(unique_nodes)]  # On enlève les NaN au cas ou
+  node_to_index = {node: idx for idx, node in enumerate(unique_nodes)}
+  print(node_to_index)
+  La = np.zeros((len(csv.columns)-1, len(unique_nodes)))
+  for _, row in csv.iterrows():
+     for layer, node in enumerate(row[1:]):
+        La[layer, node_to_index[node]] = 1
+
+  if verbose:
+     print(La)
+
+  return La
+
 def get_tree_matrices(path_to_csv_tree, verbose=False):
   csv = pd.read_csv(path_to_csv_tree)
-
   unique_nodes = pd.unique(csv.values.ravel())
   unique_nodes = unique_nodes[~pd.isnull(unique_nodes)]  # On enlève les NaN au cas ou
   node_to_index = {node: idx for idx, node in enumerate(unique_nodes)}
@@ -18,7 +33,7 @@ def get_tree_matrices(path_to_csv_tree, verbose=False):
       for parent, child in zip(row[:-1], row[1:]):
           if pd.notna(parent) and pd.notna(child):
               H[node_to_index[parent], node_to_index[child]] = 1
-
+  
   if verbose:
     print("Nodes:", unique_nodes)
     print("H:\n", H)
@@ -97,3 +112,7 @@ def get_label_branches(most_probable_branches_indices_in, most_probable_branches
     for i in range(most_probable_branches_indices_in.shape[1]):
       predicted_classes[p,i] = "pred: " + classes[most_probable_branches_indices_in[p,i]] + ", label:  " + classes[most_probable_branches_indices_target[p,i]]
   return predicted_classes
+
+if __name__ == "__main__":
+   path_to_csv_tree = "data/simple/hierarchy_test.csv"
+   get_tree_matrices(path_to_csv_tree, verbose=True)

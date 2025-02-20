@@ -35,7 +35,7 @@ from torch.nn.parallel import DistributedDataParallel as NativeDDP
 from timm import utils
 from timm.data import create_dataset, create_loader, resolve_data_config, Mixup, FastCollateMixup, AugMixDataset
 from timm.layers import convert_splitbn_model, convert_sync_batchnorm, set_fast_norm
-from timm.loss import JsdCrossEntropy, SoftTargetCrossEntropy, BinaryCrossEntropy, LabelSmoothingCrossEntropy, LogicSegLoss, HierarchicalCrossEntropy
+from timm.loss import JsdCrossEntropy, SoftTargetCrossEntropy, BinaryCrossEntropy, LabelSmoothingCrossEntropy, LogicSegLoss, HierarchicalCrossEntropy, ModifiedLogicSegLoss
 from timm.models import create_model, safe_model_name, resume_checkpoint, load_checkpoint, model_parameters
 from timm.optim import create_optimizer_v2, optimizer_kwargs
 from timm.scheduler import create_scheduler_v2, scheduler_kwargs
@@ -340,6 +340,8 @@ group.add_argument('--drop-block', type=float, default=None, metavar='PCT',
 # Custom loss
 group.add_argument('--logicseg', action='store_true', default=False,
                    help='Enable LogicSeg loss.')
+group.add_argument('--modified-logicseg', action='store_true', default=False,
+                   help='Enable Modified-LogicSeg loss.')
 group.add_argument('--hce-loss', action='store_true', default=False,
                    help="Enable Hierarchical Cross Entropy loss.")
 group.add_argument('--logicseg-ce', action='store_true', default=False,
@@ -355,6 +357,8 @@ group.add_argument('--erule-loss-weight', type=float, default=0.2,
                    help='Set the weight of the Eloss.')
 group.add_argument('--bce-loss-weight', type=float, default=1,
                    help='Set the weight of the Bce.')
+group.add_argument('--alpha_layer', type=float, default=0.1,
+                   help='Set the weight of the layer.')
 group.add_argument('--hce-alpha', type=float, default=0.1,
                    help='Set the alpha of the hce loss.')
 
@@ -678,9 +682,9 @@ def main():
         input_img_mode = args.input_img_mode
 
     # If logicSeg is used we create the class map file just before creating the dataset
-    if args.logicseg:
+    if args.logicseg or args.modified_logicseg:
         create_class_to_labels(args.csv_tree, args.class_map, verbose=False)
-        
+
     dataset_train = create_dataset(
         args.dataset,
         root=args.data_dir,
@@ -811,7 +815,7 @@ def main():
                 img_dtype=model_dtype or torch.float32,
                 **data_config,
             )
-    elif args.logicseg:
+    elif args.logicseg or args.modified_logicseg:
         loader_eval = create_loader(
             dataset_eval,
             batch_size=args.batch_size,
@@ -829,6 +833,11 @@ def main():
         H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=False)
         train_loss_fn = LogicSegLoss(H_raw, P_raw, M_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.bce_loss_weight)
         validate_loss_fn = LogicSegLoss(H_raw, P_raw, M_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.bce_loss_weight)
+    elif args.modified_logicseg: #FIXME: no mixup/label_smoothing management
+        H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=False)
+        La_raw = get_layer_matrix(args.csv_tree, verbose=False)
+        train_loss_fn = ModifiedLogicSegLoss(H_raw, P_raw, M_raw, La_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.bce_loss_weight, args.alpha_layer)
+        validate_loss_fn = ModifiedLogicSegLoss(H_raw, P_raw, M_raw, La_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.bce_loss_weight, args.alpha_layer)
     elif args.hce_loss:
         L, h = get_hce_tree_data(args.csv_tree)
         train_loss_fn = HierarchicalCrossEntropy(L, alpha=args.hce_alpha, h=h)
@@ -937,7 +946,7 @@ def main():
     results = []
     try:
         label_matrix = None
-        if args.logicseg:
+        if args.logicseg or args.modified_logicseg:
             label_matrix, _, _ = get_label_matrix(args.csv_tree)
             
         for epoch in range(start_epoch, num_epochs):
@@ -1079,6 +1088,8 @@ def train_one_epoch(
     update_time_m = utils.AverageMeter()
     data_time_m = utils.AverageMeter()
     losses_m = utils.AverageMeter()
+    acc1_m = utils.AverageMeter()
+    acc5_m = utils.AverageMeter()
 
     model.train()
 
@@ -1116,7 +1127,7 @@ def train_one_epoch(
                 output = model(input)
                 loss = loss_fn(output, target)
                 # compute the accuracy on the training data of the current batch
-                if args.logicseg:
+                if args.logicseg or args.modified_logicseg:
                     loss = loss_fn(output, target, last_batch)
                     # appliquer la sigmoid
                     output = torch.sigmoid(output)
@@ -1157,6 +1168,9 @@ def train_one_epoch(
             _backward(loss)
 
         losses_m.update(loss.item() * accum_steps, input.size(0))
+        if args.logicseg or args.modified_logicseg:
+            acc1_m.update(acc1.item() * accum_steps, input.size(0))
+            acc5_m.update(acc5.item() * accum_steps, input.size(0))
         update_sample_count += input.size(0)
 
         if not need_update:
@@ -1198,7 +1212,7 @@ def train_one_epoch(
                     f'LR: {lr:.3e}  '
                     f'Data: {data_time_m.val:.3f} ({data_time_m.avg:.3f})'
                 )
-                if args.logicseg:
+                if args.logicseg or args.modified_logicseg:
                     _logger.info(
                         f'Top 1 accuracy on training data: {acc1.item():#.3g}, '
                         f'Top 5 accuracy on training data: {acc5.item():#.3g}'
@@ -1232,7 +1246,10 @@ def train_one_epoch(
         # synchronize avg loss, each process keeps its own running avg
         loss_avg = torch.tensor([loss_avg], device=device, dtype=torch.float32)
         loss_avg = utils.reduce_tensor(loss_avg, args.world_size).item()
-    return OrderedDict([('loss', loss_avg)])
+    if args.logicseg or args.modified_logicseg:
+        return OrderedDict([('loss', loss_avg), ('acc1', acc1_m.avg), ('acc5', acc5_m.avg)])
+    else: 
+        return OrderedDict([('loss', loss_avg)])
 
 
 def validate(
@@ -1277,7 +1294,7 @@ def validate(
 
                 loss = loss_fn(output, target)
 
-            if (args.logicseg):
+            if args.logicseg or args.modified_logicseg:
                 print("sigmoid(output_val[0,:]) = ", torch.sigmoid(output[0,:]))
                 print("Target[0,:] = ", target[0,:])
                 acc1, acc5 = accuracy_logicseg(torch.sigmoid(output), target, label_matrix=label_matrix, topk=(1, 5))

@@ -1,0 +1,13 @@
+model: resnet50
+checkpoint: "output/train/BCE_chat/model_best.pth.tar"
+data_dir: "data/simple/dataset/test"
+num_classes: 17
+
+results_dir: "output/test/cce"
+results_file: "test_cce"
+
+conf_matrix: False
+
+csv_tree: "data/simple/hierarchy_test.csv"
+modified_logicseg: True
+class_map: "classmap/classmap.pkl"
