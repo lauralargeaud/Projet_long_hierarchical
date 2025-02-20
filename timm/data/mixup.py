@@ -15,9 +15,12 @@ import torch
 
 
 def one_hot(x, num_classes, on_value=1., off_value=0.):
-    x = x.long().view(-1, 1)
-    return torch.full((x.size()[0], num_classes), off_value, device=x.device).scatter_(1, x, on_value)
-
+    if (x.ndim == 1):
+        x = x.long().view(-1, 1)
+        return torch.full((x.size()[0], num_classes), off_value, device=x.device).scatter_(1, x, on_value)
+    else:
+        new_target = torch.full((x.size(0), num_classes), off_value, device=x.device) 
+        return new_target + x * (on_value - off_value)
 
 def mixup_target(target, num_classes, lam=1., smoothing=0.0):
     off_value = smoothing / num_classes
