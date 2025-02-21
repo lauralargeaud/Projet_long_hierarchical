@@ -39,8 +39,8 @@ def extract_data_from_yaml(filepath):
     opt = data["opt"]
     sched = data["sched"]
     num_classes = data["num_classes"]
-    print(f"=== File: {filepath} ===")
-    print(f"{"Hierarchical Cross Entropy" if not is_logicseg else "LogicSeg"}")
+    print(f'=== File: {filepath} ===')
+    print(f'{"Hierarchical Cross Entropy" if not is_logicseg else "LogicSeg"}')
     print(f"opt: {opt}")
     print(f"sched: {sched}")
     print(f"num_classes: {num_classes}")
