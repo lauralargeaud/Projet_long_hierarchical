@@ -356,8 +356,8 @@ def main():
                     proba_output, id_branch_output = logicseg_predictions.topk(1, dim=1)
                     proba_target, id_branch_target = onehot_targets.topk(1, dim=1)
 
-                    predicted_labels = [all_labels[id_branch_output[i]] for i in range(id_branch_output.shape[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
-                    target_labels = [all_labels[id_branch_target[i]] for i in range(id_branch_target.shape[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
+                    predicted_labels = [all_labels[0][id_branch_output[i]] for i in range(id_branch_output.shape[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
+                    target_labels = [all_labels[0][id_branch_target[i]] for i in range(id_branch_target.shape[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
 
                     cm_all_ids_preds.append(id_branch_output.cpu().numpy())
                     cm_all_labels_preds.append(predicted_labels)
