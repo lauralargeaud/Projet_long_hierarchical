@@ -27,6 +27,7 @@ from timm.utils import AverageMeter, setup_default_logging, set_jit_fuser, Parse
 
 from scripts.metrics_logicseg import topk_accuracy_logicseg
 from scripts.logic_seg_utils import *
+from scripts.results import *
 
 try:
     from apex import amp
@@ -476,6 +477,9 @@ def main():
         # print(df.set_index(args.filename_col).to_json(orient='index', indent=4))
         print("Top 1 accuracy: ", top1.item())
         print("Top 5 accuracy: ", top5.item())
+        cm = load_confusion_matrix(os.path.join(args.results_dir, "confusion_matrix.out"))
+        output_filename = os.path.join(args.results_dir, "confusion_matrix.out")
+        save_confusion_matrix(cm, output_filename, classes_labels, folder="results/img")
 
 
 def save_results(df, results_filename, results_format='csv', filename_col='filename'):
