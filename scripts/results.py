@@ -65,7 +65,7 @@ def show_results_from_csv_summary_cce_hce(filename1, filename2, model_name1, mod
     ax1.legend(loc="upper right")
     ax1.set_title("Training and Evaluation Loss")
     ax1.grid()
-    fig.savefig(os.path.join(folder, f"loss_summary_{model_name1.lower().replace(" ", "_")}_{model_name2.lower().replace(" ", "_")}"))
+    fig.savefig(os.path.join(folder, f'loss_summary_{model_name1.lower().replace(" ", "_")}_{model_name2.lower().replace(" ", "_")}'))
 
     fig, ax2 = plt.subplots(figsize=(10, 6))
     ax2.plot(data1['epoch'], data1['eval_top1'], label=f'{model_name1} Eval Top-1 Accuracy', color='red')
@@ -82,7 +82,7 @@ def show_results_from_csv_summary_cce_hce(filename1, filename2, model_name1, mod
     ax2.legend(loc="lower right")
     ax2.set_title("Accuracy")
     ax2.grid()
-    fig.savefig(os.path.join(folder, f"acc_summary_{model_name1.lower().replace(" ", "_")}_{model_name2.lower().replace(" ", "_")}"))
+    fig.savefig(os.path.join(folder, f'acc_summary_{model_name1.lower().replace(" ", "_")}_{model_name2.lower().replace(" ", "_")}'))
 
     plt.show()
 
