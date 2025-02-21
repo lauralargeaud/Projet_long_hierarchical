@@ -321,6 +321,8 @@ def main():
             top1 = 0
             top5 = 0
             nb_batches = 0
+            # construire la laebl_matrix
+            label_matrix, _, index_to_node = get_label_matrix(args.csv_tree)
             class_to_label = get_class_to_label(label_matrix, index_to_node)
             all_labels = [np.array(list(class_to_label.keys()))]
         for batch_idx, (input, target) in enumerate(loader):
@@ -339,8 +341,6 @@ def main():
             if args.logicseg:
                 # appliquer la sigmoid
                 output = torch.sigmoid(output)
-                # construire la laebl_matrix
-                label_matrix, _, index_to_node = get_label_matrix(args.csv_tree)
                 # calculer la probabilité associée à chaque branche
                 logicseg_predictions = get_logicseg_predictions(output, label_matrix)
                 # construire le label onehot associé à chaque branche
