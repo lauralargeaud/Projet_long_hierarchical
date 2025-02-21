@@ -357,8 +357,8 @@ def main():
                     class_to_label = get_class_to_label(label_matrix, index_to_node)
                     all_labels = list(class_to_label.keys())
 
-                    predicted_labels = [all_labels[id_branch_output[i]] for i in range(id_branch_output.size[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
-                    target_labels = [all_labels[id_branch_target[i]] for i in range(id_branch_target.size[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
+                    predicted_labels = [all_labels[id_branch_output[i]] for i in range(id_branch_output.shape[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
+                    target_labels = [all_labels[id_branch_target[i]] for i in range(id_branch_target.shape[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
 
                     cm_all_ids_preds.append(id_branch_output.cpu().numpy())
                     cm_all_labels_preds.append(predicted_labels.cpu().numpy())
@@ -474,8 +474,8 @@ def main():
     if not args.no_console_results:
         print(f'--result')
         # print(df.set_index(args.filename_col).to_json(orient='index', indent=4))
-        print("Top 1 accuracy: ", top1)
-        print("Top 5 accuracy: ", top5)
+        print("Top 1 accuracy: ", top1.item())
+        print("Top 5 accuracy: ", top5.item())
 
 
 def save_results(df, results_filename, results_format='csv', filename_col='filename'):
