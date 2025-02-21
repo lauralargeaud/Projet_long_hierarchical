@@ -347,7 +347,7 @@ def main():
                 acc1 =  topk_accuracy_logicseg(logicseg_predictions, onehot_targets)
                 top1 += acc1
                 # calculer l'accuracy top5
-                acc5 =  topk_accuracy_logicseg(logicseg_predictions, onehot_targets, (5,))
+                acc5 =  topk_accuracy_logicseg(logicseg_predictions, onehot_targets, 5)
                 top5 += acc5
                 if args.conf_matrix:
                     # préparer les arguments permettant de construire la matrice de confusion
