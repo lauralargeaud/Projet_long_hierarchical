@@ -314,6 +314,8 @@ def main():
     cm_all_labels = []
     use_probs = args.output_type == 'prob'
     with torch.no_grad():
+        top1 = 0
+        top5 = 0
         for batch_idx, (input, target) in enumerate(loader):
             with amp_autocast():
                 output = model(input)
@@ -331,9 +333,9 @@ def main():
                 # appliquer la sigmoid
                 output = torch.sigmoid(output)
                 label_matrix, _, index_to_node = get_label_matrix(args.csv_tree)
-                for i in range(len(output)):
-                    print("output", output[i,:])
-                    print("target", target[i,:])
+                #for i in range(len(output)):
+                #    print("output", output[i,:])
+                #    print("target", target[i,:])
                 probas_branches_input = get_predicted_branches(output, label_matrix) # taille (nb_pred, nb_feuilles)
                 probas_branches_target = get_predicted_branches(target, label_matrix)
                 output_in, indices_branches_in = probas_branches_input.topk(top_k, dim=1) # (nb_pred, top_k), (nb_pred, top_k)
