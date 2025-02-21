@@ -324,7 +324,7 @@ def main():
             # construire la laebl_matrix
             label_matrix, _, index_to_node = get_label_matrix(args.csv_tree)
             class_to_label = get_class_to_label(label_matrix, index_to_node)
-            classes_labels = [np.array(list(class_to_label.keys()))]
+            classes_labels = np.array(list(class_to_label.keys()))
         for batch_idx, (input, target) in enumerate(loader):
             nb_batches += 1
             with amp_autocast():
@@ -356,8 +356,8 @@ def main():
                     proba_output, id_branch_output = logicseg_predictions.topk(1, dim=1)
                     proba_target, id_branch_target = onehot_targets.topk(1, dim=1)
 
-                    predicted_labels = [classes_labels[0][id_branch_output[i]] for i in range(id_branch_output.shape[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
-                    target_labels = [classes_labels[0][id_branch_target[i]] for i in range(id_branch_target.shape[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
+                    predicted_labels = [classes_labels[id_branch_output[i]] for i in range(id_branch_output.shape[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
+                    target_labels = [classes_labels[id_branch_target[i]] for i in range(id_branch_target.shape[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
 
                     cm_all_ids_preds.append(id_branch_output.cpu().numpy())
                     all_labels.append(predicted_labels)
