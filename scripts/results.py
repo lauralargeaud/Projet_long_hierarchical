@@ -26,7 +26,7 @@ def show_results_from_csv_summary(filename, model_name):
     ax1.set_xlabel("Epochs")
     ax1.set_ylabel("Loss")
     ax1.legend(loc="upper right")
-    ax1.set_title(f"{model_name} Training and Evaluation Loss")
+    ax1.set_title(f'{model_name} Training and Evaluation Loss')
     ax1.grid()
 
     fig, ax2 = plt.subplots(figsize=(10, 6))
