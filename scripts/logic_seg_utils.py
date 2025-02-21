@@ -91,7 +91,7 @@ def get_class_to_label(label_matrix, index_to_node, verbose=False):
 # pred: sigmoid(y_pred)
 # on veut: tenseur de taille (nb_branches,) contenant les probas de toutes les branches
 # sortie: shape = (nb_pred, nb_branches)
-def get_predicted_branches(pred, label_matrix):
+def get_logicseg_predictions(pred, label_matrix):
   device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
   label_matrix = torch.tensor(label_matrix, dtype=torch.float32).to(device) #torch tensor
   nb_pred = pred.shape[0]
@@ -105,7 +105,7 @@ def get_predicted_branches(pred, label_matrix):
 # most_probables_branches: indices des k branches les plus probables dans l'ordre décroissant de probabilité
 # return: les k labels textuels associés
 # most (nb_pred, top_k)
-def get_label_branches(most_probable_branches_indices_in, most_probable_branches_indices_target, class_to_label):
+def get_branches_label(most_probable_branches_indices_in, most_probable_branches_indices_target, class_to_label):
   predicted_classes = np.empty(most_probable_branches_indices_in.shape, dtype=object)
   classes = list(class_to_label.keys())
 

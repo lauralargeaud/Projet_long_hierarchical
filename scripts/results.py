@@ -7,8 +7,11 @@ import seaborn as sns
 import numpy as np
 
 from scripts.hierarchy_better_mistakes_utils import *
+from scripts.read_yaml import read_yaml
 
-def show_results_from_csv_summary(filename):
+
+
+def show_results_from_csv_summary(filename, model_name):
     """
     Show results from summary csv produced by TIMM.
     """
@@ -23,95 +26,63 @@ def show_results_from_csv_summary(filename):
     ax1.set_xlabel("Epochs")
     ax1.set_ylabel("Loss")
     ax1.legend(loc="upper right")
-    ax1.set_title("Training and Evaluation Loss")
+    ax1.set_title(f"{model_name} Training and Evaluation Loss")
     ax1.grid()
 
     fig, ax2 = plt.subplots(figsize=(10, 6))
     ax2.plot(data['epoch'], data['eval_top1'], label='Eval Top-1 Accuracy', color='green')
-    ax2.plot(data['epoch'], data['eval_top5'], label='Eval Top-5 Accuracy', color='purple')
+    ax2.plot(data['epoch'], data['eval_top5'], label='Eval Top-5 Accuracy', color='lime')
+    if 'train_top1' in data:
+        ax2.plot(data['epoch'], data['train_top1'], label='Train Top-1 Accuracy', color='red')
+        ax2.plot(data['epoch'], data['train_top5'], label='Train Top-5 Accuracy', color='orange')
+
     ax2.set_xlabel("Epochs")
     ax2.set_ylabel("Accuracy (%)")
     ax2.legend(loc="lower right")
-    ax2.set_title("Evaluation Accuracy")
+    ax2.set_title(f"{model_name} Accuracy")
     ax2.grid()
 
     plt.show()
     plt.imsave()
 
-def show_results_from_csv_summary_cce_hce(filename_cce, filename_hce, folder="output/img"):
+def show_results_from_csv_summary_cce_hce(filename1, filename2, model_name1, model_name2, folder="output/img"):
     """
-    Show results from summary csv produced by TIMM with HCE and CCE.
+    Show results from summary csv produced by TIMM with 2 models.
     """
     matplotlib.use('TkAgg')
 
-    data_cce = pd.read_csv(filename_cce)
-    data_hce = pd.read_csv(filename_hce)
+    data1 = pd.read_csv(filename1)
+    data2 = pd.read_csv(filename2)
 
     fig, ax1 = plt.subplots(figsize=(10, 6))
 
-    ax1.plot(data_cce['epoch'], data_cce['train_loss'], label='CCE Train Loss', color='red', linestyle='--')
-    ax1.plot(data_cce['epoch'], data_cce['eval_loss'], label='CCE Eval Loss', color='orange')
-    ax1.plot(data_hce['epoch'], data_hce['train_loss'], label='HCE Train Loss', color='green', linestyle='--')
-    ax1.plot(data_hce['epoch'], data_hce['eval_loss'], label='HCE Eval Loss', color='lime')
+    ax1.plot(data1['epoch'], data1['train_loss'], label=f'{model_name1} Train Loss', color='red', linestyle='--')
+    ax1.plot(data1['epoch'], data1['eval_loss'], label=f'{model_name1} Eval Loss', color='salmon')
+    ax1.plot(data2['epoch'], data2['train_loss'], label=f'{model_name2} Train Loss', color='green', linestyle='--')
+    ax1.plot(data2['epoch'], data2['eval_loss'], label=f'{model_name2} Eval Loss', color='lime')
     ax1.set_xlabel("Epochs")
     ax1.set_ylabel("Loss")
     ax1.legend(loc="upper right")
     ax1.set_title("Training and Evaluation Loss")
     ax1.grid()
-    fig.savefig(os.path.join(folder, f"loss_summary_cce_hce"))
+    fig.savefig(os.path.join(folder, f"loss_summary_{model_name1.lower().replace(" ", "_")}_{model_name2.lower().replace(" ", "_")}"))
 
     fig, ax2 = plt.subplots(figsize=(10, 6))
-    ax2.plot(data_cce['epoch'], data_cce['eval_top1'], label='CCE Eval Top-1 Accuracy', color='red')
-    ax2.plot(data_cce['epoch'], data_cce['eval_top5'], label='CCE Eval Top-5 Accuracy', color='orange')
-    ax2.plot(data_hce['epoch'], data_hce['eval_top1'], label='HCE Eval Top-1 Accuracy', color='green')
-    ax2.plot(data_hce['epoch'], data_hce['eval_top5'], label='HCE Eval Top-5 Accuracy', color='lime')
+    ax2.plot(data1['epoch'], data1['eval_top1'], label=f'{model_name1} Eval Top-1 Accuracy', color='red')
+    ax2.plot(data1['epoch'], data1['eval_top5'], label=f'{model_name1} Eval Top-5 Accuracy', color='salmon')
+    ax2.plot(data2['epoch'], data2['eval_top1'], label=f'{model_name2} Eval Top-1 Accuracy', color='green')
+    ax2.plot(data2['epoch'], data2['eval_top5'], label=f'{model_name2} Eval Top-5 Accuracy', color='lime')
+    if 'train_top1' in data1 and 'train_top1' in data2:
+        ax2.plot(data1['epoch'], data1['eval_top1'], label=f'{model_name1} Train Top-1 Accuracy', color='orange')
+        ax2.plot(data1['epoch'], data1['eval_top5'], label=f'{model_name1} Train Top-5 Accuracy', color='wheat')
+        ax2.plot(data2['epoch'], data2['eval_top1'], label=f'{model_name2} Train Top-1 Accuracy', color='blue')
+        ax2.plot(data2['epoch'], data2['eval_top5'], label=f'{model_name2} Train Top-5 Accuracy', color='lightblue')
     ax2.set_xlabel("Epochs")
     ax2.set_ylabel("Accuracy (%)")
     ax2.legend(loc="lower right")
-    ax2.set_title("Evaluation Accuracy")
+    ax2.set_title("Accuracy")
     ax2.grid()
-    fig.savefig(os.path.join(folder, f"acc_summary_cce_hce"))
-
-    plt.show()
-
-def show_results_from_csv_summary_cce_hce_alpha(filename_cce, filename_hce_0_1, filename_hce_0_5, folder="output/img"):
-    """
-    Show results from summary csv produced by TIMM with HCE and CCE.
-    """
-    matplotlib.use('TkAgg')
-
-    data_cce = pd.read_csv(filename_cce)
-    data_hce_0_1 = pd.read_csv(filename_hce_0_1)
-    data_hce_0_5 = pd.read_csv(filename_hce_0_5)
-
-    fig, ax1 = plt.subplots(figsize=(10, 6))
-
-    ax1.plot(data_cce['epoch'], data_cce['train_loss'], label='CCE Train Loss', color='red', linestyle='--')
-    ax1.plot(data_cce['epoch'], data_cce['eval_loss'], label='CCE Eval Loss', color='orange')
-    ax1.plot(data_hce_0_1['epoch'], data_hce_0_1['train_loss'], label='HCE (alpha=0.1) Train Loss', color='green', linestyle='--')
-    ax1.plot(data_hce_0_1['epoch'], data_hce_0_1['eval_loss'], label='HCE (alpha=0.1) Eval Loss', color='lime')
-    ax1.plot(data_hce_0_5['epoch'], data_hce_0_5['train_loss'], label='HCE (alpha=0.5) Train Loss', color='blue', linestyle='--')
-    ax1.plot(data_hce_0_5['epoch'], data_hce_0_5['eval_loss'], label='HCE (alpha=0.5) Eval Loss', color='skyblue')
-    ax1.set_xlabel("Epochs")
-    ax1.set_ylabel("Loss")
-    ax1.legend(loc="upper right")
-    ax1.set_title("Training and Evaluation Loss")
-    ax1.grid()
-    fig.savefig(os.path.join(folder, f"loss_summary_cce_hce"))
-
-    fig, ax2 = plt.subplots(figsize=(10, 6))
-    ax2.plot(data_cce['epoch'], data_cce['eval_top1'], label='CCE Eval Top-1 Accuracy', color='red')
-    ax2.plot(data_cce['epoch'], data_cce['eval_top5'], label='CCE Eval Top-5 Accuracy', color='orange')
-    ax2.plot(data_hce_0_1['epoch'], data_hce_0_1['eval_top1'], label='HCE (alpha=0.1) Eval Top-1 Accuracy', color='green')
-    ax2.plot(data_hce_0_1['epoch'], data_hce_0_1['eval_top5'], label='HCE (alpha=0.1) Eval Top-5 Accuracy', color='lime')
-    ax2.plot(data_hce_0_5['epoch'], data_hce_0_5['eval_top1'], label='HCE (alpha=0.5) Eval Top-1 Accuracy', color='blue')
-    ax2.plot(data_hce_0_5['epoch'], data_hce_0_5['eval_top5'], label='HCE (alpha=0.5) Eval Top-5 Accuracy', color='skyblue')
-    ax2.set_xlabel("Epochs")
-    ax2.set_ylabel("Accuracy (%)")
-    ax2.legend(loc="lower right")
-    ax2.set_title("Evaluation Accuracy")
-    ax2.grid()
-    fig.savefig(os.path.join(folder, f"acc_summary_cce_hce"))
+    fig.savefig(os.path.join(folder, f"acc_summary_{model_name1.lower().replace(" ", "_")}_{model_name2.lower().replace(" ", "_")}"))
 
     plt.show()
 
@@ -210,6 +181,9 @@ def get_id_from_nodes(hierarchy_lines):
     return nodes, leafs, nodes_to_id, leafs_to_id
 
 def get_parent_confusion_matrix(cm, classes, parents):
+    """
+    Get parent confusion matrix from current classes.
+    """
     next_classes = set()
     for class_ in classes:
         next_classes.add(parents[class_])
@@ -227,3 +201,5 @@ def get_parent_confusion_matrix(cm, classes, parents):
 
     return next_cm, next_classes
 
+if __name__ == "__main__":
+    pass

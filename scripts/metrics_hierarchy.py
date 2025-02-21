@@ -1,5 +1,5 @@
 import torch
-from logic_seg_utils import get_predicted_branches
+from logic_seg_utils import get_logicseg_predictions
 
 class MetricsLabels:
     """Classe pour stocker les labels des différentes métriques"""
@@ -65,8 +65,8 @@ class MetricsHierarchy:
             target (torch.Tensor): Labels réels.
             label_matrix (torch.Tensor): Matrice des labels.
         """
-        probas_branches_input = get_predicted_branches(output, label_matrix)
-        probas_branches_target = get_predicted_branches(target, label_matrix)
+        probas_branches_input = get_logicseg_predictions(output, label_matrix)
+        probas_branches_target = get_logicseg_predictions(target, label_matrix)
 
         _, indices_branches_in = probas_branches_input.topk(1, dim=1)
         _, indices_branches_target = probas_branches_target.topk(1, dim=1)
@@ -98,8 +98,8 @@ class MetricsHierarchy:
             float: Distance hiérarchique moyenne des erreurs pour le top-k.
         """
         # Obtenir les probabilités des branches pour l'input et la cible
-        probas_branches_input = get_predicted_branches(output, label_matrix)
-        probas_branches_target = get_predicted_branches(target, label_matrix)
+        probas_branches_input = get_logicseg_predictions(output, label_matrix)
+        probas_branches_target = get_logicseg_predictions(target, label_matrix)
 
         # Obtenir les indices des k meilleures prédictions et de la cible
         _, indices_branches_in = probas_branches_input.topk(k, dim=1)  # (batch_size, k)
@@ -237,8 +237,8 @@ class MetricsHierarchy:
             label_matrix (torch.Tensor): Matrice des labels.
 
         """
-        probas_branches_input = get_predicted_branches(output, label_matrix)
-        probas_branches_target = get_predicted_branches(target, label_matrix)
+        probas_branches_input = get_logicseg_predictions(output, label_matrix)
+        probas_branches_target = get_logicseg_predictions(target, label_matrix)
 
         # Top-1 Accuracy
         _, indices_branches_in = probas_branches_input.topk(1, dim=1)

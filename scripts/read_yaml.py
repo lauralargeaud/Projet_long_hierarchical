@@ -14,6 +14,23 @@ def read_yaml(filepath):
     except yaml.YAMLError as e:
         print("Erreur lors de la lecture du YAML :", e)
 
+def compute_model_name(folderpath):
+    filepath = os.path.join(folderpath, "args.yaml")
+    data = read_yaml(filepath)
+
+def get_method(data):
+    if "method" in data:
+        return data["method"]
+    else:
+        modified_logicseg = data["modified_logicseg"] if "modified_logicseg" in data else False
+        logicseg = data["logicseg"]
+        if logicseg:
+            return "bce"
+        elif modified_logicseg:
+            return "multi_bce"
+        else:
+            return "error"
+
 def extract_data_from_yaml(filepath):
     data = read_yaml(filepath)
     modified_logicseg = data["modified_logicseg"] if "modified_logicseg" in data else False
@@ -23,6 +40,7 @@ def extract_data_from_yaml(filepath):
     sched = data["sched"]
     num_classes = data["num_classes"]
     print(f"=== File: {filepath} ===")
+    print(f"{"Hierarchical Cross Entropy" if not is_logicseg else "LogicSeg"}")
     print(f"opt: {opt}")
     print(f"sched: {sched}")
     print(f"num_classes: {num_classes}")
@@ -31,8 +49,8 @@ def extract_data_from_yaml(filepath):
         crule_loss_weight = data["crule_loss_weight"]
         drule_loss_weight = data["drule_loss_weight"]
         erule_loss_weight = data["erule_loss_weight"]
-        print(f"modified_logicseg: {modified_logicseg}")
-        print(f"logicseg: {logicseg}")
+        method = get_method(data)
+        print(f"logicseg method: {method}")
         print(f"bce_loss_weight: {bce_loss_weight}")
         print(f"crule_loss_weight: {crule_loss_weight}")
         print(f"drule_loss_weight: {drule_loss_weight}")
@@ -46,6 +64,12 @@ def extract_data_from_yaml(filepath):
         print(f"bce: {bce}")
         print(f"cce: {cce}")
         print(f"hce_alpha: {hce_alpha}")
+    cutmix = data["cutmix"]
+    mixup = data["mixup"]
+    hflip = data["hflip"]
+    print(f"cutmix: {cutmix}")
+    print(f"mixup: {mixup}")
+    print(f"hflip: {hflip}")
     print("==================================================")
 
 

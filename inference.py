@@ -25,6 +25,7 @@ from timm.layers import apply_test_time_pool
 from timm.models import create_model
 from timm.utils import AverageMeter, setup_default_logging, set_jit_fuser, ParseKwargs
 
+from scripts.metrics_logicseg import topk_accuracy_logicseg
 from scripts.logic_seg_utils import *
 
 try:
@@ -314,12 +315,14 @@ def main():
     cm_all_labels = []
     use_probs = args.output_type == 'prob'
     with torch.no_grad():
-        top1 = 0
-        top5 = 0
+        if args.logicseg:
+            top1 = 0
+            top5 = 0
+            nb_batches = 0
         for batch_idx, (input, target) in enumerate(loader):
+            nb_batches += 1
             with amp_autocast():
                 output = model(input)
-                print("output sans sigmoid", output)
 
             if use_probs:
                 output = output.softmax(-1)
@@ -332,22 +335,33 @@ def main():
             if args.logicseg:
                 # appliquer la sigmoid
                 output = torch.sigmoid(output)
+                # construire la laebl_matrix
                 label_matrix, _, index_to_node = get_label_matrix(args.csv_tree)
+                # calculer la probabilité associée à chaque branche
+                logicseg_predictions = get_logicseg_predictions(output, label_matrix)
+                # construire le label onehot associé à chaque branche
+                onehot_targets = get_logicseg_predictions(target, label_matrix)
+                # calculer l'accuracy top1
+                acc1 =  topk_accuracy_logicseg(logicseg_predictions, onehot_targets, label_matrix)
+                top1 += acc1
+                # calculer l'accuracy top5
+                acc5 =  topk_accuracy_logicseg(logicseg_predictions, onehot_targets, label_matrix, 5)
+                top5 += acc5
+
                 #for i in range(len(output)):
                 #    print("output", output[i,:])
                 #    print("target", target[i,:])
-                probas_branches_input = get_predicted_branches(output, label_matrix) # taille (nb_pred, nb_feuilles)
-                probas_branches_target = get_predicted_branches(target, label_matrix)
-                output_in, indices_branches_in = probas_branches_input.topk(top_k, dim=1) # (nb_pred, top_k), (nb_pred, top_k)
-                output_target, indices_branches_target = probas_branches_target.topk(top_k, dim=1) # (nb_pred, top_k), (nb_pred, top_k)
-                np_indices_branches_in = indices_branches_in.cpu().numpy()
-                np_indices_branches_target = indices_branches_target.cpu().numpy()
-                if args.include_index:
-                    all_indices.append(np_indices_branches_in)
-                
-                class_to_label = get_class_to_label(label_matrix, index_to_node)
-                np_labels_branches = get_label_branches(np_indices_branches_in, np_indices_branches_target, class_to_label)
-                all_labels.append(np_labels_branches)
+                # probas_branches_input = get_predicted_branches(output, label_matrix) # taille (nb_pred, nb_feuilles)
+                # probas_branches_target = get_predicted_branches(target, label_matrix)
+                # output_in, indices_branches_in = probas_branches_input.topk(top_k, dim=1) # (nb_pred, top_k), (nb_pred, top_k)
+                # output_target, indices_branches_target = probas_branches_target.topk(top_k, dim=1) # (nb_pred, top_k), (nb_pred, top_k)
+                # np_indices_branches_in = indices_branches_in.cpu().numpy()
+                # np_indices_branches_target = indices_branches_target.cpu().numpy()
+                # if args.include_index:
+                #     all_indices.append(np_indices_branches_in)
+                # class_to_label = get_class_to_label(label_matrix, index_to_node)
+                # np_labels_branches = get_label_branches(np_indices_branches_in, np_indices_branches_target, class_to_label)
+                # all_labels.append(np_labels_branches)
 
             if top_k and not args.logicseg:
                 output, indices = output.topk(top_k)
@@ -367,6 +381,11 @@ def main():
             if batch_idx % args.log_freq == 0:
                 _logger.info('Predict: [{0}/{1}] Time {batch_time.val:.3f} ({batch_time.avg:.3f})'.format(
                     batch_idx, len(loader), batch_time=batch_time))
+
+        if args.logicseg:
+            # mettre à jour les variables des métriques
+            top1 = top1 / nb_batches
+            top5 = top5 / nb_batches
 
     all_indices = np.concatenate(all_indices, axis=0) if all_indices else None
     all_labels = np.concatenate(all_labels, axis=0) if all_labels else None

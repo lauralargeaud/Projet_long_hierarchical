@@ -6,7 +6,7 @@ from timm.loss import HierarchicalCrossEntropy
 from timm.loss.logicseg import multi_bce_loss
 
 from scripts.hierarchy_better_mistakes_utils import *
-from scripts.hce_results import *
+from scripts.results import *
 from scripts.utils import *
 from scripts.logic_seg_utils import *
 

@@ -43,7 +43,7 @@ from timm.utils import ApexScaler, NativeScaler
 
 from scripts.logic_seg_utils import *
 from scripts.hierarchy_better_mistakes_utils import get_hce_tree_data
-from scripts.metrics_logicseg import accuracy_logicseg
+from scripts.metrics_logicseg import topk_accuracy_logicseg
 
 try:
     from apex import amp
@@ -1134,7 +1134,7 @@ def train_one_epoch(
                     loss = loss_fn(output, target, last_batch)
                     # appliquer la sigmoid
                     output = torch.sigmoid(output)
-                    acc1, acc5 = accuracy_logicseg(output, target, label_matrix)
+                    acc1, acc5 = topk_accuracy_logicseg(output, target, label_matrix)
                     
             if accum_steps > 1:
                 loss /= accum_steps
@@ -1300,7 +1300,7 @@ def validate(
             if args.logicseg:
                 print("sigmoid(output_val[0,:]) = ", torch.sigmoid(output[0,:]))
                 print("Target[0,:] = ", target[0,:])
-                acc1, acc5 = accuracy_logicseg(torch.sigmoid(output), target, label_matrix=label_matrix, topk=(1, 5))
+                acc1, acc5 = topk_accuracy_logicseg(torch.sigmoid(output), target, label_matrix=label_matrix, topk=(1, 5))
             else:
                 acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
 
