@@ -479,7 +479,7 @@ def main():
         print("Top 5 accuracy: ", top5.item())
         cm = load_confusion_matrix(os.path.join(args.results_dir, "confusion_matrix.out"))
         output_filename = "confusion_matrix.jpg"
-        save_confusion_matrix(cm, output_filename, classes_labels, folder="./results/img")
+        save_confusion_matrix(cm, output_filename, classes_labels, folder="./results")
 
 
 def save_results(df, results_filename, results_format='csv', filename_col='filename'):
