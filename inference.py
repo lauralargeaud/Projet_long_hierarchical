@@ -416,7 +416,9 @@ def main():
         if args.logicseg:
             cm_all_ids_preds = np.concatenate(cm_all_ids_preds, axis=0)
             cm_all_targets = np.concatenate(cm_all_targets, axis=0)
-            cm = confusion_matrix(cm_all_targets, cm_all_ids_preds, labels=all_labels)
+            print("cm_all_targets: ", cm_all_targets)
+            print("cm_all_ids_preds: ", cm_all_ids_preds)
+            cm = confusion_matrix(cm_all_targets, cm_all_ids_preds)
             np.savetxt(os.path.join(args.results_dir, "confusion_matrix.out"), cm)
         else:
             cm_all_ids_preds = np.concatenate(cm_all_ids_preds, axis=0)
