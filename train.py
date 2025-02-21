@@ -1138,8 +1138,8 @@ def train_one_epoch(
                     logicseg_predictions = get_logicseg_predictions(torch.sigmoid(output), label_matrix)
                     # construire le label onehot associé à chaque branche
                     onehot_targets = get_logicseg_predictions(target, label_matrix)
-                    acc1 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=1)
-                    acc5 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=5)
+                    acc1 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=(1,))
+                    acc5 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=(5,))
                     
             if accum_steps > 1:
                 loss /= accum_steps
@@ -1309,8 +1309,8 @@ def validate(
                 logicseg_predictions = get_logicseg_predictions(torch.sigmoid(output), label_matrix)
                 # construire le label onehot associé à chaque branche
                 onehot_targets = get_logicseg_predictions(target, label_matrix)
-                acc1 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=1)
-                acc5 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=5)
+                acc1 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=(1,))
+                acc5 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=(5,))
             else:
                 acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
 
