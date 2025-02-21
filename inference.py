@@ -361,8 +361,8 @@ def main():
                     target_labels = [all_labels[id_branch_target[i]] for i in range(id_branch_target.shape[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
 
                     cm_all_ids_preds.append(id_branch_output.cpu().numpy())
-                    cm_all_labels_preds.append(predicted_labels.cpu().numpy())
-                    cm_all_labels_targets.append(target_labels.cpu().numpy())
+                    cm_all_labels_preds.append(predicted_labels)
+                    cm_all_labels_targets.append(target_labels)
                     cm_all_targets.append(id_branch_target.cpu().numpy())
 
                 #for i in range(len(output)):
