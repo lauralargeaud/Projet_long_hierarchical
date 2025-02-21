@@ -4,7 +4,7 @@ from math import *
 """ Métriques de logicSeg
 """
 
-def topk_accuracy_logicseg(probas_branches_input, onehot_targets, topk=(1,)):
+def topk_accuracy_logicseg(probas_branches_input, onehot_targets, topk=1):
     """Computes the accuracy over the k top predictions for the specified values of k"""
     topk = min(topk,probas_branches_input.shape[1])
     _, indices_branches_target = onehot_targets.topk(1, dim=1) # (nb_pred, 1), (nb_pred, 1)
