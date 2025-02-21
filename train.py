@@ -1134,7 +1134,12 @@ def train_one_epoch(
                     loss = loss_fn(output, target, last_batch)
                     # appliquer la sigmoid
                     output = torch.sigmoid(output)
-                    acc1, acc5 = topk_accuracy_logicseg(output, target, label_matrix)
+                    # calculer la probabilité associée à chaque branche
+                    logicseg_predictions = get_logicseg_predictions(torch.sigmoid(output), label_matrix)
+                    # construire le label onehot associé à chaque branche
+                    onehot_targets = get_logicseg_predictions(target, label_matrix)
+                    acc1 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=1)
+                    acc5 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=5)
                     
             if accum_steps > 1:
                 loss /= accum_steps
@@ -1300,7 +1305,12 @@ def validate(
             if args.logicseg:
                 print("sigmoid(output_val[0,:]) = ", torch.sigmoid(output[0,:]))
                 print("Target[0,:] = ", target[0,:])
-                acc1, acc5 = topk_accuracy_logicseg(torch.sigmoid(output), target, label_matrix=label_matrix, topk=(1, 5))
+                # calculer la probabilité associée à chaque branche
+                logicseg_predictions = get_logicseg_predictions(torch.sigmoid(output), label_matrix)
+                # construire le label onehot associé à chaque branche
+                onehot_targets = get_logicseg_predictions(target, label_matrix)
+                acc1 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=1)
+                acc5 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=5)
             else:
                 acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
 

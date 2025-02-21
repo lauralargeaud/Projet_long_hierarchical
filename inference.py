@@ -311,8 +311,10 @@ def main():
     all_indices = []
     all_labels = []
     all_outputs = []
-    cm_all_preds = []
-    cm_all_labels = []
+    cm_all_ids_preds = []
+    cm_all_labels_preds = []
+    cm_all_labels_targets = []
+    cm_all_targets = []
     use_probs = args.output_type == 'prob'
     with torch.no_grad():
         if args.logicseg:
@@ -327,10 +329,10 @@ def main():
             if use_probs:
                 output = output.softmax(-1)
 
-            if args.conf_matrix:
-                _, preds = torch.max(output, 1)
-                cm_all_preds.append(preds.cpu().numpy())
-                cm_all_labels.append(target.cpu().numpy())
+            if args.conf_matrix and not args.logicseg:
+                _, ids_preds = torch.max(output, 1)
+                cm_all_ids_preds.append(ids_preds.cpu().numpy())
+                cm_all_targets.append(target.cpu().numpy())
 
             if args.logicseg:
                 # appliquer la sigmoid
@@ -347,6 +349,21 @@ def main():
                 # calculer l'accuracy top5
                 acc5 =  topk_accuracy_logicseg(logicseg_predictions, onehot_targets, label_matrix, 5)
                 top5 += acc5
+                if args.conf_matrix:
+                    # préparer les arguments permettant de construire la matrice de confusion
+                    proba_output, id_branch_output = logicseg_predictions.topk(1, dim=1)
+                    proba_target, id_branch_target = onehot_targets.topk(1, dim=1)
+        
+                    class_to_label = get_class_to_label(label_matrix, index_to_node)
+                    all_labels = list(class_to_label.keys())
+
+                    predicted_labels = [all_labels[id_branch_output[i]] for i in range(id_branch_output.size[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
+                    target_labels = [all_labels[id_branch_target[i]] for i in range(id_branch_target.size[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
+
+                    cm_all_ids_preds.append(id_branch_output.cpu().numpy())
+                    cm_all_labels_preds.append(predicted_labels.cpu().numpy())
+                    cm_all_labels_targets.append(target_labels.cpu().numpy())
+                    cm_all_targets.append(id_branch_target.cpu().numpy())
 
                 #for i in range(len(output)):
                 #    print("output", output[i,:])
@@ -397,10 +414,17 @@ def main():
             os.makedirs(args.results_dir)
 
     if args.conf_matrix:
-        cm_all_preds = np.concatenate(cm_all_preds, axis=0)
-        cm_all_labels = np.concatenate(cm_all_labels, axis=0)
-        cm = confusion_matrix(cm_all_labels, cm_all_preds)
-        np.savetxt(os.path.join(args.results_dir, "confusion_matrix.out"), cm)
+        if args.logicseg:
+            cm_all_ids_preds = np.concatenate(cm_all_ids_preds, axis=0)
+            cm_all_targets = np.concatenate(cm_all_targets, axis=0)
+            cm = confusion_matrix(cm_all_targets, cm_all_ids_preds, labels=all_labels)
+            np.savetxt(os.path.join(args.results_dir, "confusion_matrix.out"), cm)
+        else:
+            cm_all_ids_preds = np.concatenate(cm_all_ids_preds, axis=0)
+            cm_all_targets = np.concatenate(cm_all_targets, axis=0)
+            cm = confusion_matrix(cm_all_targets, cm_all_ids_preds)
+            np.savetxt(os.path.join(args.results_dir, "confusion_matrix.out"), cm)
+
 
 
     output_col = args.output_col or ('prob' if use_probs else 'logit')
@@ -449,7 +473,9 @@ def main():
 
     if not args.no_console_results:
         print(f'--result')
-        print(df.set_index(args.filename_col).to_json(orient='index', indent=4))
+        # print(df.set_index(args.filename_col).to_json(orient='index', indent=4))
+        print("Top 1 accuracy: ", top1)
+        print("Top 5 accuracy: ", top5)
 
 
 def save_results(df, results_filename, results_format='csv', filename_col='filename'):
