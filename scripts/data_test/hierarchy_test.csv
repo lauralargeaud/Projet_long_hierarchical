@@ -1,0 +1,10 @@
+class,order,family,genus,species
+Vivant,Animal,Mammifère,Félins,Chat
+Vivant,Animal,Mammifère,Félins,Tigre
+Vivant,Animal,Mammifère,Félins,Lion
+Vivant,Animal,Mammifère,Canidés,Chien
+Vivant,Animal,Mammifère,Canidés,Loup
+Vivant,Animal,Oiseau,Rapace,Aigle
+Vivant,Animal,Oiseau,Rapace,Faucon
+Vivant,Animal,Oiseau,Passereau,Moineau
+Vivant,Animal,Oiseau,Passereau,Corbeau

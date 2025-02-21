@@ -8,10 +8,11 @@ def get_layer_matrix(path_to_csv_tree, verbose=False):
   unique_nodes = pd.unique(csv.values.ravel())
   unique_nodes = unique_nodes[~pd.isnull(unique_nodes)]  # On enlève les NaN au cas ou
   node_to_index = {node: idx for idx, node in enumerate(unique_nodes)}
-  print(node_to_index)
-  La = np.zeros((len(csv.columns)-1, len(unique_nodes)))
+  # if verbose:
+  #   print(node_to_index)
+  La = np.zeros((len(csv.columns), len(unique_nodes)))
   for _, row in csv.iterrows():
-     for layer, node in enumerate(row[1:]):
+     for layer, node in enumerate(row):
         La[layer, node_to_index[node]] = 1
 
   if verbose:

@@ -2,7 +2,8 @@ import json
 import time
 
 import torch
-from timm.loss import HierarchicalCrossEntropy, ModifiedLogicSegLoss
+from timm.loss import HierarchicalCrossEntropy
+from timm.loss.logicseg import multi_bce_loss
 
 from scripts.hierarchy_better_mistakes_utils import *
 from scripts.hce_results import *
@@ -52,13 +53,12 @@ def test_hce():
     print("Valeur de la perte HXE :", loss_value.item())
 
 def test_modified_logiqseg_loss():
-    tree_filename = "data/simple/hierarchy_test.csv"
-    H, P, M = get_tree_matrices(tree_filename)
-    La = get_layer_matrix(tree_filename)
+    tree_filename = "/mnt/c/Users/rubcr/OneDrive/Bureau/projet_long/pytorch-image-models-bees/scripts/data_test/hierarchy_test.csv"
+    La_raw = get_layer_matrix(tree_filename)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    La = torch.tensor(La).to(device)
+    La_raw = torch.tensor(La_raw).to(device)
     
-    loss_fn = ModifiedLogicSegLoss(H, P, M, La, alpha_c=0, alpha_d=0, alpha_e=0, alpha_bce=1, alpha_lam=0.1)
+    loss_fn = multi_bce_loss.MultiBCE(La_raw, 0.1)
     
     logits = torch.mul(torch.ones(2, 17), -10).to(device)
     target = torch.zeros(2, 17).to(device)
@@ -67,9 +67,11 @@ def test_modified_logiqseg_loss():
     logits[1,[0, 1, 2, 3, 7]] = 10
     target[1,[0, 1, 2, 3, 4]] = 1
 
-    
-    loss = loss_fn.forward(logits, target, verbose=True)
-    print("Valeur de la perte :", loss.item())
+    y_pred = torch.sigmoid(logits)
+    loss1 = loss_fn.forward(y_pred, target)
+    loss2 = loss_fn.forward_old(y_pred, target)
+    print("Valeur de la perte 1:", loss1.item())
+    print("Valeur de la perte 2:", loss2.item())
 
 
 def print_results():
