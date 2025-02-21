@@ -321,6 +321,8 @@ def main():
             top1 = 0
             top5 = 0
             nb_batches = 0
+            class_to_label = get_class_to_label(label_matrix, index_to_node)
+            all_labels = [np.array(list(class_to_label.keys()))]
         for batch_idx, (input, target) in enumerate(loader):
             nb_batches += 1
             with amp_autocast():
@@ -353,9 +355,6 @@ def main():
                     # préparer les arguments permettant de construire la matrice de confusion
                     proba_output, id_branch_output = logicseg_predictions.topk(1, dim=1)
                     proba_target, id_branch_target = onehot_targets.topk(1, dim=1)
-        
-                    class_to_label = get_class_to_label(label_matrix, index_to_node)
-                    all_labels = np.array(list(class_to_label.keys()))
 
                     predicted_labels = [all_labels[id_branch_output[i]] for i in range(id_branch_output.shape[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
                     target_labels = [all_labels[id_branch_target[i]] for i in range(id_branch_target.shape[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
