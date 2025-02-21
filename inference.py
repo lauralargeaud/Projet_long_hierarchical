@@ -312,7 +312,6 @@ def main():
     all_labels = []
     all_outputs = []
     cm_all_ids_preds = []
-    cm_all_labels_preds = []
     cm_all_labels_targets = []
     cm_all_targets = []
     use_probs = args.output_type == 'prob'
@@ -324,7 +323,7 @@ def main():
             # construire la laebl_matrix
             label_matrix, _, index_to_node = get_label_matrix(args.csv_tree)
             class_to_label = get_class_to_label(label_matrix, index_to_node)
-            all_labels = [np.array(list(class_to_label.keys()))]
+            classes_labels = [np.array(list(class_to_label.keys()))]
         for batch_idx, (input, target) in enumerate(loader):
             nb_batches += 1
             with amp_autocast():
@@ -356,11 +355,11 @@ def main():
                     proba_output, id_branch_output = logicseg_predictions.topk(1, dim=1)
                     proba_target, id_branch_target = onehot_targets.topk(1, dim=1)
 
-                    predicted_labels = [all_labels[0][id_branch_output[i]] for i in range(id_branch_output.shape[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
-                    target_labels = [all_labels[0][id_branch_target[i]] for i in range(id_branch_target.shape[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
+                    predicted_labels = [classes_labels[0][id_branch_output[i]] for i in range(id_branch_output.shape[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
+                    target_labels = [classes_labels[0][id_branch_target[i]] for i in range(id_branch_target.shape[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
 
                     cm_all_ids_preds.append(id_branch_output.cpu().numpy())
-                    cm_all_labels_preds.append(predicted_labels)
+                    all_labels.append(predicted_labels)
                     cm_all_labels_targets.append(target_labels)
                     cm_all_targets.append(id_branch_target.cpu().numpy())
 
@@ -416,8 +415,8 @@ def main():
         if args.logicseg:
             cm_all_ids_preds = np.concatenate(cm_all_ids_preds, axis=0)
             cm_all_targets = np.concatenate(cm_all_targets, axis=0)
-            print("cm_all_targets: ", cm_all_targets)
-            print("cm_all_ids_preds: ", cm_all_ids_preds)
+            # print("cm_all_targets: ", cm_all_targets)
+            # print("cm_all_ids_preds: ", cm_all_ids_preds)
             cm = confusion_matrix(cm_all_targets, cm_all_ids_preds)
             np.savetxt(os.path.join(args.results_dir, "confusion_matrix.out"), cm)
         else:
