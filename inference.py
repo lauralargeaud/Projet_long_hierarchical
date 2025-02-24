@@ -373,9 +373,9 @@ def main():
 
                     nb_pred = output.shape[0]
                     # extraction des probabilités de chaque noeud pour chaque hauteur de l'arbre
-                    output_rep = output.unsqueeze(0).repeat(h) # (h, nb_pred, nb_noeuds)
-                    onehot_rep = target.unsqueeze(0).repeat(h) # (h, nb_pred, nb_noeuds)
-                    La_rep = La.unsqueeze(1).repeat(nb_pred) # (h, nb_pred, nb_noeuds)
+                    output_rep = output.unsqueeze(0).repeat(h, 1, 1) # (h, nb_pred, nb_noeuds)
+                    onehot_rep = target.unsqueeze(0).repeat(h, 1, 1) # (h, nb_pred, nb_noeuds)
+                    La_rep = La.unsqueeze(1).repeat(1, nb_pred, 1) # (h, nb_pred, nb_noeuds)
                     probas_par_hauteur = output_rep * La_rep # (h, nb_pred, nb_noeuds): probas_par_hauteur[i,j,:] = les probas des noeuds de hauteur i pour la prédiction d'indice j
                     onehot_par_hauteur = onehot_rep * La_rep # (h, nb_pred, nb_noeuds)
                     proba_output, id_branch_output = probas_par_hauteur.topk(1, dim=2) # (h, nb_pred) id de la classe prédite à chaque hauteur de l'arbre
