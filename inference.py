@@ -325,6 +325,13 @@ def main():
             label_matrix, _, index_to_node = get_label_matrix(args.csv_tree)
             class_to_label = get_class_to_label(label_matrix, index_to_node)
             classes_labels = np.array(list(class_to_label.keys()))
+            # données utiles pour la matrice de confusion pour chaque hauteur de l'arbre
+            La_raw = get_layer_matrix(args.csv_tree, verbose=False) 
+            La = torch.tensor(La_raw).to(device) # (hauteur, nb_noeuds); La[i,j] = 1 si le noeud d'index j est de profondeur i, sinon 0
+            h = La.shape[0] # hauteur de l'arbre
+            nb_pred = output.shape[0]
+            cm_par_hauteur_ids_preds = np.empty((h,0), dtype=torch.float32)
+            cm_par_hauteur_ids_targets = np.empty((h,0), dtype=torch.float32)
         for batch_idx, (input, target) in enumerate(loader):
             nb_batches += 1
             with amp_autocast():
@@ -342,9 +349,9 @@ def main():
                 # appliquer la sigmoid
                 output = torch.sigmoid(output)
                 # calculer la probabilité associée à chaque branche
-                logicseg_predictions = get_logicseg_predictions(output, label_matrix)
+                logicseg_predictions = get_logicseg_predictions(output, label_matrix) # (nb_pred, nb_feuilles) probabilités des feuilles prédites par le modèle
                 # construire le label onehot associé à chaque branche
-                onehot_targets = get_logicseg_predictions(target, label_matrix)
+                onehot_targets = get_logicseg_predictions(target, label_matrix) # (nb_pred, nb_feuilles) one hot encoding des feuilles cibles
                 # calculer l'accuracy top1
                 acc1 =  topk_accuracy_logicseg(logicseg_predictions, onehot_targets)
                 top1 += acc1
@@ -352,9 +359,9 @@ def main():
                 acc5 =  topk_accuracy_logicseg(logicseg_predictions, onehot_targets, 5)
                 top5 += acc5
                 if args.conf_matrix:
-                    # préparer les arguments permettant de construire la matrice de confusion
-                    proba_output, id_branch_output = logicseg_predictions.topk(1, dim=1)
-                    proba_target, id_branch_target = onehot_targets.topk(1, dim=1)
+                    # données utiles pour la matrice de confusion sur les feuilles
+                    proba_output, id_branch_output = logicseg_predictions.topk(1, dim=1) # proba max, id proba max: classe prédite par le modèles
+                    proba_target, id_branch_target = onehot_targets.topk(1, dim=1) # idem mais classe cible
 
                     predicted_labels = [classes_labels[id_branch_output[i]] for i in range(id_branch_output.shape[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
                     target_labels = [classes_labels[id_branch_target[i]] for i in range(id_branch_target.shape[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
@@ -363,6 +370,18 @@ def main():
                     all_labels.append(predicted_labels)
                     cm_all_labels_targets.append(target_labels)
                     cm_all_targets.append(id_branch_target.cpu().numpy())
+
+                    # extraction des probabilités de chaque noeud pour chaque hauteur de l'arbre
+                    output_rep = output.unsqueeze(0).repeat(h) # (h, nb_pred, nb_noeuds)
+                    onehot_rep = target.unsqueeze(0).repeat(h) # (h, nb_pred, nb_noeuds)
+                    La_rep = La.unsqueeze(1).repeat(nb_pred) # (h, nb_pred, nb_noeuds)
+                    probas_par_hauteur = output_rep * La_rep # (h, nb_pred, nb_noeuds): probas_par_hauteur[i,j,:] = les probas des noeuds de hauteur i pour la prédiction d'indice j
+                    onehot_par_hauteur = onehot_rep * La_rep # (h, nb_pred, nb_noeuds)
+                    proba_output, id_branch_output = probas_par_hauteur.topk(1, dim=2) # (h, nb_pred) id de la classe prédite à chaque hauteur de l'arbre
+                    proba_target, id_branch_target = onehot_par_hauteur.topk(1, dim=2) # (h, nb_pred) id de la classe cible à chaque hauteur de l'arbre
+
+                    cm_par_hauteur_ids_preds = np.concat((cm_par_hauteur_ids_preds, id_branch_output.cpu().numpy()), 1) # (h, nb_images_traitées)
+                    cm_par_hauteur_ids_targets = np.concat((cm_par_hauteur_ids_targets, id_branch_target.cpu().numpy()), 1) # (h, nb_images_traitées)
 
                 #for i in range(len(output)):
                 #    print("output", output[i,:])
@@ -414,12 +433,21 @@ def main():
 
     if args.conf_matrix:
         if args.logicseg:
+
+            # construire la matrice de confusion des feuilles
             cm_all_ids_preds = np.concatenate(cm_all_ids_preds, axis=0)
             cm_all_targets = np.concatenate(cm_all_targets, axis=0)
             # print("cm_all_targets: ", cm_all_targets)
             # print("cm_all_ids_preds: ", cm_all_ids_preds)
             cm = confusion_matrix(cm_all_targets, cm_all_ids_preds)
             np.savetxt(os.path.join(args.results_dir, "confusion_matrix.out"), cm)
+
+            # construire la matrice de confusion pour chaque hauteur de l'arbre
+            for hauteur in range(h-1):
+                cm = confusion_matrix(cm_par_hauteur_ids_targets[hauteur,:], cm_par_hauteur_ids_preds[hauteur, :])
+                np.savetxt(os.path.join(args.results_dir, "confusion_matrix_"+hauteur+".out"), cm)
+
+
         else:
             cm_all_ids_preds = np.concatenate(cm_all_ids_preds, axis=0)
             cm_all_targets = np.concatenate(cm_all_targets, axis=0)
@@ -480,6 +508,13 @@ def main():
         cm = load_confusion_matrix(os.path.join(args.results_dir, "confusion_matrix.out"))
         output_filename = "confusion_matrix.jpg"
         save_confusion_matrix(cm, output_filename, classes_labels, folder="./results")
+
+        if args.logicseg:
+            # construire la matrice de confusion pour chaque hauteur de l'arbre
+            for hauteur in range(h-1):
+                cm = load_confusion_matrix(os.path.join(args.results_dir, "confusion_matrix_"+hauteur+".out"))
+                output_filename = "confusion_matrix_"+hauteur+".jpg"
+                save_confusion_matrix(cm, output_filename, folder="./results")
 
 
 def save_results(df, results_filename, results_format='csv', filename_col='filename'):
