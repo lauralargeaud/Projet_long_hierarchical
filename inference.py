@@ -330,8 +330,8 @@ def main():
             La_raw = get_layer_matrix(args.csv_tree, verbose=False) 
             La = torch.tensor(La_raw).to(device) # (hauteur, nb_noeuds); La[i,j] = 1 si le noeud d'index j est de profondeur i, sinon 0
             h = La.shape[0] # hauteur de l'arbre
-            cm_par_hauteur_ids_preds = np.empty((h,0), dtype=torch.float32)
-            cm_par_hauteur_ids_targets = np.empty((h,0), dtype=torch.float32)
+            cm_par_hauteur_ids_preds = np.empty((h,0), dtype=np.float32)
+            cm_par_hauteur_ids_targets = np.empty((h,0), dtype=np.float32)
         for batch_idx, (input, target) in enumerate(loader):
             nb_batches += 1
             with amp_autocast():
