@@ -380,9 +380,9 @@ def main():
                     onehot_par_hauteur = onehot_rep * La_rep # (h, nb_pred, nb_noeuds)
                     proba_output, id_branch_output = probas_par_hauteur.topk(1, dim=2) # (h, nb_pred) id de la classe prédite à chaque hauteur de l'arbre
                     proba_target, id_branch_target = onehot_par_hauteur.topk(1, dim=2) # (h, nb_pred) id de la classe cible à chaque hauteur de l'arbre
-
-                    cm_par_hauteur_ids_preds = np.concatenate((cm_par_hauteur_ids_preds, id_branch_output.cpu().numpy()), 1) # (h, nb_images_traitées)
-                    cm_par_hauteur_ids_targets = np.concatenate((cm_par_hauteur_ids_targets, id_branch_target.cpu().numpy()), 1) # (h, nb_images_traitées)
+                    
+                    cm_par_hauteur_ids_preds = np.concatenate((cm_par_hauteur_ids_preds, id_branch_output.squeeze(2).cpu().numpy()), 1) # (h, nb_images_traitées)
+                    cm_par_hauteur_ids_targets = np.concatenate((cm_par_hauteur_ids_targets, id_branch_target.squeeze(2).cpu().numpy()), 1) # (h, nb_images_traitées)
 
                 #for i in range(len(output)):
                 #    print("output", output[i,:])
