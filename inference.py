@@ -331,7 +331,7 @@ def main():
             La_raw = get_layer_matrix(args.csv_tree, verbose=False) 
             La = torch.tensor(La_raw).to(device) # (hauteur, nb_noeuds); La[i,j] = 1 si le noeud d'index j est de profondeur i, sinon 0
             h = La.shape[0] # hauteur de l'
-            labels_par_hauteur = [[index_to_node[La[hauteur,j]] for j in range(La.shape[1]) if La[hauteur,j] == 1 ] for hauteur in range(h)] # liste de h sous-listes; labels_par_hauteur[i] = les labels de la hauteur
+            labels_par_hauteur = [[index_to_node[int(La[hauteur,j].item())] for j in range(La.shape[1]) if int(La[hauteur,j].item()) == 1 ] for hauteur in range(h)] # liste de h sous-listes; labels_par_hauteur[i] = les labels de la hauteur
             cm_par_hauteur_ids_preds = np.empty((h,0), dtype=np.float32)
             cm_par_hauteur_ids_targets = np.empty((h,0), dtype=np.float32)
         for batch_idx, (input, target) in enumerate(loader):
