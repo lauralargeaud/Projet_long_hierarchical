@@ -519,7 +519,7 @@ def main():
             for hauteur in range(1,h):
                 cm = load_confusion_matrix(os.path.join(args.results_dir, "confusion_matrix_"+str(hauteur)+".out"))
                 output_filename = "confusion_matrix_"+str(hauteur)+".jpg"
-                save_confusion_matrix(cm, output_filename, labels_par_hauteur[hauteur-1], folder="./results")
+                save_confusion_matrix(cm, output_filename, labels_par_hauteur[hauteur], folder="./results")
 
 
 def save_results(df, results_filename, results_format='csv', filename_col='filename'):
