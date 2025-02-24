@@ -330,7 +330,6 @@ def main():
             La_raw = get_layer_matrix(args.csv_tree, verbose=False) 
             La = torch.tensor(La_raw).to(device) # (hauteur, nb_noeuds); La[i,j] = 1 si le noeud d'index j est de profondeur i, sinon 0
             h = La.shape[0] # hauteur de l'arbre
-            nb_pred = output.shape[0]
             cm_par_hauteur_ids_preds = np.empty((h,0), dtype=torch.float32)
             cm_par_hauteur_ids_targets = np.empty((h,0), dtype=torch.float32)
         for batch_idx, (input, target) in enumerate(loader):
@@ -372,6 +371,7 @@ def main():
                     cm_all_labels_targets.append(target_labels)
                     cm_all_targets.append(id_branch_target.cpu().numpy())
 
+                    nb_pred = output.shape[0]
                     # extraction des probabilités de chaque noeud pour chaque hauteur de l'arbre
                     output_rep = output.unsqueeze(0).repeat(h) # (h, nb_pred, nb_noeuds)
                     onehot_rep = target.unsqueeze(0).repeat(h) # (h, nb_pred, nb_noeuds)
