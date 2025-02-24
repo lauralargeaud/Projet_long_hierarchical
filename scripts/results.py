@@ -91,7 +91,7 @@ def load_confusion_matrix(filename):
     Load confusion matrix from a txt file.
     """
     cm = np.loadtxt(filename)
-    cm = cm.astype(int)
+    cm = cm.astype(float)
     return cm
 
 def save_confusion_matrix(cm, output_filename, classes, folder="output/img"):
