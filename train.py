@@ -1091,16 +1091,13 @@ def train_one_epoch(
     data_time_m = utils.AverageMeter()
     #losses_m = utils.AverageMeter()
     losses_dict = dict()
-    losses_dict["loss_globale"] = []
-    if args.logicseg:
-        losses_dict["C_loss"] = []
-        losses_dict["D_loss"] = []
-        losses_dict["E_loss"] = []
-        losses_dict["target_loss"] = []
-        
     losses_m = dict()
-    for key in list(losses_dict.keys()):
-            losses_m[key] = utils.AverageMeter()
+    losses_m["loss_globale"] = utils.AverageMeter()
+    if args.logicseg:
+        losses_m["C_loss"] = utils.AverageMeter()
+        losses_m["D_loss"] = utils.AverageMeter()
+        losses_m["E_loss"] = utils.AverageMeter()
+        losses_m["target_loss"] = utils.AverageMeter()
     acc1_m = utils.AverageMeter()
     acc5_m = utils.AverageMeter()
 
@@ -1191,7 +1188,7 @@ def train_one_epoch(
             _backward(loss)
 
         if losses_dict != None:
-            losses_dict["loss_globale"].append(loss)
+            losses_dict["loss_globale"] = loss
             
         #losses_m.update(loss.item() * accum_steps, input.size(0))
         for key in list(losses_dict.keys()):

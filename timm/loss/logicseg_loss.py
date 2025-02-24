@@ -62,11 +62,11 @@ class LogicSegLoss(nn.Module):
                 target_loss = self.multi_bce(y_pred_sigmoid, y_true)
                 
         if losses_dict != None:
-            losses_dict["C_loss"].append(batch_c_losses)
-            losses_dict["D_loss"].append(batch_d_losses)
-            losses_dict["E_loss"].append(batch_e_losses)
-            losses_dict["target_loss"].append(target_loss)
-        
+            losses_dict["C_loss"] = batch_c_losses
+            losses_dict["D_loss"] = batch_d_losses
+            losses_dict["E_loss"] = batch_e_losses
+            losses_dict["target_loss"] = target_loss
+      
         if verbose:
             print("bce_losses", target_loss.item())
 
