@@ -1097,7 +1097,10 @@ def train_one_epoch(
         losses_dict["D_loss"] = []
         losses_dict["E_loss"] = []
         losses_dict["target_loss"] = []
+        
     losses_m = dict()
+    for key in list(losses_dict.keys()):
+            losses_m[key] = utils.AverageMeter()
     acc1_m = utils.AverageMeter()
     acc5_m = utils.AverageMeter()
 
