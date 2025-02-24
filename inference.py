@@ -446,7 +446,7 @@ def main():
             # construire la matrice de confusion pour chaque hauteur de l'arbre
             for hauteur in range(h-1):
                 cm = confusion_matrix(cm_par_hauteur_ids_targets[hauteur,:], cm_par_hauteur_ids_preds[hauteur, :])
-                np.savetxt(os.path.join(args.results_dir, "confusion_matrix_"+hauteur+".out"), cm)
+                np.savetxt(os.path.join(args.results_dir, "confusion_matrix_"+str(hauteur)+".out"), cm)
 
 
         else:
@@ -514,7 +514,7 @@ def main():
             # construire la matrice de confusion pour chaque hauteur de l'arbre
             for hauteur in range(h-1):
                 cm = load_confusion_matrix(os.path.join(args.results_dir, "confusion_matrix_"+hauteur+".out"))
-                output_filename = "confusion_matrix_"+hauteur+".jpg"
+                output_filename = "confusion_matrix_"+str(hauteur)+".jpg"
                 save_confusion_matrix(cm, output_filename, folder="./results")
 
 
