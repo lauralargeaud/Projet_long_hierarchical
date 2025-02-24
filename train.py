@@ -1140,6 +1140,10 @@ def train_one_epoch(
                     onehot_targets = get_logicseg_predictions(target, label_matrix)
                     acc1 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=1)
                     acc5 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=5)
+                else:
+                    acc1, acc5 = utils.accuracy(output, torch.argmax(target, dim=1), topk=(1, 5))
+                    acc1 = acc1 / 100
+                    acc5 = acc5 / 100
                     
             if accum_steps > 1:
                 loss /= accum_steps
@@ -1176,9 +1180,8 @@ def train_one_epoch(
             _backward(loss)
 
         losses_m.update(loss.item() * accum_steps, input.size(0))
-        if args.logicseg:
-            acc1_m.update(acc1.item() * accum_steps, input.size(0))
-            acc5_m.update(acc5.item() * accum_steps, input.size(0))
+        acc1_m.update(acc1.item() * accum_steps, input.size(0))
+        acc5_m.update(acc5.item() * accum_steps, input.size(0))
         update_sample_count += input.size(0)
 
         if not need_update:
@@ -1218,13 +1221,10 @@ def train_one_epoch(
                     f'Time: {update_time_m.val:.3f}s, {update_sample_count / update_time_m.val:>7.2f}/s  '
                     f'({update_time_m.avg:.3f}s, {update_sample_count / update_time_m.avg:>7.2f}/s)  '
                     f'LR: {lr:.3e}  '
-                    f'Data: {data_time_m.val:.3f} ({data_time_m.avg:.3f})'
+                    f'Data: {data_time_m.val:.3f} ({data_time_m.avg:.3f}) '
+                    f'Acc@1: {acc1_m.val:#.3g} ({acc1_m.avg:#.3g}), '
+                    f'Acc@5: {acc5_m.val:#.3g} ({acc5_m.avg:#.3g})'
                 )
-                if args.logicseg:
-                    _logger.info(
-                        f'Top 1 accuracy on training data: {acc1.item():#.3g}, '
-                        f'Top 5 accuracy on training data: {acc5.item():#.3g}'
-                    )
 
 
                 if args.save_images and output_dir:
@@ -1250,14 +1250,17 @@ def train_one_epoch(
         optimizer.sync_lookahead()
 
     loss_avg = losses_m.avg
+    acc1_avg = acc1_m.avg
+    acc5_avg = acc5_m.avg
     if args.distributed:
         # synchronize avg loss, each process keeps its own running avg
         loss_avg = torch.tensor([loss_avg], device=device, dtype=torch.float32)
         loss_avg = utils.reduce_tensor(loss_avg, args.world_size).item()
-    if args.logicseg:
-        return OrderedDict([('loss', loss_avg), ('acc1', acc1_m.avg), ('acc5', acc5_m.avg)])
-    else: 
-        return OrderedDict([('loss', loss_avg)])
+        acc1 = utils.reduce_tensor(acc1, args.world_size)
+        acc1_avg = torch.tensor([acc1_avg], device=device, dtype=torch.float32)
+        acc5 = utils.reduce_tensor(acc5, args.world_size)
+        acc5_avg = torch.tensor([acc5_avg], device=device, dtype=torch.float32)
+    return OrderedDict([('loss', loss_avg), ('acc1', acc1_avg), ('acc5', acc5_avg)])
 
 
 def validate(
@@ -1273,8 +1276,8 @@ def validate(
 ):
     batch_time_m = utils.AverageMeter()
     losses_m = utils.AverageMeter()
-    top1_m = utils.AverageMeter()
-    top5_m = utils.AverageMeter()
+    acc1_m = utils.AverageMeter()
+    acc5_m = utils.AverageMeter()
 
     model.eval()
 
@@ -1313,6 +1316,8 @@ def validate(
                 acc5 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=5)
             else:
                 acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
+                acc1 = acc1 / 100
+                acc5 = acc5 / 100
 
             if args.distributed:
                 reduced_loss = utils.reduce_tensor(loss.data, args.world_size)
@@ -1327,8 +1332,8 @@ def validate(
                 torch.npu.synchronize()
 
             losses_m.update(reduced_loss.item(), input.size(0))
-            top1_m.update(acc1.item(), output.size(0))
-            top5_m.update(acc5.item(), output.size(0))
+            acc1_m.update(acc1.item(), output.size(0))
+            acc5_m.update(acc5.item(), output.size(0))
 
             batch_time_m.update(time.time() - end)
             end = time.time()
@@ -1338,11 +1343,11 @@ def validate(
                     f'{log_name}: [{batch_idx:>4d}/{last_idx}]  '
                     f'Time: {batch_time_m.val:.3f} ({batch_time_m.avg:.3f})  '
                     f'Loss: {losses_m.val:>7.3f} ({losses_m.avg:>6.3f})  '
-                    f'Acc@1: {top1_m.val:>7.3f} ({top1_m.avg:>7.3f})  '
-                    f'Acc@5: {top5_m.val:>7.3f} ({top5_m.avg:>7.3f})'
+                    f'Acc@1: {acc1_m.val:>7.3f} ({acc1_m.avg:>7.3f})  '
+                    f'Acc@5: {acc5_m.val:>7.3f} ({acc5_m.avg:>7.3f})'
                 )
 
-    metrics = OrderedDict([('loss', losses_m.avg), ('top1', top1_m.avg), ('top5', top5_m.avg)])
+    metrics = OrderedDict([('loss', losses_m.avg), ('top1', acc1_m.avg), ('top5', acc5_m.avg)])
 
     return metrics
 
