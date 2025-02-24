@@ -316,6 +316,7 @@ def main():
     cm_all_labels_targets = []
     cm_all_targets = []
     h = 0
+    labels_par_hauteur = None
     use_probs = args.output_type == 'prob'
     with torch.no_grad():
         if args.logicseg:
@@ -329,7 +330,8 @@ def main():
             # données utiles pour la matrice de confusion pour chaque hauteur de l'arbre
             La_raw = get_layer_matrix(args.csv_tree, verbose=False) 
             La = torch.tensor(La_raw).to(device) # (hauteur, nb_noeuds); La[i,j] = 1 si le noeud d'index j est de profondeur i, sinon 0
-            h = La.shape[0] # hauteur de l'arbre
+            h = La.shape[0] # hauteur de l'
+            labels_par_hauteur = [[index_to_node(La[hauteur,j]) for j in range(La.shape[1]) if La[hauteur,j] == 1 ] for hauteur in range(h)] # liste de h sous-listes; labels_par_hauteur[i] = les labels de la hauteur
             cm_par_hauteur_ids_preds = np.empty((h,0), dtype=np.float32)
             cm_par_hauteur_ids_targets = np.empty((h,0), dtype=np.float32)
         for batch_idx, (input, target) in enumerate(loader):
@@ -444,7 +446,7 @@ def main():
             np.savetxt(os.path.join(args.results_dir, "confusion_matrix.out"), cm)
 
             # construire la matrice de confusion pour chaque hauteur de l'arbre
-            for hauteur in range(h-1):
+            for hauteur in range(h):
                 cm = confusion_matrix(cm_par_hauteur_ids_targets[hauteur,:], cm_par_hauteur_ids_preds[hauteur, :])
                 np.savetxt(os.path.join(args.results_dir, "confusion_matrix_"+str(hauteur)+".out"), cm)
 
@@ -512,10 +514,10 @@ def main():
 
         if args.logicseg:
             # construire la matrice de confusion pour chaque hauteur de l'arbre
-            for hauteur in range(h-1):
+            for hauteur in range(h):
                 cm = load_confusion_matrix(os.path.join(args.results_dir, "confusion_matrix_"+str(hauteur)+".out"))
                 output_filename = "confusion_matrix_"+str(hauteur)+".jpg"
-                save_confusion_matrix(cm, output_filename, folder="./results")
+                save_confusion_matrix(cm, output_filename, labels_par_hauteur[hauteur], folder="./results")
 
 
 def save_results(df, results_filename, results_format='csv', filename_col='filename'):
