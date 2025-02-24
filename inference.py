@@ -445,12 +445,12 @@ def main():
             # print("cm_all_targets: ", cm_all_targets)
             # print("cm_all_ids_preds: ", cm_all_ids_preds)
             cm = confusion_matrix(cm_all_targets, cm_all_ids_preds)
-            np.savetxt(os.path.join(args.results_dir, "confusion_matrix.out"), cm)
+            np.savetxt(os.path.join(args.results_dir, "cm.out"), cm)
 
             # construire la matrice de confusion pour chaque hauteur de l'arbre
             for hauteur in range(1,h):
                 cm = confusion_matrix(cm_par_hauteur_ids_targets[hauteur,:], cm_par_hauteur_ids_preds[hauteur, :], normalize='true')
-                np.savetxt(os.path.join(args.results_dir, "confusion_matrix_"+str(hauteur)+".out"), cm)
+                np.savetxt(os.path.join(args.results_dir, "cm_"+str(hauteur)+".out"), cm)
 
 
         else:
@@ -510,15 +510,15 @@ def main():
         # print(df.set_index(args.filename_col).to_json(orient='index', indent=4))
         print("Top 1 accuracy: ", top1.item())
         print("Top 5 accuracy: ", top5.item())
-        cm = load_confusion_matrix(os.path.join(args.results_dir, "confusion_matrix.out"))
-        output_filename = "confusion_matrix.jpg"
+        cm = load_confusion_matrix(os.path.join(args.results_dir, "cm.out"))
+        output_filename = "cm_branches.jpg"
         save_confusion_matrix(cm, output_filename, classes_labels, folder="./results")
 
         if args.logicseg:
             # construire la matrice de confusion pour chaque hauteur de l'arbre
             for hauteur in range(1,h):
-                cm = load_confusion_matrix(os.path.join(args.results_dir, "confusion_matrix_"+str(hauteur)+".out"))
-                output_filename = "confusion_matrix_"+str(hauteur)+".jpg"
+                cm = load_confusion_matrix(os.path.join(args.results_dir, "cm_"+str(hauteur)+".out"))
+                output_filename = "im_"+str(hauteur)+"_cm.jpg"
                 save_confusion_matrix(cm, output_filename, labels_par_hauteur[hauteur], folder="./results")
 
 
