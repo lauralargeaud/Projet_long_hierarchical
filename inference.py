@@ -513,7 +513,7 @@ def main():
         if args.logicseg:
             # construire la matrice de confusion pour chaque hauteur de l'arbre
             for hauteur in range(h-1):
-                cm = load_confusion_matrix(os.path.join(args.results_dir, "confusion_matrix_"+hauteur+".out"))
+                cm = load_confusion_matrix(os.path.join(args.results_dir, "confusion_matrix_"+str(hauteur)+".out"))
                 output_filename = "confusion_matrix_"+str(hauteur)+".jpg"
                 save_confusion_matrix(cm, output_filename, folder="./results")
 
