@@ -315,6 +315,7 @@ def main():
     cm_all_ids_preds = []
     cm_all_labels_targets = []
     cm_all_targets = []
+    h = 0
     use_probs = args.output_type == 'prob'
     with torch.no_grad():
         if args.logicseg:
