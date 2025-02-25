@@ -10,6 +10,7 @@ import json
 import logging
 import os
 import time
+import shutil
 from contextlib import suppress
 from functools import partial
 from sys import maxsize
@@ -340,7 +341,6 @@ def main():
             cm_par_hauteur_ids_preds = np.empty((h,0), dtype=np.float32)
             cm_par_hauteur_ids_targets = np.empty((h,0), dtype=np.float32)
         for batch_idx, (input, target) in enumerate(loader):
-            nb_batch += 1
             with amp_autocast():
                 output = model(input)
 
@@ -447,6 +447,9 @@ def main():
             os.makedirs(args.results_dir)
 
     if args.conf_matrix:
+        args_filepath = os.path.join(os.path.dirname(args.checkpoint), "args.yaml")
+        copy_filepath = os.path.join(args.results_dir, "args.yaml")
+        shutil.copy(args_filepath, copy_filepath)
         if args.logicseg:
 
             # construire la matrice de confusion des feuilles

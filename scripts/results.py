@@ -6,16 +6,16 @@ import matplotlib
 import seaborn as sns
 import numpy as np
 
-from read_yaml import compute_model_name
+from scripts.read_yaml import compute_model_name
 
-def generate_barplot(values, labels, title):
+def generate_barplots(values, labels, title, filename, folder="output/img/"):
     plt.figure(figsize=(10, 5))
     plt.bar(labels, values, color='skyblue')
     plt.xlabel('Catégories')
     plt.ylabel('Valeurs')
     plt.title(title)
     plt.xticks(rotation=45)
-    plt.savefig("output/img/testbarplot.png")
+    plt.savefig(os.path.join(folder, filename))
 
 def show_results_from_csv_summary(filename, title, model_name, folder="output/img"):
     """
@@ -214,7 +214,3 @@ def get_parent_confusion_matrix(cm, classes, parents):
             next_cm[next_class_1_id, next_class_2_id] += cm[i,j]
 
     return next_cm, next_classes
-
-if __name__ == "__main__":
-    # display_models_summary("output/train")
-    generate_barplot(5)

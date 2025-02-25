@@ -160,5 +160,6 @@ def create_tree(df, name, root, childrens):
 
 if __name__ == "__main__":
     # test_hce()
-    print_results()
+    # print_results()
     # test_modified_logiqseg_loss()
+    display_models_summary("output/train")
