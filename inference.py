@@ -341,6 +341,7 @@ def main():
             cm_par_hauteur_ids_preds = np.empty((h,0), dtype=np.float32)
             cm_par_hauteur_ids_targets = np.empty((h,0), dtype=np.float32)
         for batch_idx, (input, target) in enumerate(loader):
+            nb_batches += 1
             with amp_autocast():
                 output = model(input)
 

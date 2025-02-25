@@ -277,11 +277,11 @@ class MetricsHierarchy:
     def compute_metrics(self, output, target, label_matrix):
         """Compute all the define metrics using the given data"""
         label_matrix = torch.tensor(label_matrix, dtype=torch.float32).to(self.device)
-        self.hierarchical_distance_mistake(output, target, label_matrix)
-        self.topk_hierarchical_distance_mistake(output, target, label_matrix)
-        self.c_rule_respect_percentage(output, target, label_matrix)
-        self.d_rule_respect_percentage(output, target, label_matrix)
-        self.e_rule_respect_percentage(output, target, label_matrix)
+        # self.hierarchical_distance_mistake(output, target, label_matrix)
+        # self.topk_hierarchical_distance_mistake(output, target, label_matrix)
+        # self.c_rule_respect_percentage(output, target, label_matrix)
+        # self.d_rule_respect_percentage(output, target, label_matrix)
+        # self.e_rule_respect_percentage(output, target, label_matrix)
         self.accuracy_topk_1_5(output, target, label_matrix)
 
     def update_metrics(self, metrics_hierarchy_batch):
