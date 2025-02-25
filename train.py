@@ -1342,11 +1342,11 @@ def validate(
                     pd.set_option('display.max_colwidth', None) # Affiche le contenu complet des colonnes
                     df = pd.DataFrame(torch.sigmoid(output[0,:]).cpu().numpy()).T
                     print(" --> Prédiciton: ")
-                    print(df)  # Affichage sans indices
+                    print(df.to_string(index=False))  
                     print(" ")
                     print(" --> Target: ")
                     df = pd.DataFrame(target[0,:].cpu().numpy()).T
-                    print(df)
+                    print(df.to_string(index=False))
                     print(" ")
                 # calculer la probabilité associée à chaque branche
                 logicseg_predictions = get_logicseg_predictions(torch.sigmoid(output), label_matrix)
