@@ -33,7 +33,10 @@ erule_loss_weight: 0.2
 bce_loss_weight: 1
 method: "multi_bce"
 
-no_aug: True
-
-# Device
-# amp: True
+# Augmentation
+drop_path: 0.05 
+smoothing: 0.1 
+mixup: 0.2 
+cutmix: 1.0 
+hflip: 0.5 
+aa: "rand-m7-mstd0.5"

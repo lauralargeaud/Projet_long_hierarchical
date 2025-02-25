@@ -1,0 +1,9 @@
+model: resnet50
+checkpoint: "output/train/BCE/model_best.pth.tar"
+data_dir: "data/small-collomboles/dataset/test"
+num_classes: 79
+
+results_dir: "output/test/bce"
+results_file: "test_bce"
+
+conf_matrix: True

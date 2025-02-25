@@ -316,17 +316,17 @@ def main():
     cm_all_labels_targets = []
     cm_all_targets = []
     use_probs = args.output_type == 'prob'
+    nb_batch = 0
     with torch.no_grad():
         if args.logicseg:
             top1 = 0
             top5 = 0
-            nb_batches = 0
             # construire la laebl_matrix
             label_matrix, _, index_to_node = get_label_matrix(args.csv_tree)
             class_to_label = get_class_to_label(label_matrix, index_to_node)
             classes_labels = np.array(list(class_to_label.keys()))
         for batch_idx, (input, target) in enumerate(loader):
-            nb_batches += 1
+            nb_batch += 1
             with amp_autocast():
                 output = model(input)
 
@@ -400,8 +400,8 @@ def main():
 
         if args.logicseg:
             # mettre à jour les variables des métriques
-            top1 = top1 / nb_batches
-            top5 = top5 / nb_batches
+            top1 = top1 / nb_batch
+            top5 = top5 / nb_batch
 
     all_indices = np.concatenate(all_indices, axis=0) if all_indices else None
     all_labels = np.concatenate(all_labels, axis=0) if all_labels else None
@@ -472,7 +472,7 @@ def main():
     for fmt in args.results_format:
         save_results(df, results_filename, fmt)
 
-    if not args.no_console_results:
+    if not args.no_console_results and args.logicseg:
         print(f'--result')
         # print(df.set_index(args.filename_col).to_json(orient='index', indent=4))
         print("Top 1 accuracy: ", top1.item())

@@ -20,11 +20,10 @@ def test_hce():
     print_tree(tree)
     print("================================")
 
-    nodes, leafs, nodes_to_id, leafs_to_id = get_id_from_nodes(tree_lines_without_names)
+    _, _, nodes_to_id, leafs_to_id = get_id_from_nodes(tree_lines_without_names)
     print("nodes:", nodes_to_id)    
     print("leafs:", leafs_to_id)
 
-    paths = get_path_from_leafs(tree_lines_without_names, nodes_to_id)
     L = compute_full_L(tree_lines_without_names, nodes_to_id, leafs_to_id)
 
     hxe_loss = HierarchicalCrossEntropy(L, alpha=0.1, h=len(tree_lines[0])-1)
@@ -88,9 +87,11 @@ def print_results():
     parents = get_parents(hierarchy_lines_without_names)
     hierarchy_names = hierarchy_lines[0]
     hierarchy_names.reverse()
+    output_folder_bce = "output/test/bce"
     output_folder_cce = "output/test/cce"
     output_folder_hce_0_1 = "output/test/hce_0_1"
     output_folder_hce_0_5 = "output/test/hce_0_5"
+    save_confusion_matrix_and_metrics(output_folder_bce, "bce", classes, parents, hierarchy_names)
     save_confusion_matrix_and_metrics(output_folder_cce, "cce", classes, parents, hierarchy_names)
     save_confusion_matrix_and_metrics(output_folder_hce_0_1, "hce_0_1", classes, parents, hierarchy_names)
     save_confusion_matrix_and_metrics(output_folder_hce_0_5, "hce_0_5", classes, parents, hierarchy_names)
@@ -159,5 +160,5 @@ def create_tree(df, name, root, childrens):
 
 if __name__ == "__main__":
     # test_hce()
-    # print_results()
-    test_modified_logiqseg_loss()
+    print_results()
+    # test_modified_logiqseg_loss()
