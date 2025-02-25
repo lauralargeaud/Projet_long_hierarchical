@@ -1139,7 +1139,11 @@ def train_one_epoch(
                 loss = loss_fn(output, target)
                 # compute the accuracy on the training data of the current batch
                 if args.logicseg:
+                    if last_batch:
+                        print("Valeur des losses au dernier batch de l'epoch: ")
                     loss = loss_fn(output, target, last_batch, losses_dict)
+                    if last_batch:
+                        print(" ")
                     # appliquer la sigmoid
                     output = torch.sigmoid(output)
                     # calculer la probabilité associée à chaque branche
@@ -1329,9 +1333,10 @@ def validate(
 
             if args.logicseg:
                 if last_batch:
+                    print(" ")
                     print("Un exemple de prédiction / target associé pour une image de la validation:")
-                    print("Prédiction = ", torch.sigmoid(output[0,:]))
-                    print("Target = ", target[0,:])
+                    print("Prédiction = ", torch.sigmoid(output[0,:]).item())
+                    print("Target = ", target[0,:].item())
                     print(" ")
                 # calculer la probabilité associée à chaque branche
                 logicseg_predictions = get_logicseg_predictions(torch.sigmoid(output), label_matrix)
