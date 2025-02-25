@@ -319,13 +319,6 @@ def main():
     h = 0
     labels_par_hauteur = None
     use_probs = args.output_type == 'prob'
-<<<<<<< HEAD
-    nb_batch = 0
-    with torch.no_grad():
-        if args.logicseg:
-            top1 = 0
-            top5 = 0
-=======
     metrics_hierarchy = None
     with torch.no_grad():
         if args.logicseg:
@@ -335,7 +328,6 @@ def main():
             metrics_hierarchy = MetricsHierarchy(H_raw)
             metrics_hierarchy.setZero()
             nb_batches = 0
->>>>>>> 203446124dfc0111317a150ced9e9f8d8e2b3683
             # construire la laebl_matrix
             label_matrix, _, index_to_node = get_label_matrix(args.csv_tree)
             class_to_label = get_class_to_label(label_matrix, index_to_node)
@@ -441,14 +433,9 @@ def main():
 
         if args.logicseg:
             # mettre à jour les variables des métriques
-<<<<<<< HEAD
-            top1 = top1 / nb_batch
-            top5 = top5 / nb_batch
-=======
             # top1 = top1 / nb_batches
             # top5 = top5 / nb_batches
             metrics_hierarchy.divide(nb_batches)
->>>>>>> 203446124dfc0111317a150ced9e9f8d8e2b3683
 
     all_indices = np.concatenate(all_indices, axis=0) if all_indices else None
     all_labels = np.concatenate(all_labels, axis=0) if all_labels else None
