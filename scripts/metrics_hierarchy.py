@@ -19,13 +19,13 @@ class MetricsHierarchy:
     def __init__(self, H : torch.Tensor):
         """Initialise le dictionnaire pour stocker les métriques."""
         self.metrics = {
-            MetricsLabels.accuracy_top1: -1,
-            MetricsLabels.accuracy_top5: -1,
-            MetricsLabels.hierarchical_distance_mistakes: -1,
-            MetricsLabels.topk_hierarchical_distance_mistakes: -1,
-            MetricsLabels.c_rule_respect: -1,
-            MetricsLabels.d_rule_respect: -1,
-            MetricsLabels.e_rule_respect: -1,
+            MetricsLabels.accuracy_top1: torch.tensor(-1),
+            MetricsLabels.accuracy_top5: torch.tensor(-1),
+            MetricsLabels.hierarchical_distance_mistakes: torch.tensor(-1),
+            MetricsLabels.topk_hierarchical_distance_mistakes: torch.tensor(-1),
+            MetricsLabels.c_rule_respect: torch.tensor(-1),
+            MetricsLabels.d_rule_respect: torch.tensor(-1),
+            MetricsLabels.e_rule_respect: torch.tensor(-1),
         }
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

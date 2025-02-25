@@ -525,7 +525,7 @@ def main():
         # print("Top 1 accuracy: ", top1.item())
         # print("Top 5 accuracy: ", top5.item())
         for key, value in metrics_hierarchy.metrics.items():
-            print(key + ": ", value)
+            print(key + ": ", value.item())
         cm = load_confusion_matrix(os.path.join(args.results_dir, "cm.out"))
         output_filename = "cm_branches.jpg"
         save_confusion_matrix(cm, output_filename, classes_labels, folder=args.results_dir)
