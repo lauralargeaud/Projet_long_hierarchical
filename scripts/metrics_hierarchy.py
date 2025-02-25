@@ -227,7 +227,7 @@ class MetricsHierarchy:
         self.metrics[MetricsLabels.e_rule_respect] = total_respect
 
 
-    def topk_accuracy_logicseg(probas_branches_input, onehot_targets, topk=1):
+    def topk_accuracy_logicseg(self, probas_branches_input, onehot_targets, topk=1):
         """Generic function that computes the topk accuracy (= the accuracy over the topk top predictions) 
         for the specified values of topk"""
         topk = min(topk,probas_branches_input.shape[1])
@@ -251,10 +251,10 @@ class MetricsHierarchy:
         onehot_targets = get_logicseg_predictions(target, label_matrix)
 
         # Top-1 Accuracy
-        acc1 = self.topk_accuracy_logicseg(probas_branches_input, onehot_targets, 1)
+        acc1 = self.topk_accuracy_logicseg(probas_branches_input, onehot_targets, topk=1)
 
         # Top-5 Accuracy
-        acc5 = self.topk_accuracy_logicseg(probas_branches_input, onehot_targets, 5)
+        acc5 = self.topk_accuracy_logicseg(probas_branches_input, onehot_targets, topk=5)
 
         # Stocker les résultats
         self.metrics[MetricsLabels.accuracy_top1] = acc1
