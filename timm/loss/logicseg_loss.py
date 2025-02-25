@@ -31,7 +31,7 @@ class LogicSegLoss(nn.Module):
             self.multi_bce = MultiBCE(La_raw, alpha_layer)
 
   
-    def forward(self, y_pred: torch.Tensor, y_true: torch.Tensor, verbose: bool = False) -> torch.Tensor:
+    def forward(self, y_pred: torch.Tensor, y_true: torch.Tensor, verbose: bool = False, losses_dict=None) -> torch.Tensor:
 
         y_pred, y_true = y_pred.float(), y_true.float()
 
@@ -42,7 +42,7 @@ class LogicSegLoss(nn.Module):
         if verbose:
             print("c_losses", batch_c_losses.item())
 
-        batch_d_losses = self.d_rule(y_pred_sigmoid, y_true)
+        batch_d_losses = self.d_rule(y_pred_sigmoid, y_true)     
         if verbose:
             print("d_losses", batch_d_losses.item())
 
@@ -60,9 +60,15 @@ class LogicSegLoss(nn.Module):
                 target_loss = self.asl(y_pred_sigmoid, y_true)
             case "multi_bce":
                 target_loss = self.multi_bce(y_pred_sigmoid, y_true)
-        
+                
+        if losses_dict != None:
+            losses_dict["C_loss"] = batch_c_losses
+            losses_dict["D_loss"] = batch_d_losses
+            losses_dict["E_loss"] = batch_e_losses
+            losses_dict["target_loss"] = target_loss
+      
         if verbose:
-            print("bce_losses", target_loss.item())
+            print("target_loss", target_loss.item())
 
         return self.alpha_c * batch_c_losses + \
             self.alpha_d * batch_d_losses + \

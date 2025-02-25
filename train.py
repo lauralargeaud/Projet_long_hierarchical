@@ -25,6 +25,7 @@ from collections import OrderedDict
 from contextlib import suppress
 from datetime import datetime
 from functools import partial
+import matplotlib as plt
 
 import torch
 import torch.nn as nn
@@ -833,7 +834,6 @@ def main():
             **data_config,
         )
 
-
     validate_loss_fn = nn.CrossEntropyLoss().to(device=device)
     # setup loss function
     if args.logicseg: #FIXME: no mixup/label_smoothing management
@@ -951,7 +951,7 @@ def main():
         label_matrix = None
         if args.logicseg:
             label_matrix, _, _ = get_label_matrix(args.csv_tree)
-            
+
         for epoch in range(start_epoch, num_epochs):
             if hasattr(dataset_train, 'set_epoch'):
                 dataset_train.set_epoch(epoch)
@@ -974,7 +974,7 @@ def main():
                 model_ema=model_ema,
                 mixup_fn=mixup_fn,
                 num_updates_total=num_epochs * updates_per_epoch,
-                label_matrix=label_matrix,
+                label_matrix=label_matrix
             )
 
             if args.distributed and args.dist_bn in ('broadcast', 'reduce'):
@@ -1060,7 +1060,6 @@ def main():
         )
         print(f'--result\n{json.dumps(display_results[-10:], indent=4)}')
 
-
 def train_one_epoch(
         epoch,
         model,
@@ -1078,7 +1077,7 @@ def train_one_epoch(
         model_ema=None,
         mixup_fn=None,
         num_updates_total=None,
-        label_matrix=None,
+        label_matrix=None
 ):
     if args.mixup_off_epoch and epoch >= args.mixup_off_epoch:
         if args.prefetcher and loader.mixup_enabled:
@@ -1090,7 +1089,15 @@ def train_one_epoch(
     has_no_sync = hasattr(model, "no_sync")
     update_time_m = utils.AverageMeter()
     data_time_m = utils.AverageMeter()
-    losses_m = utils.AverageMeter()
+    #losses_m = utils.AverageMeter()
+    losses_dict = dict()
+    losses_m = dict()
+    losses_m["loss_globale"] = utils.AverageMeter()
+    if args.logicseg:
+        losses_m["C_loss"] = utils.AverageMeter()
+        losses_m["D_loss"] = utils.AverageMeter()
+        losses_m["E_loss"] = utils.AverageMeter()
+        losses_m["target_loss"] = utils.AverageMeter()
     acc1_m = utils.AverageMeter()
     acc5_m = utils.AverageMeter()
 
@@ -1106,6 +1113,7 @@ def train_one_epoch(
     data_start_time = update_start_time = time.time()
     optimizer.zero_grad()
     update_sample_count = 0
+
     for batch_idx, (input, target) in enumerate(loader):
         last_batch = batch_idx == last_batch_idx
         need_update = last_batch or (batch_idx + 1) % accum_steps == 0
@@ -1123,7 +1131,7 @@ def train_one_epoch(
         # multiply by accum steps to get equivalent for full update
         data_time_m.update(accum_steps * (time.time() - data_start_time))
 
-        def _forward(args=None, last_batch=False):
+        def _forward(args=None, last_batch=False, losses_dict=None):
             acc1 = None
             acc5 = None
             with amp_autocast():
@@ -1131,7 +1139,11 @@ def train_one_epoch(
                 loss = loss_fn(output, target)
                 # compute the accuracy on the training data of the current batch
                 if args.logicseg:
-                    loss = loss_fn(output, target, last_batch)
+                    if last_batch:
+                        print("Valeur des losses au dernier batch de l'epoch: ")
+                    loss = loss_fn(output, target, last_batch, losses_dict)
+                    if last_batch:
+                        print(" ")
                     # appliquer la sigmoid
                     output = torch.sigmoid(output)
                     # calculer la probabilité associée à chaque branche
@@ -1173,13 +1185,19 @@ def train_one_epoch(
 
         if has_no_sync and not need_update:
             with model.no_sync():
-                loss, acc1, acc5 = _forward(args, last_batch)
+                loss, acc1, acc5 = _forward(args, last_batch, losses_dict)
                 _backward(loss)
         else:
-            loss, acc1, acc5 = _forward(args, last_batch)
+            loss, acc1, acc5 = _forward(args, last_batch, losses_dict)
             _backward(loss)
 
-        losses_m.update(loss.item() * accum_steps, input.size(0))
+        if losses_dict != None:
+            losses_dict["loss_globale"] = loss
+            
+        #losses_m.update(loss.item() * accum_steps, input.size(0))
+        for key in list(losses_dict.keys()):
+            losses_m[key].update(losses_dict[key].item() * accum_steps, input.size(0))
+
         acc1_m.update(acc1.item() * accum_steps, input.size(0))
         acc5_m.update(acc5.item() * accum_steps, input.size(0))
         update_sample_count += input.size(0)
@@ -1206,7 +1224,7 @@ def train_one_epoch(
             lrl = [param_group['lr'] for param_group in optimizer.param_groups]
             lr = sum(lrl) / len(lrl)
 
-            loss_avg, loss_now = losses_m.avg, losses_m.val
+            loss_avg, loss_now = losses_m["loss_globale"].avg, losses_m["loss_globale"].val
             if args.distributed:
                 # synchronize current step and avg loss, each process keeps its own running avg
                 loss_avg = utils.reduce_tensor(loss.new([loss_avg]), args.world_size).item()
@@ -1240,7 +1258,7 @@ def train_one_epoch(
             saver.save_recovery(epoch, batch_idx=update_idx)
 
         if lr_scheduler is not None:
-            lr_scheduler.step_update(num_updates=num_updates, metric=losses_m.avg)
+            lr_scheduler.step_update(num_updates=num_updates, metric=losses_m["loss_globale"].avg)
 
         update_sample_count = 0
         data_start_time = time.time()
@@ -1249,18 +1267,26 @@ def train_one_epoch(
     if hasattr(optimizer, 'sync_lookahead'):
         optimizer.sync_lookahead()
 
-    loss_avg = losses_m.avg
+    loss_avg = dict()
+    for key, value in losses_m.items():
+        loss_avg[key] = value.avg
     acc1_avg = acc1_m.avg
     acc5_avg = acc5_m.avg
+    
     if args.distributed:
         # synchronize avg loss, each process keeps its own running avg
-        loss_avg = torch.tensor([loss_avg], device=device, dtype=torch.float32)
-        loss_avg = utils.reduce_tensor(loss_avg, args.world_size).item()
-        acc1 = utils.reduce_tensor(acc1, args.world_size)
+        for key, value in loss_avg.items():
+            loss_avg[key] = utils.reduce_tensor(loss_avg[key], args.world_size).item()
+            loss_avg[key] = torch.tensor([loss_avg[key]], device=device, dtype=torch.float32)
+        acc1_avg = utils.reduce_tensor(acc1, args.world_size)
         acc1_avg = torch.tensor([acc1_avg], device=device, dtype=torch.float32)
-        acc5 = utils.reduce_tensor(acc5, args.world_size)
+        acc5_avg = utils.reduce_tensor(acc5, args.world_size)
         acc5_avg = torch.tensor([acc5_avg], device=device, dtype=torch.float32)
-    return OrderedDict([('loss', loss_avg), ('acc1', acc1_avg), ('acc5', acc5_avg)])
+    
+    results = OrderedDict([('top1', acc1_avg), ('top5', acc5_avg)])
+    for key, value in loss_avg.items():
+        results[key] = value
+    return results
 
 
 def validate(
@@ -1306,8 +1332,22 @@ def validate(
                 loss = loss_fn(output, target)
 
             if args.logicseg:
-                print("sigmoid(output_val[0,:]) = ", torch.sigmoid(output[0,:]))
-                print("Target[0,:] = ", target[0,:])
+                if last_batch:
+                    print(" ")
+                    print("Un exemple de prédiction / target pour une image de la validation:")
+                    # Déplacement sur CPU et conversion en DataFrame
+                    pd.set_option('display.max_rows', None)   # Affiche toutes les lignes
+                    pd.set_option('display.max_columns', None) # Affiche toutes les colonnes
+                    pd.set_option('display.width', None)      # Ajuste automatiquement la largeur de l'affichage
+                    pd.set_option('display.max_colwidth', None) # Affiche le contenu complet des colonnes
+                    df = pd.DataFrame(torch.sigmoid(output[0,:]).cpu().numpy()).T
+                    print(" --> Prédiction: ")
+                    print(df.to_string(index=False))  
+                    print(" ")
+                    print(" --> Target: ")
+                    df = pd.DataFrame(target[0,:].cpu().numpy()).T
+                    print(df.to_string(index=False))
+                    print(" ")
                 # calculer la probabilité associée à chaque branche
                 logicseg_predictions = get_logicseg_predictions(torch.sigmoid(output), label_matrix)
                 # construire le label onehot associé à chaque branche

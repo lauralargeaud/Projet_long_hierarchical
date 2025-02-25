@@ -105,7 +105,7 @@ def load_confusion_matrix(filename):
     Load confusion matrix from a txt file.
     """
     cm = np.loadtxt(filename)
-    cm = cm.astype(int)
+    cm = cm.astype(float)
     return cm
 
 def save_confusion_matrix(cm, output_filename, classes, folder="output/img"):
@@ -114,7 +114,7 @@ def save_confusion_matrix(cm, output_filename, classes, folder="output/img"):
     """
     figsize = len(classes) / 2 if len(classes) > 10 else 5
     plt.figure(figsize=(figsize, figsize))
-    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=classes, yticklabels=classes)
+    sns.heatmap(cm, annot=True, fmt=".2f", cmap="Blues", xticklabels=classes, yticklabels=classes)
     plt.xlabel("Prédictions")
     plt.ylabel("Vérités")
     plt.title("Matrice de Confusion")

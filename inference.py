@@ -28,6 +28,7 @@ from timm.utils import AverageMeter, setup_default_logging, set_jit_fuser, Parse
 from scripts.metrics_logicseg import topk_accuracy_logicseg
 from scripts.logic_seg_utils import *
 from scripts.results import load_confusion_matrix, save_confusion_matrix
+from scripts.metrics_hierarchy import *
 
 try:
     from apex import amp
@@ -315,16 +316,37 @@ def main():
     cm_all_ids_preds = []
     cm_all_labels_targets = []
     cm_all_targets = []
+    h = 0
+    labels_par_hauteur = None
     use_probs = args.output_type == 'prob'
+<<<<<<< HEAD
     nb_batch = 0
     with torch.no_grad():
         if args.logicseg:
             top1 = 0
             top5 = 0
+=======
+    metrics_hierarchy = None
+    with torch.no_grad():
+        if args.logicseg:
+            # top1 = 0
+            # top5 = 0
+            H_raw, _, _ = get_tree_matrices(args.csv_tree, verbose=False)
+            metrics_hierarchy = MetricsHierarchy(H_raw)
+            metrics_hierarchy.setZero()
+            nb_batches = 0
+>>>>>>> 203446124dfc0111317a150ced9e9f8d8e2b3683
             # construire la laebl_matrix
             label_matrix, _, index_to_node = get_label_matrix(args.csv_tree)
             class_to_label = get_class_to_label(label_matrix, index_to_node)
             classes_labels = np.array(list(class_to_label.keys()))
+            # données utiles pour la matrice de confusion pour chaque hauteur de l'arbre
+            La_raw = get_layer_matrix(args.csv_tree, verbose=False) 
+            La = torch.tensor(La_raw).to(device) # (hauteur, nb_noeuds); La[i,j] = 1 si le noeud d'index j est de profondeur i, sinon 0
+            h = La.shape[0] # hauteur de l'
+            labels_par_hauteur = [[index_to_node[j] for j in range(La.shape[1]) if int(La[hauteur,j].item()) == 1 ] for hauteur in range(h)] # liste de h sous-listes; labels_par_hauteur[i] = les labels de la hauteur
+            cm_par_hauteur_ids_preds = np.empty((h,0), dtype=np.float32)
+            cm_par_hauteur_ids_targets = np.empty((h,0), dtype=np.float32)
         for batch_idx, (input, target) in enumerate(loader):
             nb_batch += 1
             with amp_autocast():
@@ -342,19 +364,25 @@ def main():
                 # appliquer la sigmoid
                 output = torch.sigmoid(output)
                 # calculer la probabilité associée à chaque branche
-                logicseg_predictions = get_logicseg_predictions(output, label_matrix)
+                logicseg_predictions = get_logicseg_predictions(output, label_matrix) # (nb_pred, nb_feuilles) probabilités des feuilles prédites par le modèle
                 # construire le label onehot associé à chaque branche
-                onehot_targets = get_logicseg_predictions(target, label_matrix)
+                onehot_targets = get_logicseg_predictions(target, label_matrix) # (nb_pred, nb_feuilles) one hot encoding des feuilles cibles
+                # calculer les métriques sur les prédictions réalisées dans le batch courant
+                metrics_hierarchy_batch = MetricsHierarchy(H_raw)
+                metrics_hierarchy_batch.compute_metrics(output, target, label_matrix)
+                # mettre à jour les métriques globales
+                metrics_hierarchy.update_metrics(metrics_hierarchy_batch)
                 # calculer l'accuracy top1
-                acc1 =  topk_accuracy_logicseg(logicseg_predictions, onehot_targets)
-                top1 += acc1
-                # calculer l'accuracy top5
-                acc5 =  topk_accuracy_logicseg(logicseg_predictions, onehot_targets, 5)
-                top5 += acc5
+                # acc1 =  topk_accuracy_logicseg(logicseg_predictions, onehot_targets)
+                # top1 += acc1
+                # # calculer l'accuracy top5
+                # acc5 =  topk_accuracy_logicseg(logicseg_predictions, onehot_targets, 5)
+                # top5 += acc5
+                
                 if args.conf_matrix:
-                    # préparer les arguments permettant de construire la matrice de confusion
-                    proba_output, id_branch_output = logicseg_predictions.topk(1, dim=1)
-                    proba_target, id_branch_target = onehot_targets.topk(1, dim=1)
+                    # données utiles pour la matrice de confusion sur les feuilles
+                    proba_output, id_branch_output = logicseg_predictions.topk(1, dim=1) # proba max, id proba max: classe prédite par le modèles
+                    proba_target, id_branch_target = onehot_targets.topk(1, dim=1) # idem mais classe cible
 
                     predicted_labels = [classes_labels[id_branch_output[i]] for i in range(id_branch_output.shape[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
                     target_labels = [classes_labels[id_branch_target[i]] for i in range(id_branch_target.shape[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
@@ -363,6 +391,19 @@ def main():
                     all_labels.append(predicted_labels)
                     cm_all_labels_targets.append(target_labels)
                     cm_all_targets.append(id_branch_target.cpu().numpy())
+
+                    nb_pred = output.shape[0]
+                    # extraction des probabilités de chaque noeud pour chaque hauteur de l'arbre
+                    output_rep = output.unsqueeze(0).repeat(h, 1, 1) # (h, nb_pred, nb_noeuds)
+                    onehot_rep = target.unsqueeze(0).repeat(h, 1, 1) # (h, nb_pred, nb_noeuds)
+                    La_rep = La.unsqueeze(1).repeat(1, nb_pred, 1) # (h, nb_pred, nb_noeuds)
+                    probas_par_hauteur = output_rep * La_rep # (h, nb_pred, nb_noeuds): probas_par_hauteur[i,j,:] = les probas des noeuds de hauteur i pour la prédiction d'indice j
+                    onehot_par_hauteur = onehot_rep * La_rep # (h, nb_pred, nb_noeuds)
+                    proba_output, id_branch_output = probas_par_hauteur.topk(1, dim=2) # (h, nb_pred) id de la classe prédite à chaque hauteur de l'arbre
+                    proba_target, id_branch_target = onehot_par_hauteur.topk(1, dim=2) # (h, nb_pred) id de la classe cible à chaque hauteur de l'arbre
+                    
+                    cm_par_hauteur_ids_preds = np.concatenate((cm_par_hauteur_ids_preds, id_branch_output.squeeze(2).cpu().numpy()), 1) # (h, nb_images_traitées)
+                    cm_par_hauteur_ids_targets = np.concatenate((cm_par_hauteur_ids_targets, id_branch_target.squeeze(2).cpu().numpy()), 1) # (h, nb_images_traitées)
 
                 #for i in range(len(output)):
                 #    print("output", output[i,:])
@@ -400,8 +441,14 @@ def main():
 
         if args.logicseg:
             # mettre à jour les variables des métriques
+<<<<<<< HEAD
             top1 = top1 / nb_batch
             top5 = top5 / nb_batch
+=======
+            # top1 = top1 / nb_batches
+            # top5 = top5 / nb_batches
+            metrics_hierarchy.divide(nb_batches)
+>>>>>>> 203446124dfc0111317a150ced9e9f8d8e2b3683
 
     all_indices = np.concatenate(all_indices, axis=0) if all_indices else None
     all_labels = np.concatenate(all_labels, axis=0) if all_labels else None
@@ -414,12 +461,21 @@ def main():
 
     if args.conf_matrix:
         if args.logicseg:
+
+            # construire la matrice de confusion des feuilles
             cm_all_ids_preds = np.concatenate(cm_all_ids_preds, axis=0)
             cm_all_targets = np.concatenate(cm_all_targets, axis=0)
             # print("cm_all_targets: ", cm_all_targets)
             # print("cm_all_ids_preds: ", cm_all_ids_preds)
             cm = confusion_matrix(cm_all_targets, cm_all_ids_preds)
-            np.savetxt(os.path.join(args.results_dir, "confusion_matrix.out"), cm)
+            np.savetxt(os.path.join(args.results_dir, "cm.out"), cm)
+
+            # construire la matrice de confusion pour chaque hauteur de l'arbre
+            for hauteur in range(1,h):
+                cm = confusion_matrix(cm_par_hauteur_ids_targets[hauteur,:], cm_par_hauteur_ids_preds[hauteur, :], normalize='true')
+                np.savetxt(os.path.join(args.results_dir, "cm_"+str(hauteur)+".out"), cm)
+
+
         else:
             cm_all_ids_preds = np.concatenate(cm_all_ids_preds, axis=0)
             cm_all_targets = np.concatenate(cm_all_targets, axis=0)
@@ -475,11 +531,20 @@ def main():
     if not args.no_console_results and args.logicseg:
         print(f'--result')
         # print(df.set_index(args.filename_col).to_json(orient='index', indent=4))
-        print("Top 1 accuracy: ", top1.item())
-        print("Top 5 accuracy: ", top5.item())
-        cm = load_confusion_matrix(os.path.join(args.results_dir, "confusion_matrix.out"))
-        output_filename = "confusion_matrix.jpg"
+        # print("Top 1 accuracy: ", top1.item())
+        # print("Top 5 accuracy: ", top5.item())
+        for key, value in metrics_hierarchy.items():
+            print(key + ": ", value.item())
+        cm = load_confusion_matrix(os.path.join(args.results_dir, "cm.out"))
+        output_filename = "cm_branches.jpg"
         save_confusion_matrix(cm, output_filename, classes_labels, folder="./results")
+
+        if args.logicseg:
+            # construire la matrice de confusion pour chaque hauteur de l'arbre
+            for hauteur in range(1,h):
+                cm = load_confusion_matrix(os.path.join(args.results_dir, "cm_"+str(hauteur)+".out"))
+                output_filename = "im_"+str(hauteur)+"_cm.jpg"
+                save_confusion_matrix(cm, output_filename, labels_par_hauteur[hauteur], folder="./results")
 
 
 def save_results(df, results_filename, results_format='csv', filename_col='filename'):
