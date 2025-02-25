@@ -332,8 +332,6 @@ def main():
             La = torch.tensor(La_raw).to(device) # (hauteur, nb_noeuds); La[i,j] = 1 si le noeud d'index j est de profondeur i, sinon 0
             h = La.shape[0] # hauteur de l'
             labels_par_hauteur = [[index_to_node[j] for j in range(La.shape[1]) if int(La[hauteur,j].item()) == 1 ] for hauteur in range(h)] # liste de h sous-listes; labels_par_hauteur[i] = les labels de la hauteur
-            print("lph: ", labels_par_hauteur)
-            print("lph[1]: ", labels_par_hauteur[1])
             cm_par_hauteur_ids_preds = np.empty((h,0), dtype=np.float32)
             cm_par_hauteur_ids_targets = np.empty((h,0), dtype=np.float32)
         for batch_idx, (input, target) in enumerate(loader):
