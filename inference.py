@@ -340,7 +340,7 @@ def main():
             cm_par_hauteur_ids_preds = np.empty((h,0), dtype=np.float32)
             cm_par_hauteur_ids_targets = np.empty((h,0), dtype=np.float32)
         for batch_idx, (input, target) in enumerate(loader):
-            nb_batches += 1
+            nb_batch += 1
             with amp_autocast():
                 output = model(input)
 
@@ -515,7 +515,7 @@ def main():
     for fmt in args.results_format:
         save_results(df, results_filename, fmt)
 
-    if not args.no_console_results:
+    if not args.no_console_results and args.logicseg:
         print(f'--result')
         # print(df.set_index(args.filename_col).to_json(orient='index', indent=4))
         # print("Top 1 accuracy: ", top1.item())

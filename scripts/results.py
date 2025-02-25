@@ -6,28 +6,33 @@ import matplotlib
 import seaborn as sns
 import numpy as np
 
-from scripts.hierarchy_better_mistakes_utils import *
-from scripts.read_yaml import read_yaml
+from read_yaml import compute_model_name
 
+def generate_barplot(values, labels, title):
+    plt.figure(figsize=(10, 5))
+    plt.bar(labels, values, color='skyblue')
+    plt.xlabel('Catégories')
+    plt.ylabel('Valeurs')
+    plt.title(title)
+    plt.xticks(rotation=45)
+    plt.savefig("output/img/testbarplot.png")
 
-
-def show_results_from_csv_summary(filename, model_name):
+def show_results_from_csv_summary(filename, title, model_name, folder="output/img"):
     """
     Show results from summary csv produced by TIMM.
     """
-    matplotlib.use('TkAgg')
-
     data = pd.read_csv(filename)
 
     fig, ax1 = plt.subplots(figsize=(10, 6))
 
-    ax1.plot(data['epoch'], data['train_loss'], label='Train Loss', color='blue', linestyle='--')
+    ax1.plot(data['epoch'], data['train_loss'], label='Train Loss', color='blue')
     ax1.plot(data['epoch'], data['eval_loss'], label='Eval Loss', color='red')
     ax1.set_xlabel("Epochs")
     ax1.set_ylabel("Loss")
     ax1.legend(loc="upper right")
-    ax1.set_title(f'{model_name} Training and Evaluation Loss')
+    ax1.set_title(f'{title} Training and Evaluation Loss')
     ax1.grid()
+    fig.savefig(os.path.join(folder, f'loss_summary_{model_name.lower().replace(" ", "_")}'))
 
     fig, ax2 = plt.subplots(figsize=(10, 6))
     ax2.plot(data['epoch'], data['eval_top1'], label='Eval Top-1 Accuracy', color='green')
@@ -39,18 +44,16 @@ def show_results_from_csv_summary(filename, model_name):
     ax2.set_xlabel("Epochs")
     ax2.set_ylabel("Accuracy (%)")
     ax2.legend(loc="lower right")
-    ax2.set_title(f"{model_name} Accuracy")
+    ax2.set_ylim([0, 1])
+    ax2.set_title(f"{title} Accuracy")
     ax2.grid()
 
-    plt.show()
-    plt.imsave()
+    fig.savefig(os.path.join(folder, f'acc_summary_{model_name.lower().replace(" ", "_")}'))
 
-def show_results_from_csv_summary_cce_hce(filename1, filename2, model_name1, model_name2, folder="output/img"):
+def show_results_from_csv_summarys(filename1, filename2, model_name1, model_name2, folder="output/img"):
     """
     Show results from summary csv produced by TIMM with 2 models.
     """
-    matplotlib.use('TkAgg')
-
     data1 = pd.read_csv(filename1)
     data2 = pd.read_csv(filename2)
 
@@ -80,11 +83,22 @@ def show_results_from_csv_summary_cce_hce(filename1, filename2, model_name1, mod
     ax2.set_xlabel("Epochs")
     ax2.set_ylabel("Accuracy (%)")
     ax2.legend(loc="lower right")
+    ax2.set_ylim([0, 1])
     ax2.set_title("Accuracy")
     ax2.grid()
     fig.savefig(os.path.join(folder, f'acc_summary_{model_name1.lower().replace(" ", "_")}_{model_name2.lower().replace(" ", "_")}'))
 
     plt.show()
+
+def display_models_summary(train_output_folder, output_folder="output/img"):
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    for folder in os.listdir(train_output_folder):
+        summary_path = os.path.join(train_output_folder, folder, "summary.csv")
+        args_path = os.path.join(train_output_folder, folder, "args.yaml")
+        title, model_filename = compute_model_name(args_path)
+        show_results_from_csv_summary(summary_path, title, model_filename, output_folder)
 
 def load_confusion_matrix(filename):
     """
@@ -202,4 +216,5 @@ def get_parent_confusion_matrix(cm, classes, parents):
     return next_cm, next_classes
 
 if __name__ == "__main__":
-    pass
+    # display_models_summary("output/train")
+    generate_barplot(5)

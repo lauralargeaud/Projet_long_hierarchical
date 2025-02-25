@@ -14,9 +14,29 @@ def read_yaml(filepath):
     except yaml.YAMLError as e:
         print("Erreur lors de la lecture du YAML :", e)
 
-def compute_model_name(folderpath):
-    filepath = os.path.join(folderpath, "args.yaml")
+def compute_model_name(filepath):
     data = read_yaml(filepath)
+    modified_logicseg = data["modified_logicseg"] if "modified_logicseg" in data else False
+    logicseg = data["logicseg"]
+    is_logicseg = modified_logicseg or logicseg
+    if is_logicseg:
+        method = data["method"]
+        if method == "bce":
+            return "LogicSeg (BCE)", "logicseg_bce"
+        elif method == "multi_bce":
+            return "LogicSeg (Multi BCE)", "logicseg_multibce"
+        else:
+            return "LogicSeg", "logicseg"
+    else:
+        hce = data["hce_loss"]
+        bce = data["bce_loss"]
+        hce_alpha = data["hce_alpha"]
+        if hce:
+            return f"HCE (alpha={hce_alpha})", f"hce_alpha_{str(hce_alpha).replace(".", "_")}"
+        elif bce:
+            return "BCE", "bce"
+        else:
+            return "CCE", "cce"
 
 def get_method(data):
     if "method" in data:
@@ -71,8 +91,6 @@ def extract_data_from_yaml(filepath):
     print(f"mixup: {mixup}")
     print(f"hflip: {hflip}")
     print("==================================================")
-
-
 
 if __name__ == "__main__":
     root_folder = "output/train"
