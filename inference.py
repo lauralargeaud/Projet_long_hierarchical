@@ -524,7 +524,7 @@ def main():
         # print(df.set_index(args.filename_col).to_json(orient='index', indent=4))
         # print("Top 1 accuracy: ", top1.item())
         # print("Top 5 accuracy: ", top5.item())
-        for key, value in metrics_hierarchy.items():
+        for key, value in metrics_hierarchy.metrics.items():
             print(key + ": ", value.item())
         cm = load_confusion_matrix(os.path.join(args.results_dir, "cm.out"))
         output_filename = "cm_branches.jpg"
