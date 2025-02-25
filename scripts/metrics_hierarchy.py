@@ -274,7 +274,7 @@ class MetricsHierarchy:
         for key, value in self.metrics.items():
             self.metrics[key] = value / n
 
-    def compute_metrics(self, output, target, label_matrix, H):
+    def compute_metrics(self, output, target, label_matrix):
         """Compute all the define metrics using the given data"""
         label_matrix = torch.tensor(label_matrix, dtype=torch.float32).to(self.device)
         self.hierarchical_distance_mistake(output, target, label_matrix)
