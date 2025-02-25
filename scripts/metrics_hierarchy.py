@@ -4,13 +4,13 @@ from logic_seg_utils import get_logicseg_predictions
 class MetricsLabels:
     """Classe pour stocker les labels des différentes métriques"""
 
-    accuracy_top1 = "accuracy top 1"
-    accuracy_top5 = "accuracy top 5"
-    hierarchical_distance_mistakes = "hierarchical distance mistakes"
-    topk_hierarchical_distance_mistakes = "hierarchical distance mistakes"
-    c_rule_respect = "respect of the c rule"
-    d_rule_respect = "respect of the d rule"
-    e_rule_respect = "respect of the e rule"
+    accuracy_top1 = "Top 1 accuracy"
+    accuracy_top5 = "Top 5 accuracy"
+    hierarchical_distance_mistakes = "Top 1 hierarchical distance mistakes"
+    topk_hierarchical_distance_mistakes = "Top 5 hierarchical distance mistakes"
+    c_rule_respect = "Respect of the c rule"
+    d_rule_respect = "Respect of the d rule"
+    e_rule_respect = "Respect of the e rule"
 
 
 class MetricsHierarchy:
@@ -28,7 +28,8 @@ class MetricsHierarchy:
             MetricsLabels.e_rule_respect: None,
         }
 
-        self.H = H
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.H = torch.tensor(H, dtype=torch.float32).to(self.device) #torch tensor
     
     
     def lca_height(self, node1 : int, node2: int):
@@ -226,6 +227,15 @@ class MetricsHierarchy:
         self.metrics[MetricsLabels.e_rule_respect] = total_respect
 
 
+    def topk_accuracy_logicseg(probas_branches_input, onehot_targets, topk=1):
+        """Generic function that computes the topk accuracy (= the accuracy over the topk top predictions) 
+        for the specified values of topk"""
+        topk = min(topk,probas_branches_input.shape[1])
+        _, indices_branches_target = onehot_targets.topk(1, dim=1) # (nb_pred, 1), (nb_pred, 1)
+        indices_branches_target = indices_branches_target.repeat(1, topk) # (nb_pred, top_k)
+        _, indices_branches_in = probas_branches_input.topk(topk , dim=1) # (nb_pred, top_k), (nb_pred, top_k)
+        acc = torch.sum(torch.any(indices_branches_in == indices_branches_target, dim=1), dim=0) / indices_branches_in.shape[0]
+        return acc
 
     def accuracy_topk_1_5(self, output, target, label_matrix):
         """
@@ -238,25 +248,45 @@ class MetricsHierarchy:
 
         """
         probas_branches_input = get_logicseg_predictions(output, label_matrix)
-        probas_branches_target = get_logicseg_predictions(target, label_matrix)
+        onehot_targets = get_logicseg_predictions(target, label_matrix)
 
         # Top-1 Accuracy
-        _, indices_branches_in = probas_branches_input.topk(1, dim=1)
-        _, indices_branches_target = probas_branches_target.topk(1, dim=1)
-        acc1 = (indices_branches_in == indices_branches_target).sum().item() / indices_branches_in.size(0)
+        acc1 = self.topk_accuracy_logicseg(probas_branches_input, onehot_targets, topk=1)
 
         # Top-5 Accuracy
-        _, indices_branches_in = probas_branches_input.topk(5, dim=1)
-        _, indices_branches_target = probas_branches_target.topk(5, dim=1)
-        acc5 = (indices_branches_in == indices_branches_target).sum().item() / indices_branches_in.size(0)
+        acc5 = self.topk_accuracy_logicseg(probas_branches_input, onehot_targets, topk=5)
 
         # Stocker les résultats
         self.metrics[MetricsLabels.accuracy_top1] = acc1
         self.metrics[MetricsLabels.accuracy_top5] = acc5
 
 
-
     def reset_metrics(self):
         """Réinitialise les métriques stockées."""
         self.metrics = {key: -1 for key in self.metrics}
 
+    def setZero(self):
+        """Défini la valeur de toutes les métriques à 0"""
+        self.metrics = {key: 0 for key in self.metrics}
+
+    def divide(self, n):
+        """Diviser toutes les métriques par n."""
+        for key, value in self.metrics.items():
+            self.metrics[key] = value / n
+
+    def compute_metrics(self, output, target, label_matrix, H):
+        """Compute all the define metrics using the given data"""
+        label_matrix = torch.tensor(label_matrix, dtype=torch.float32).to(self.device)
+        self.hierarchical_distance_mistake(output, target, label_matrix)
+        self.topk_hierarchical_distance_mistake(output, target, label_matrix)
+        self.c_rule_respect_percentage(output, target, label_matrix)
+        self.d_rule_respect_percentage(output, target, label_matrix)
+        self.e_rule_respect_percentage(output, target, label_matrix)
+        self.accuracy_topk_1_5(output, target, label_matrix)
+
+    def update_metrics(self, metrics_hierarchy_batch):
+        """Mettre à jour les métriques de l'objet en y ajoutant les valeurs des métriques d'un autre objet"""
+        if not isinstance(metrics_hierarchy_batch, MetricsHierarchy):
+            raise ValueError("Le paramètre doit être un objet de type MetricsHierarchy")
+        for key, value in self.metrics.items():
+            self.metrics[key] = value + metrics_hierarchy_batch.metrics[key]

@@ -28,6 +28,7 @@ from timm.utils import AverageMeter, setup_default_logging, set_jit_fuser, Parse
 from scripts.metrics_logicseg import topk_accuracy_logicseg
 from scripts.logic_seg_utils import *
 from scripts.results import load_confusion_matrix, save_confusion_matrix
+from scripts.metrics_hierarchy import *
 
 try:
     from apex import amp
@@ -318,10 +319,14 @@ def main():
     h = 0
     labels_par_hauteur = None
     use_probs = args.output_type == 'prob'
+    metrics_hierarchy = None
     with torch.no_grad():
         if args.logicseg:
-            top1 = 0
-            top5 = 0
+            # top1 = 0
+            # top5 = 0
+            H_raw, _, _ = get_tree_matrices(args.csv_tree, verbose=False)
+            metrics_hierarchy = MetricsHierarchy(H_raw)
+            metrics_hierarchy.setZero()
             nb_batches = 0
             # construire la laebl_matrix
             label_matrix, _, index_to_node = get_label_matrix(args.csv_tree)
@@ -354,12 +359,18 @@ def main():
                 logicseg_predictions = get_logicseg_predictions(output, label_matrix) # (nb_pred, nb_feuilles) probabilités des feuilles prédites par le modèle
                 # construire le label onehot associé à chaque branche
                 onehot_targets = get_logicseg_predictions(target, label_matrix) # (nb_pred, nb_feuilles) one hot encoding des feuilles cibles
+                # calculer les métriques sur les prédictions réalisées dans le batch courant
+                metrics_hierarchy_batch = MetricsHierarchy(H_raw)
+                metrics_hierarchy_batch.compute_metrics(output, target, label_matrix)
+                # mettre à jour les métriques globales
+                metrics_hierarchy.update_metrics(metrics_hierarchy_batch)
                 # calculer l'accuracy top1
-                acc1 =  topk_accuracy_logicseg(logicseg_predictions, onehot_targets)
-                top1 += acc1
-                # calculer l'accuracy top5
-                acc5 =  topk_accuracy_logicseg(logicseg_predictions, onehot_targets, 5)
-                top5 += acc5
+                # acc1 =  topk_accuracy_logicseg(logicseg_predictions, onehot_targets)
+                # top1 += acc1
+                # # calculer l'accuracy top5
+                # acc5 =  topk_accuracy_logicseg(logicseg_predictions, onehot_targets, 5)
+                # top5 += acc5
+                
                 if args.conf_matrix:
                     # données utiles pour la matrice de confusion sur les feuilles
                     proba_output, id_branch_output = logicseg_predictions.topk(1, dim=1) # proba max, id proba max: classe prédite par le modèles
@@ -422,8 +433,9 @@ def main():
 
         if args.logicseg:
             # mettre à jour les variables des métriques
-            top1 = top1 / nb_batches
-            top5 = top5 / nb_batches
+            # top1 = top1 / nb_batches
+            # top5 = top5 / nb_batches
+            metrics_hierarchy.divide(nb_batches)
 
     all_indices = np.concatenate(all_indices, axis=0) if all_indices else None
     all_labels = np.concatenate(all_labels, axis=0) if all_labels else None
@@ -506,8 +518,10 @@ def main():
     if not args.no_console_results:
         print(f'--result')
         # print(df.set_index(args.filename_col).to_json(orient='index', indent=4))
-        print("Top 1 accuracy: ", top1.item())
-        print("Top 5 accuracy: ", top5.item())
+        # print("Top 1 accuracy: ", top1.item())
+        # print("Top 5 accuracy: ", top5.item())
+        for key, value in metrics_hierarchy.items():
+            print(key + ": ", value.item())
         cm = load_confusion_matrix(os.path.join(args.results_dir, "cm.out"))
         output_filename = "cm_branches.jpg"
         save_confusion_matrix(cm, output_filename, classes_labels, folder="./results")
