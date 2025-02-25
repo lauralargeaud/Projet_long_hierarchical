@@ -68,7 +68,7 @@ class LogicSegLoss(nn.Module):
             losses_dict["target_loss"] = target_loss
       
         if verbose:
-            print("bce_losses", target_loss.item())
+            print("target_loss", target_loss.item())
 
         return self.alpha_c * batch_c_losses + \
             self.alpha_d * batch_d_losses + \
