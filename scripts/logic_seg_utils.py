@@ -56,7 +56,7 @@ def create_class_to_labels(path_to_csv_tree, path_to_temporary_class_to_labels_f
       pickle.dump(class_to_labels, f)  # Écriture binaire
 
 def get_label_matrix(path_to_csv_tree, verbose=False):
-  print(path_to_csv_tree)
+  # print(path_to_csv_tree)
   csv = pd.read_csv(path_to_csv_tree)
   unique_nodes = pd.unique(csv.values.ravel())
   unique_nodes = unique_nodes[~pd.isnull(unique_nodes)]  # On enlève les NaN au cas ou

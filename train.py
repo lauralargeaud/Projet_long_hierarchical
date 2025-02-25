@@ -1279,7 +1279,7 @@ def train_one_epoch(
         acc5_avg = utils.reduce_tensor(acc5, args.world_size)
         acc5_avg = torch.tensor([acc5_avg], device=device, dtype=torch.float32)
     
-    results = OrderedDict([('acc1', acc1_avg), ('acc5', acc5_avg)])
+    results = OrderedDict([('top1', acc1_avg), ('top5', acc5_avg)])
     for key, value in loss_avg.items():
         results[key] = value
     return results
