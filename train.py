@@ -1328,8 +1328,9 @@ def validate(
                 loss = loss_fn(output, target)
 
             if args.logicseg:
-                print("sigmoid(output_val[0,:]) = ", torch.sigmoid(output[0,:]))
-                print("Target[0,:] = ", target[0,:])
+                if last_batch:
+                    print("sigmoid(output_val[0,:]) = ", torch.sigmoid(output[0,:]))
+                    print("Target[0,:] = ", target[0,:])
                 # calculer la probabilité associée à chaque branche
                 logicseg_predictions = get_logicseg_predictions(torch.sigmoid(output), label_matrix)
                 # construire le label onehot associé à chaque branche
