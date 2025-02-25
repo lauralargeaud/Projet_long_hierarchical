@@ -28,7 +28,7 @@ from timm.utils import AverageMeter, setup_default_logging, set_jit_fuser, Parse
 
 from scripts.metrics_logicseg import topk_accuracy_logicseg
 from scripts.logic_seg_utils import *
-from scripts.results import load_confusion_matrix, save_confusion_matrix
+from scripts.results import load_confusion_matrix, save_confusion_matrix, save_metrics
 from scripts.metrics_hierarchy import *
 
 try:
@@ -527,14 +527,19 @@ def main():
             print(key + ": ", value.item())
         cm = load_confusion_matrix(os.path.join(args.results_dir, "cm.out"))
         output_filename = "cm_branches.jpg"
-        save_confusion_matrix(cm, output_filename, classes_labels, folder="./results")
+        save_confusion_matrix(cm, output_filename, classes_labels, folder=args.results_dir)
+        df = save_metrics(cm, folder=args.results_dir, filename="metrics_branches.csv", classes=classes_labels, hierarchy_name="branches")
 
         if args.logicseg:
             # construire la matrice de confusion pour chaque hauteur de l'arbre
             for hauteur in range(1,h):
                 cm = load_confusion_matrix(os.path.join(args.results_dir, "cm_"+str(hauteur)+".out"))
                 output_filename = "im_"+str(hauteur)+"_cm.jpg"
-                save_confusion_matrix(cm, output_filename, labels_par_hauteur[hauteur], folder="./results")
+                save_confusion_matrix(cm, output_filename, labels_par_hauteur[hauteur], folder=args.results_dir)
+                next_df = save_metrics(cm, folder=args.results_dir, filename=f"metrics_{hauteur}.csv", classes=labels_par_hauteur[hauteur], hierarchy_name="hauteur_"+str(hauteur))
+                df = pd.concat([df, next_df])
+        
+        df.to_csv(os.path.join(args.results_dir, "metrics_all.csv"), index=False)
 
 
 def save_results(df, results_filename, results_format='csv', filename_col='filename'):
