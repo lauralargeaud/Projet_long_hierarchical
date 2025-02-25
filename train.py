@@ -1341,7 +1341,7 @@ def validate(
                     pd.set_option('display.width', None)      # Ajuste automatiquement la largeur de l'affichage
                     pd.set_option('display.max_colwidth', None) # Affiche le contenu complet des colonnes
                     df = pd.DataFrame(torch.sigmoid(output[0,:]).cpu().numpy()).T
-                    print(" --> Prédiciton: ")
+                    print(" --> Prédiction: ")
                     print(df.to_string(index=False))  
                     print(" ")
                     print(" --> Target: ")
