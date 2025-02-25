@@ -1336,11 +1336,15 @@ def validate(
                     print(" ")
                     print("Un exemple de prédiction / target associé pour une image de la validation:")
                     # Déplacement sur CPU et conversion en DataFrame
+                    pd.set_option('display.max_rows', None)   # Affiche toutes les lignes
+                    pd.set_option('display.max_columns', None) # Affiche toutes les colonnes
+                    pd.set_option('display.width', None)      # Ajuste automatiquement la largeur de l'affichage
+                    pd.set_option('display.max_colwidth', None) # Affiche le contenu complet des colonnes
                     df = pd.DataFrame(torch.sigmoid(output[0,:]).cpu().numpy(), columns=["Valeurs"]).T
                     print("Prédiciton: ")
                     print(df)  # Affichage sans indices
                     print("Target: ")
-                    df = pd.DataFrame(torch.sigmoid(target[0,:].cpu().numpy(), columns=["Valeurs"])).T
+                    df = pd.DataFrame(torch.sigmoid(target[0,:]).cpu().numpy(), columns=["Valeurs"]).T
                     print(df)
                     print(" ")
                 # calculer la probabilité associée à chaque branche
