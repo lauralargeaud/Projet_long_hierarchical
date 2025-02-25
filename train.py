@@ -1340,12 +1340,12 @@ def validate(
                     pd.set_option('display.max_columns', None) # Affiche toutes les colonnes
                     pd.set_option('display.width', None)      # Ajuste automatiquement la largeur de l'affichage
                     pd.set_option('display.max_colwidth', None) # Affiche le contenu complet des colonnes
-                    df = pd.DataFrame(torch.sigmoid(output[0,:]).cpu().numpy(), columns=["Valeurs"]).T
+                    df = pd.DataFrame(torch.sigmoid(output[0,:]).cpu().numpy()).T
                     print(" --> Prédiciton: ")
                     print(df)  # Affichage sans indices
                     print(" ")
                     print(" --> Target: ")
-                    df = pd.DataFrame(target[0,:].cpu().numpy(), columns=["Valeurs"]).T
+                    df = pd.DataFrame(target[0,:].cpu().numpy()).T
                     print(df)
                     print(" ")
                 # calculer la probabilité associée à chaque branche
