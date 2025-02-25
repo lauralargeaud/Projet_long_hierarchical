@@ -6,7 +6,7 @@ import matplotlib
 import seaborn as sns
 import numpy as np
 
-from read_yaml import compute_model_name
+from script.read_yaml import compute_model_name
 
 def generate_barplot(values, labels, title):
     plt.figure(figsize=(10, 5))
