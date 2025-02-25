@@ -1335,8 +1335,13 @@ def validate(
                 if last_batch:
                     print(" ")
                     print("Un exemple de prédiction / target associé pour une image de la validation:")
-                    print("Prédiction = ", torch.sigmoid(output[0,:]).item())
-                    print("Target = ", target[0,:].item())
+                    # Déplacement sur CPU et conversion en DataFrame
+                    df = pd.DataFrame(torch.sigmoid(output[0,:]).cpu().numpy(), columns=["Valeurs"]).T
+                    print("Prédiciton: ")
+                    print(df)  # Affichage sans indices
+                    print("Target: ")
+                    df = pd.DataFrame(torch.sigmoid(target[0,:].cpu().numpy(), columns=["Valeurs"])).T
+                    print(df)
                     print(" ")
                 # calculer la probabilité associée à chaque branche
                 logicseg_predictions = get_logicseg_predictions(torch.sigmoid(output), label_matrix)
