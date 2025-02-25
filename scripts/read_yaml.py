@@ -32,7 +32,7 @@ def compute_model_name(filepath):
         bce = data["bce_loss"]
         hce_alpha = data["hce_alpha"]
         if hce:
-            return f"HCE (alpha={hce_alpha})", f"hce_alpha_{str(hce_alpha).replace(".", "_")}"
+            return f"HCE (alpha={hce_alpha})", f'hce_alpha_{str(hce_alpha).replace(".", "_")}'
         elif bce:
             return "BCE", "bce"
         else:
