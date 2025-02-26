@@ -554,17 +554,17 @@ def main():
             # build the right csv file from metrics_all.csv without the lines whose "Etage" is "branches"
             # TODO: ajouter la racine au csv ? (elle y est dans le csv de Edgar)
             # Attention il faut que le csv contienne les données calculées sur des matrices de confusion non normalisées
-        build_F1_perfs_csv(df, os.path.join(args.results_dir, "metric_F1_perfs.csv"), args.csv_tree)
+        # build_F1_perfs_csv(df, os.path.join(args.results_dir, "metric_F1_perfs.csv"), args.csv_tree)
             # call the function
-        color_list = get_custom_color_list(saturation_factor=1.25)
-        plot_hierarchical_perfs(perfs_csv="metric_F1_perfs.csv",
-                                    metric_to_plot="F1-score",
-                                    cmap_list=color_list,
-                                    show=False,
-                                    html_output=os.path.join(args.results_dir, "F1_perfs.csv"),
-                                    png_output=os.path.join(args.results_dir, "F1_perfs.png"),
-                                    remove_lines=False,
-                                    font_size=32)
+        # color_list = get_custom_color_list(saturation_factor=1.25)
+        # plot_hierarchical_perfs(perfs_csv="metric_F1_perfs.csv",
+                                    # metric_to_plot="F1-score",
+                                    # cmap_list=color_list,
+                                    # show=False,
+                                    # html_output=os.path.join(args.results_dir, "F1_perfs.csv"),
+                                    # png_output=os.path.join(args.results_dir, "F1_perfs.png"),
+                                    # remove_lines=False,
+                                    # font_size=32)
 
 def save_results(df, results_filename, results_format='csv', filename_col='filename'):
     np.set_printoptions(threshold=maxsize)
