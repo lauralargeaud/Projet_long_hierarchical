@@ -28,7 +28,7 @@ from timm.utils import AverageMeter, setup_default_logging, set_jit_fuser, Parse
 
 from scripts.metrics_logicseg import topk_accuracy_logicseg
 from scripts.logic_seg_utils import *
-from scripts.results import load_confusion_matrix, save_confusion_matrix, save_metrics
+from scripts.results import *
 from scripts.metrics_hierarchy import *
 from scripts.hierarchical_perfs_plot import *
 
