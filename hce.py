@@ -163,3 +163,4 @@ if __name__ == "__main__":
     # print_results()
     # test_modified_logiqseg_loss()
     display_models_summary("output/train")
+    display_models_barplots("output/test", output_folder="output/img")
