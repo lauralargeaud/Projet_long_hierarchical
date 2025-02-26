@@ -341,6 +341,7 @@ def main():
             cm_par_hauteur_ids_preds = np.empty((h,0), dtype=np.float32)
             cm_par_hauteur_ids_targets = np.empty((h,0), dtype=np.float32)
         for batch_idx, (input, target) in enumerate(loader):
+            nb_batches += 1
             with amp_autocast():
                 output = model(input)
 
@@ -523,7 +524,7 @@ def main():
         # print(df.set_index(args.filename_col).to_json(orient='index', indent=4))
         # print("Top 1 accuracy: ", top1.item())
         # print("Top 5 accuracy: ", top5.item())
-        for key, value in metrics_hierarchy.items():
+        for key, value in metrics_hierarchy.metrics.items():
             print(key + ": ", value.item())
         cm = load_confusion_matrix(os.path.join(args.results_dir, "cm.out"))
         output_filename = "cm_branches.jpg"

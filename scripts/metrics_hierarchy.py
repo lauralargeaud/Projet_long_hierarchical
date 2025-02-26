@@ -19,13 +19,13 @@ class MetricsHierarchy:
     def __init__(self, H : torch.Tensor):
         """Initialise le dictionnaire pour stocker les métriques."""
         self.metrics = {
-            MetricsLabels.accuracy_top1: None,
-            MetricsLabels.accuracy_top5: None,
-            MetricsLabels.hierarchical_distance_mistakes: None,
-            MetricsLabels.topk_hierarchical_distance_mistakes: None,
-            MetricsLabels.c_rule_respect: None,
-            MetricsLabels.d_rule_respect: None,
-            MetricsLabels.e_rule_respect: None,
+            MetricsLabels.accuracy_top1: torch.tensor(-1),
+            MetricsLabels.accuracy_top5: torch.tensor(-1),
+            MetricsLabels.hierarchical_distance_mistakes: torch.tensor(-1),
+            MetricsLabels.topk_hierarchical_distance_mistakes: torch.tensor(-1),
+            MetricsLabels.c_rule_respect: torch.tensor(-1),
+            MetricsLabels.d_rule_respect: torch.tensor(-1),
+            MetricsLabels.e_rule_respect: torch.tensor(-1),
         }
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -227,7 +227,7 @@ class MetricsHierarchy:
         self.metrics[MetricsLabels.e_rule_respect] = total_respect
 
 
-    def topk_accuracy_logicseg(probas_branches_input, onehot_targets, topk=1):
+    def topk_accuracy_logicseg(self, probas_branches_input, onehot_targets, topk=1):
         """Generic function that computes the topk accuracy (= the accuracy over the topk top predictions) 
         for the specified values of topk"""
         topk = min(topk,probas_branches_input.shape[1])
@@ -277,11 +277,11 @@ class MetricsHierarchy:
     def compute_metrics(self, output, target, label_matrix):
         """Compute all the define metrics using the given data"""
         label_matrix = torch.tensor(label_matrix, dtype=torch.float32).to(self.device)
-        self.hierarchical_distance_mistake(output, target, label_matrix)
-        self.topk_hierarchical_distance_mistake(output, target, label_matrix)
-        self.c_rule_respect_percentage(output, target, label_matrix)
-        self.d_rule_respect_percentage(output, target, label_matrix)
-        self.e_rule_respect_percentage(output, target, label_matrix)
+        # self.hierarchical_distance_mistake(output, target, label_matrix)
+        # self.topk_hierarchical_distance_mistake(output, target, label_matrix)
+        # self.c_rule_respect_percentage(output, target, label_matrix)
+        # self.d_rule_respect_percentage(output, target, label_matrix)
+        # self.e_rule_respect_percentage(output, target, label_matrix)
         self.accuracy_topk_1_5(output, target, label_matrix)
 
     def update_metrics(self, metrics_hierarchy_batch):
