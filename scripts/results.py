@@ -1,13 +1,14 @@
 import os
+from unidecode import unidecode
 
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib
 import seaborn as sns
 import numpy as np
 import csv
 
 from scripts.read_yaml import compute_model_name
+from scripts.hierarchy_better_mistakes_utils import read_csv
 
 def generate_barplots(values, labels, title, filename, folder="output/img/"):
     plt.figure(figsize=(10, 5))
@@ -16,7 +17,34 @@ def generate_barplots(values, labels, title, filename, folder="output/img/"):
     plt.ylabel('Valeurs')
     plt.title(title)
     plt.xticks(rotation=45)
+    plt.tight_layout()
     plt.savefig(os.path.join(folder, filename))
+
+
+def display_models_barplots(test_output_folder, output_folder="output/img", hierarchy_filename="data/small-collomboles/hierarchy.csv"):
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    hierarchy_lines = read_csv(hierarchy_filename)
+    hierarchy_names = hierarchy_lines[0]
+    
+    metrics = ["Précision", "Rappel", "F1-score"]
+    values = {metric: {hierarchy_name: [] for hierarchy_name in hierarchy_names} for metric in metrics}
+    labels = []
+    for folder in os.listdir(test_output_folder):
+        csv_path = os.path.join(test_output_folder, folder, "metrics_all.csv")
+        args_path = os.path.join(test_output_folder, folder, "args.yaml")
+        title, _ = compute_model_name(args_path)
+        labels.append(title)
+
+        df = pd.read_csv(csv_path)
+        for name in hierarchy_names:
+            line = df[(df['Etage'] == name) & (df['Classe'] == 'Moyenne')]
+            for metric in metrics:
+                values[metric][name].append(line[metric].values[0])
+    for metric, hierarchy in values.items():
+        for name, data in hierarchy.items():
+            generate_barplots(data, labels, f"{metric} {name}", f"{unidecode(metric).lower()}_{name}.png")
 
 def show_results_from_csv_summary(filename, title, model_name, folder="output/img"):
     """
