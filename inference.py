@@ -30,6 +30,7 @@ from scripts.metrics_logicseg import topk_accuracy_logicseg
 from scripts.logic_seg_utils import *
 from scripts.results import load_confusion_matrix, save_confusion_matrix, save_metrics
 from scripts.metrics_hierarchy import *
+from scripts.hierarchical_perfs_plot import *
 
 try:
     from apex import amp
@@ -459,20 +460,24 @@ def main():
             # print("cm_all_targets: ", cm_all_targets)
             # print("cm_all_ids_preds: ", cm_all_ids_preds)
             cm = confusion_matrix(cm_all_targets, cm_all_ids_preds)
+            cm_normalized = confusion_matrix(cm_all_targets, cm_all_ids_preds, normalize='false')
             np.savetxt(os.path.join(args.results_dir, "cm.out"), cm)
-
+            np.savetxt(os.path.join(args.results_dir, "cm_norm.out"), cm_normalized)
             # construire la matrice de confusion pour chaque hauteur de l'arbre
-            for hauteur in range(1,h):
-                cm = confusion_matrix(cm_par_hauteur_ids_targets[hauteur,:], cm_par_hauteur_ids_preds[hauteur, :], normalize='true')
+            for hauteur in range(h):
+                cm = confusion_matrix(cm_par_hauteur_ids_targets[hauteur,:], cm_par_hauteur_ids_preds[hauteur, :])
+                cm_normalized = confusion_matrix(cm_par_hauteur_ids_targets[hauteur,:], cm_par_hauteur_ids_preds[hauteur, :], normalize='true')
                 np.savetxt(os.path.join(args.results_dir, "cm_"+str(hauteur)+".out"), cm)
+                np.savetxt(os.path.join(args.results_dir, "cm_norm_"+str(hauteur)+".out"), cm_normalized)
 
 
         else:
             cm_all_ids_preds = np.concatenate(cm_all_ids_preds, axis=0)
             cm_all_targets = np.concatenate(cm_all_targets, axis=0)
             cm = confusion_matrix(cm_all_targets, cm_all_ids_preds)
+            cm_normalized = confusion_matrix(cm_all_targets, cm_all_ids_preds, normalize='true')
             np.savetxt(os.path.join(args.results_dir, "confusion_matrix.out"), cm)
-
+            np.savetxt(os.path.join(args.results_dir, "confusion_matrix_norm.out"), cm_normalized)
 
 
     output_col = args.output_col or ('prob' if use_probs else 'logit')
@@ -527,21 +532,39 @@ def main():
         for key, value in metrics_hierarchy.metrics.items():
             print(key + ": ", value.item())
         cm = load_confusion_matrix(os.path.join(args.results_dir, "cm.out"))
-        output_filename = "cm_branches.jpg"
-        save_confusion_matrix(cm, output_filename, classes_labels, folder=args.results_dir)
+        cm_normalized = load_confusion_matrix(os.path.join(args.results_dir, "cm_norm.out"))
+        output_filename = "cm_norm_branches.jpg"
+        save_confusion_matrix(cm_normalized, output_filename, classes_labels, folder=args.results_dir)
         df = save_metrics(cm, folder=args.results_dir, filename="metrics_branches.csv", classes=classes_labels, hierarchy_name="branches")
 
         if args.logicseg:
             # construire la matrice de confusion pour chaque hauteur de l'arbre
-            for hauteur in range(1,h):
+            for hauteur in range(h):
                 cm = load_confusion_matrix(os.path.join(args.results_dir, "cm_"+str(hauteur)+".out"))
-                output_filename = "im_"+str(hauteur)+"_cm.jpg"
-                save_confusion_matrix(cm, output_filename, labels_par_hauteur[hauteur], folder=args.results_dir)
+                cm_norm = load_confusion_matrix(os.path.join(args.results_dir, "cm_norm_"+str(hauteur)+".out"))
+                if hauteur > 0:
+                    output_filename = "im_"+str(hauteur)+"_cm.jpg"
+                    save_confusion_matrix(cm_norm, output_filename, labels_par_hauteur[hauteur], folder=args.results_dir)
                 next_df = save_metrics(cm, folder=args.results_dir, filename=f"metrics_{hauteur}.csv", classes=labels_par_hauteur[hauteur], hierarchy_name="hauteur_"+str(hauteur))
                 df = pd.concat([df, next_df])
         
         df.to_csv(os.path.join(args.results_dir, "metrics_all.csv"), index=False)
 
+        # build the circle figure showing the F1 score for each node
+            # build the right csv file from metrics_all.csv without the lines whose "Etage" is "branches"
+            # TODO: ajouter la racine au csv ? (elle y est dans le csv de Edgar)
+            # Attention il faut que le csv contienne les données calculées sur des matrices de confusion non normalisées
+        build_F1_perfs_csv(df, os.path.join(args.results_dir, "metric_F1_perfs.csv"), args.csv_tree)
+            # call the function
+        color_list = get_custom_color_list(saturation_factor=1.25)
+        plot_hierarchical_perfs(perfs_csv="metric_F1_perfs.csv",
+                                    metric_to_plot="F1-score",
+                                    cmap_list=color_list,
+                                    show=False,
+                                    html_output=os.path.join(args.results_dir, "F1_perfs.csv"),
+                                    png_output=os.path.join(args.results_dir, "F1_perfs.png"),
+                                    remove_lines=False,
+                                    font_size=32)
 
 def save_results(df, results_filename, results_format='csv', filename_col='filename'):
     np.set_printoptions(threshold=maxsize)

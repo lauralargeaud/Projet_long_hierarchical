@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import seaborn as sns
 import numpy as np
+import csv
 
 from scripts.read_yaml import compute_model_name
 
@@ -214,3 +215,60 @@ def get_parent_confusion_matrix(cm, classes, parents):
             next_cm[next_class_1_id, next_class_2_id] += cm[i,j]
 
     return next_cm, next_classes
+
+
+def read_csv(filename):
+    """
+    Read CSV.
+    """
+    lines = []
+    with open(filename, newline="", encoding="utf-8") as csvfile:
+        reader = csv.reader(csvfile)
+        for row in reader:
+            lines.append(row)
+    return lines
+
+def get_parents(hierarchy_lines):
+    parents = {}
+    for line in hierarchy_lines:
+        for i, node in enumerate(line[1:]):
+            parents[node] = line[i]
+    return parents
+
+def get_taxonLevel(hierarchy_lines):
+    taxon_levels = {}
+    for line in hierarchy_lines[1:]:
+        for i, node in enumerate(line):
+            taxon_levels[node] = hierarchy_lines[0][i]
+    return taxon_levels
+
+# df contient les données de metrics_all.csv
+# on veut construire le csv requis par plot_hierarchical_perf
+def build_F1_perfs_csv(df, path_generated_csv, path_hierarchy):
+
+    df_filtered = df[df["Etage"] != "branches"]
+    df_filtered = df_filtered[df_filtered["Classe"] != "Moyenne"]
+    
+    # Construire le nouveau DataFrame
+    new_df = pd.DataFrame({
+        "Taxon_level": None,  # non renseigné
+        "Name": df_filtered["Classe"],
+        "Parent": None,  # Parent non renseigné
+        "Count": df_filtered["True"],
+        "F1-score": df_filtered["F1-score"]
+    })
+
+    # Trier par ordre alphabétique des 'Name'
+    new_df = new_df.sort_values(by=["Name"])
+
+    hierarchy_filename = path_hierarchy
+    hierarchy_lines = read_csv(hierarchy_filename)
+    hierarchy_lines_without_names = hierarchy_lines[1:]
+    parents = get_parents(hierarchy_lines_without_names)
+    new_df["Parent"] = new_df["Name"].map(parents)
+
+    taxon_levels = get_taxonLevel(hierarchy_lines)
+    taxon_levels = dict(sorted(taxon_levels.items()))
+    new_df["Taxon_level"] = new_df["Name"].map(taxon_levels)
+
+    new_df.to_csv(path_generated_csv, index=False)
