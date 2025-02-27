@@ -453,6 +453,7 @@ def main():
         copy_filepath = os.path.join(args.results_dir, "args.yaml")
         shutil.copy(args_filepath, copy_filepath)
         if args.logicseg:
+            header_list = get_csv_header(args.csv_tree)
             # construire la matrice de confusion des feuilles
             cm_all_ids_preds = np.concatenate(cm_all_ids_preds, axis=0)
             cm_all_targets = np.concatenate(cm_all_targets, axis=0)
@@ -460,14 +461,14 @@ def main():
             # print("cm_all_ids_preds: ", cm_all_ids_preds)
             cm = confusion_matrix(cm_all_targets, cm_all_ids_preds)
             cm_normalized = confusion_matrix(cm_all_targets, cm_all_ids_preds, normalize='true')
-            np.savetxt(os.path.join(args.results_dir, "cm.out"), cm)
-            np.savetxt(os.path.join(args.results_dir, "cm_norm.out"), cm_normalized)
+            np.savetxt(os.path.join(args.results_dir, "cm_branch.out"), cm)
+            np.savetxt(os.path.join(args.results_dir, "cm_norm_branch.out"), cm_normalized)
             # construire la matrice de confusion pour chaque hauteur de l'arbre
             for hauteur in range(h):
                 cm = confusion_matrix(cm_par_hauteur_ids_targets[hauteur,:], cm_par_hauteur_ids_preds[hauteur, :])
                 cm_normalized = confusion_matrix(cm_par_hauteur_ids_targets[hauteur,:], cm_par_hauteur_ids_preds[hauteur, :], normalize='true')
-                np.savetxt(os.path.join(args.results_dir, "cm_"+str(hauteur)+".out"), cm)
-                np.savetxt(os.path.join(args.results_dir, "cm_norm_"+str(hauteur)+".out"), cm_normalized)
+                np.savetxt(os.path.join(args.results_dir, "cm_"+header_list[hauteur]+".out"), cm)
+                np.savetxt(os.path.join(args.results_dir, "cm_norm_"+header_list[hauteur]+".out"), cm_normalized)
 
 
         else:
@@ -530,8 +531,8 @@ def main():
         # print("Top 5 accuracy: ", top5.item())
         for key, value in metrics_hierarchy.metrics.items():
             print(key + ": ", value.item())
-        cm = load_confusion_matrix(os.path.join(args.results_dir, "cm.out"))
-        cm_normalized = load_confusion_matrix(os.path.join(args.results_dir, "cm_norm.out"))
+        cm = load_confusion_matrix(os.path.join(args.results_dir, "cm_branch.out"))
+        cm_normalized = load_confusion_matrix(os.path.join(args.results_dir, "cm_norm_branch.out"))
         output_filename = "cm_norm_branches.jpg"
         save_confusion_matrix(cm_normalized, output_filename, classes_labels, folder=args.results_dir)
         df = save_metrics(cm, folder=args.results_dir, filename="metrics_branches.csv", classes=classes_labels, hierarchy_name="branches")
