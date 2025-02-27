@@ -459,7 +459,7 @@ def main():
             # print("cm_all_targets: ", cm_all_targets)
             # print("cm_all_ids_preds: ", cm_all_ids_preds)
             cm = confusion_matrix(cm_all_targets, cm_all_ids_preds)
-            cm_normalized = confusion_matrix(cm_all_targets, cm_all_ids_preds)
+            cm_normalized = confusion_matrix(cm_all_targets, cm_all_ids_preds, normalize='true')
             np.savetxt(os.path.join(args.results_dir, "cm.out"), cm)
             np.savetxt(os.path.join(args.results_dir, "cm_norm.out"), cm_normalized)
             # construire la matrice de confusion pour chaque hauteur de l'arbre
