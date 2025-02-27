@@ -569,7 +569,6 @@ def main():
 
             path_output_csv = os.path.join(args.results_dir, "results_from_leaves", "metric_F1_perfs.csv")
             # build the right csv file from metrics_all.csv without the lines whose "Etage" is "branches"
-            # TODO: ajouter la racine au csv ? (elle y est dans le csv de Edgar)
             # Attention il faut que le csv contienne les données calculées sur des matrices de confusion non normalisées
             build_F1_perfs_csv(os.path.join(args.results_dir, "results_from_leaves", "metrics_all.csv"), path_output_csv, args.csv_tree)
                 # call the function
