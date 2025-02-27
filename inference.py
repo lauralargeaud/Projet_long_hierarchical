@@ -527,11 +527,11 @@ def main():
     if args.conf_matrix:
         if args.logicseg:
             print(f'--result')
-            # print(df.set_index(args.filename_col).to_json(orient='index', indent=4))
-            # print("Top 1 accuracy: ", top1.item())
-            # print("Top 5 accuracy: ", top5.item())
-            for key, value in metrics_hierarchy.metrics.items():
-                print(key + ": ", value.item())
+            with open("mon_fichier.txt", "w") as fichier:
+                for key, value in metrics_hierarchy.metrics.items():
+                    print(key + ": ", value.item())
+                    # écrire aussi dans le fichier des résultats
+                    fichier.write(key + ": ", value.item() + "\n")
             cm = load_confusion_matrix(os.path.join(args.results_dir, "cm_branch.out"))
             cm_normalized = load_confusion_matrix(os.path.join(args.results_dir, "cm_norm_branch.out"))
             output_filename = "cm_branches.jpg"
