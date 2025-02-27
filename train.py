@@ -1147,9 +1147,9 @@ def train_one_epoch(
                     # appliquer la sigmoid
                     output = torch.sigmoid(output)
                     # calculer la probabilité associée à chaque branche
-                    logicseg_predictions = get_logicseg_predictions(torch.sigmoid(output), label_matrix)
+                    logicseg_predictions = get_logicseg_predictions(torch.sigmoid(output), label_matrix, device)
                     # construire le label onehot associé à chaque branche
-                    onehot_targets = get_logicseg_predictions(target, label_matrix)
+                    onehot_targets = get_logicseg_predictions(target, label_matrix, device)
                     acc1 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=1)
                     acc5 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=5)
                 else:
@@ -1349,9 +1349,9 @@ def validate(
                     print(df.to_string(index=False))
                     print(" ")
                 # calculer la probabilité associée à chaque branche
-                logicseg_predictions = get_logicseg_predictions(torch.sigmoid(output), label_matrix)
+                logicseg_predictions = get_logicseg_predictions(torch.sigmoid(output), label_matrix, device)
                 # construire le label onehot associé à chaque branche
-                onehot_targets = get_logicseg_predictions(target, label_matrix)
+                onehot_targets = get_logicseg_predictions(target, label_matrix, device)
                 acc1 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=1)
                 acc5 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=5)
             else:

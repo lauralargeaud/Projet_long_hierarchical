@@ -358,12 +358,12 @@ def main():
                 # appliquer la sigmoid
                 output = torch.sigmoid(output)
                 # calculer la probabilité associée à chaque branche
-                logicseg_predictions = get_logicseg_predictions(output, label_matrix) # (nb_pred, nb_feuilles) probabilités des feuilles prédites par le modèle
+                logicseg_predictions = get_logicseg_predictions(output, label_matrix, device) # (nb_pred, nb_feuilles) probabilités des feuilles prédites par le modèle
                 # construire le label onehot associé à chaque branche
-                onehot_targets = get_logicseg_predictions(target, label_matrix) # (nb_pred, nb_feuilles) one hot encoding des feuilles cibles
+                onehot_targets = get_logicseg_predictions(target, label_matrix, device) # (nb_pred, nb_feuilles) one hot encoding des feuilles cibles
                 # calculer les métriques sur les prédictions réalisées dans le batch courant
                 metrics_hierarchy_batch = MetricsHierarchy(H_raw)
-                metrics_hierarchy_batch.compute_metrics(output, target, label_matrix)
+                metrics_hierarchy_batch.compute_metrics(output, target, label_matrix, device)
                 # mettre à jour les métriques globales
                 metrics_hierarchy.update_metrics(metrics_hierarchy_batch)
                 # calculer l'accuracy top1
@@ -552,7 +552,7 @@ def main():
                 output_filename_norm = "cm_im_norm_"+header_list[hauteur]+".jpg"
                 save_confusion_matrix(cm_normalized, output_filename, labels_par_hauteur[hauteur], folder=args.results_dir)
                 save_confusion_matrix(cm_normalized, output_filename_norm, labels_par_hauteur[hauteur], folder=args.results_dir)
-                next_df = save_metrics(cm, folder=args.results_dir, filename=f"metrics_{header_list[hauteur]}.csv", classes=labels_par_hauteur[hauteur], hierarchy_name="hauteur_"+header_list[hauteur])
+                next_df = save_metrics(cm, folder=args.results_dir, filename=f"metrics_{header_list[hauteur]}.csv", classes=labels_par_hauteur[hauteur], hierarchy_name=header_list[hauteur])
                 df = pd.concat([df, next_df])
             
             df.to_csv(os.path.join(args.results_dir, "metrics_all.csv"), index=False)

@@ -19,8 +19,18 @@ def generate_barplots(values, labels, title, filename, folder="output/img/"):
     plt.ylabel('Valeurs')
     plt.title(title)
     plt.xticks(rotation=45)
+    
+    # Ajouter les valeurs au-dessus des barres
+    for i, v in enumerate(values):
+        plt.text(i, v + max(values) * -0.10, f"{v:.3f}", ha='center', fontsize=10, fontweight='bold')
+    
     plt.tight_layout()
+    
+    # Vérifier si le dossier existe, sinon le créer
+    os.makedirs(folder, exist_ok=True)
+    
     plt.savefig(os.path.join(folder, filename))
+    plt.close()  # Fermer la figure après sauvegarde pour éviter des problèmes d'affichage
 
 
 def display_models_barplots(test_output_folder, output_folder="output/img", hierarchy_filename="data/small-collomboles/hierarchy.csv"):
@@ -34,6 +44,7 @@ def display_models_barplots(test_output_folder, output_folder="output/img", hier
     values = {metric: {hierarchy_name: [] for hierarchy_name in hierarchy_names} for metric in metrics}
     labels = []
     for folder in os.listdir(test_output_folder):
+        print(folder)
         csv_path = os.path.join(test_output_folder, folder, "metrics_all.csv")
         args_path = os.path.join(test_output_folder, folder, "args.yaml")
         title, _ = compute_model_name(args_path)

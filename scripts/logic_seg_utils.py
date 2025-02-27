@@ -91,8 +91,7 @@ def get_class_to_label(label_matrix, index_to_node, verbose=False):
 # pred: sigmoid(y_pred)
 # on veut: tenseur de taille (nb_branches,) contenant les probas de toutes les branches
 # sortie: shape = (nb_pred, nb_branches)
-def get_logicseg_predictions(pred, label_matrix):
-  device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+def get_logicseg_predictions(pred, label_matrix, device):
   label_matrix = torch.tensor(label_matrix, dtype=torch.float32).to(device) #torch tensor
   nb_pred = pred.shape[0]
   nb_feuilles = label_matrix.shape[0]

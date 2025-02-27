@@ -11,3 +11,5 @@ conf_matrix: True
 csv_tree: "data/small-collomboles/hierarchy.csv"
 logicseg: True
 class_map: "classmap/classmap.pkl"
+
+device: "cpu"

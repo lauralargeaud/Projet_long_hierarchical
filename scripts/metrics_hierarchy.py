@@ -57,7 +57,7 @@ class MetricsHierarchy:
         return distance
     
 
-    def hierarchical_distance_mistake(self, output, target, label_matrix):
+    def hierarchical_distance_mistake(self, output, target, label_matrix, device):
         """
         Calcule la distance hierarchique des erreurs
 
@@ -66,8 +66,8 @@ class MetricsHierarchy:
             target (torch.Tensor): Labels réels.
             label_matrix (torch.Tensor): Matrice des labels.
         """
-        probas_branches_input = get_logicseg_predictions(output, label_matrix)
-        probas_branches_target = get_logicseg_predictions(target, label_matrix)
+        probas_branches_input = get_logicseg_predictions(output, label_matrix, device)
+        probas_branches_target = get_logicseg_predictions(target, label_matrix, device)
 
         _, indices_branches_in = probas_branches_input.topk(1, dim=1)
         _, indices_branches_target = probas_branches_target.topk(1, dim=1)
@@ -85,7 +85,7 @@ class MetricsHierarchy:
 
         self.metrics[MetricsLabels.hierarchical_distance_mistakes] = total_distance / target.size(0)
 
-    def topk_hierarchical_distance_mistake(self, output, target, label_matrix, k=5):
+    def topk_hierarchical_distance_mistake(self, output, target, label_matrix, device, k=5):
         """
         Calcule la distance hiérarchique moyenne des erreurs pour les k meilleures prédictions.
 
@@ -99,8 +99,8 @@ class MetricsHierarchy:
             float: Distance hiérarchique moyenne des erreurs pour le top-k.
         """
         # Obtenir les probabilités des branches pour l'input et la cible
-        probas_branches_input = get_logicseg_predictions(output, label_matrix)
-        probas_branches_target = get_logicseg_predictions(target, label_matrix)
+        probas_branches_input = get_logicseg_predictions(output, label_matrix, device)
+        probas_branches_target = get_logicseg_predictions(target, label_matrix, device)
 
         # Obtenir les indices des k meilleures prédictions et de la cible
         _, indices_branches_in = probas_branches_input.topk(k, dim=1)  # (batch_size, k)
@@ -237,7 +237,7 @@ class MetricsHierarchy:
         acc = torch.sum(torch.any(indices_branches_in == indices_branches_target, dim=1), dim=0) / indices_branches_in.shape[0]
         return acc
 
-    def accuracy_topk_1_5(self, output, target, label_matrix):
+    def accuracy_topk_1_5(self, output, target, label_matrix, device):
         """
         Calcule la précision top-1 et top-5 pour la segmentation logique.
 
@@ -247,8 +247,8 @@ class MetricsHierarchy:
             label_matrix (torch.Tensor): Matrice des labels.
 
         """
-        probas_branches_input = get_logicseg_predictions(output, label_matrix)
-        onehot_targets = get_logicseg_predictions(target, label_matrix)
+        probas_branches_input = get_logicseg_predictions(output, label_matrix, device)
+        onehot_targets = get_logicseg_predictions(target, label_matrix, device)
 
         # Top-1 Accuracy
         acc1 = self.topk_accuracy_logicseg(probas_branches_input, onehot_targets, topk=1)
@@ -274,7 +274,7 @@ class MetricsHierarchy:
         for key, value in self.metrics.items():
             self.metrics[key] = value / n
 
-    def compute_metrics(self, output, target, label_matrix):
+    def compute_metrics(self, output, target, label_matrix, device):
         """Compute all the define metrics using the given data"""
         label_matrix = torch.tensor(label_matrix, dtype=torch.float32).to(self.device)
         # self.hierarchical_distance_mistake(output, target, label_matrix)
@@ -282,7 +282,7 @@ class MetricsHierarchy:
         # self.c_rule_respect_percentage(output, target, label_matrix)
         # self.d_rule_respect_percentage(output, target, label_matrix)
         # self.e_rule_respect_percentage(output, target, label_matrix)
-        self.accuracy_topk_1_5(output, target, label_matrix)
+        self.accuracy_topk_1_5(output, target, label_matrix, device)
 
     def update_metrics(self, metrics_hierarchy_batch):
         """Mettre à jour les métriques de l'objet en y ajoutant les valeurs des métriques d'un autre objet"""
