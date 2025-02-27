@@ -540,6 +540,8 @@ def main():
             save_confusion_matrix(cm_normalized, output_filename_norm, classes_labels, folder=args.results_dir)
             df = save_metrics(cm, folder=args.results_dir, filename="metrics_branches.csv", classes=classes_labels, hierarchy_name="branches")
 
+            save_confusion_matrix_and_metrics(os.path.join(args.results_dir, "results_from_leaves"), os.path.join(args.results_dir, "cm_branch.out"), classes, parents, hierarchy_names)
+
             header_list = get_csv_header(args.csv_tree)
             # construire la matrice de confusion pour chaque hauteur de l'arbre
             for hauteur in range(h):
@@ -565,7 +567,7 @@ def main():
             parents = get_parents(hierarchy_lines_without_names)
             hierarchy_names = hierarchy_lines[0]
             hierarchy_names.reverse()
-            save_confusion_matrix_and_metrics(args.results_dir, os.path.basename(args.results_dir), classes, parents, hierarchy_names)
+            save_confusion_matrix_and_metrics(args.results_dir, os.path.join(args.results_dir, "confusion_matrix.out"), classes, parents, hierarchy_names)
 
         # build the circle figure showing the F1 score for each node
         path_output_csv = os.path.join(args.results_dir, "metric_F1_perfs.csv")
