@@ -1,5 +1,6 @@
 import torch
 from scripts.logic_seg_utils import get_logicseg_predictions
+from ..timm.utils import AverageMeter
 
 class MetricsLabels:
     """Classe pour stocker les labels des différentes métriques"""
@@ -13,24 +14,59 @@ class MetricsLabels:
     e_rule_respect = "Respect of the e rule"
 
 
+class AverageMeter:
+    """Computes and stores the average and current value"""
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count
+
+
 class MetricsHierarchy:
     """Classe pour calculer et stocker différentes métriques de performance d'une IA."""
 
     def __init__(self, H : torch.Tensor):
         """Initialise le dictionnaire pour stocker les métriques."""
         self.metrics = {
-            MetricsLabels.accuracy_top1: torch.tensor(-1),
-            MetricsLabels.accuracy_top5: torch.tensor(-1),
-            MetricsLabels.hierarchical_distance_mistakes: torch.tensor(-1),
-            MetricsLabels.topk_hierarchical_distance_mistakes: torch.tensor(-1),
-            MetricsLabels.c_rule_respect: torch.tensor(-1),
-            MetricsLabels.d_rule_respect: torch.tensor(-1),
-            MetricsLabels.e_rule_respect: torch.tensor(-1),
+            MetricsLabels.accuracy_top1: AverageMeter(),
+            MetricsLabels.accuracy_top5: AverageMeter(),
+            MetricsLabels.hierarchical_distance_mistakes: AverageMeter(),
+            MetricsLabels.topk_hierarchical_distance_mistakes: AverageMeter(),
+            MetricsLabels.c_rule_respect: AverageMeter(),
+            MetricsLabels.d_rule_respect: AverageMeter(),
+            MetricsLabels.e_rule_respect: AverageMeter(),
         }
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.H = torch.tensor(H, dtype=torch.float32).to(self.device) #torch tensor
     
+
+    def get_metrics_string(self):
+        # Generate a single string with all metrics
+        metrics_str = "\n".join([f"{label}: {meter.average():.4f}" for label, meter in self.metrics.items()])
+        return metrics_str
+    
+
+    def compute_all_metrics(self, output, target):
+        self.topk_accuracy_logicseg(output, target, 1)
+        self.topk_accuracy_logicseg(output, target, 5)
+        self.hierarchical_distance_mistake(output, target)
+        self.topk_hierarchical_distance_mistake(output, target, 5)
+        self.c_rule_respect_percentage(output, target)
+        self.d_rule_respect_percentage(output, target)
+        self.e_rule_respect_percentage(output, target)
+
+
     
     def lca_height(self, node1 : int, node2: int):
         """Trouve la distance qui sépare les nœuds du Lowest Common Ancestor.
@@ -57,7 +93,7 @@ class MetricsHierarchy:
         return distance
     
 
-    def hierarchical_distance_mistake(self, output, target, label_matrix, device):
+    def hierarchical_distance_mistake(self, output, target):
         """
         Calcule la distance hierarchique des erreurs
 
@@ -66,11 +102,9 @@ class MetricsHierarchy:
             target (torch.Tensor): Labels réels.
             label_matrix (torch.Tensor): Matrice des labels.
         """
-        probas_branches_input = get_logicseg_predictions(output, label_matrix, device)
-        probas_branches_target = get_logicseg_predictions(target, label_matrix, device)
 
-        _, indices_branches_in = probas_branches_input.topk(1, dim=1)
-        _, indices_branches_target = probas_branches_target.topk(1, dim=1)
+        _, indices_branches_in = output.topk(1, dim=1)
+        _, indices_branches_target = target.topk(1, dim=1)
 
         # Initialiser la distance totale
         total_distance = 0.0
@@ -83,9 +117,9 @@ class MetricsHierarchy:
                 distance = self.lca_height(pred_class, true_class)
                 total_distance += distance
 
-        self.metrics[MetricsLabels.hierarchical_distance_mistakes] = total_distance / target.size(0)
+        self.metrics[MetricsLabels.hierarchical_distance_mistakes].update(total_distance / target.size(0))
 
-    def topk_hierarchical_distance_mistake(self, output, target, label_matrix, device, k=5):
+    def topk_hierarchical_distance_mistake(self, output, target, k=5):
         """
         Calcule la distance hiérarchique moyenne des erreurs pour les k meilleures prédictions.
 
@@ -98,13 +132,10 @@ class MetricsHierarchy:
         Returns:
             float: Distance hiérarchique moyenne des erreurs pour le top-k.
         """
-        # Obtenir les probabilités des branches pour l'input et la cible
-        probas_branches_input = get_logicseg_predictions(output, label_matrix, device)
-        probas_branches_target = get_logicseg_predictions(target, label_matrix, device)
 
         # Obtenir les indices des k meilleures prédictions et de la cible
-        _, indices_branches_in = probas_branches_input.topk(k, dim=1)  # (batch_size, k)
-        _, indices_branches_target = probas_branches_target.topk(1, dim=1)  # (batch_size, 1)
+        _, indices_branches_in = output.topk(k, dim=1)  # (batch_size, k)
+        _, indices_branches_target = target.topk(1, dim=1)  # (batch_size, 1)
         
         # Initialiser la distance totale
         total_distance = 0.0
@@ -123,9 +154,9 @@ class MetricsHierarchy:
             total_distance += sum(distances) / k
 
         # Stocker le résultat
-        self.metrics[MetricsLabels.topk_hierarchical_distance_mistakes.format(k)] = total_distance / target.size(0)
+        self.metrics[MetricsLabels.topk_hierarchical_distance_mistakes.format(k)].update(total_distance / target.size(0))
 
-    def c_rule_respect_percentage(self, output: torch.Tensor, target, label_matrix: torch.Tensor):
+    def c_rule_respect_percentage(self, output: torch.Tensor, target):
         """
         Calcule le pourcentage d'échantillons respectant la C-Rule.
 
@@ -159,11 +190,11 @@ class MetricsHierarchy:
 
         # Calcul du pourcentage d'échantillons respectant la C-Rule
         total_respect = torch.mean(batch_respect)
-        self.metrics[MetricsLabels.c_rule_respect] = total_respect
+        self.metrics[MetricsLabels.c_rule_respect].update(total_respect)
 
 
 
-    def d_rule_respect_percentage(self, output: torch.Tensor, target, label_matrix: torch.Tensor):
+    def d_rule_respect_percentage(self, output: torch.Tensor, target):
         """
         Calcule le pourcentage d'échantillons respectant la D-Rule.
 
@@ -195,11 +226,11 @@ class MetricsHierarchy:
 
         # Calcul du pourcentage d'échantillons respectant la C-Rule
         total_respect = torch.mean(batch_respect)
-        self.metrics[MetricsLabels.d_rule_respect] = total_respect
+        self.metrics[MetricsLabels.d_rule_respect].update(total_respect)
 
 
 
-    def  e_rule_respect_percentage(self, output: torch.Tensor, target, label_matrix: torch.Tensor):
+    def  e_rule_respect_percentage(self, output: torch.Tensor, target):
         """
         Calcule le pourcentage d'échantillons respectant la E-Rule.
 
@@ -224,7 +255,7 @@ class MetricsHierarchy:
 
         # Calcul du pourcentage d'échantillons respectant la C-Rule
         total_respect = torch.mean(batch_respect)
-        self.metrics[MetricsLabels.e_rule_respect] = total_respect
+        self.metrics[MetricsLabels.e_rule_respect].update(total_respect)
 
 
     def topk_accuracy_logicseg(self, probas_branches_input, onehot_targets, topk=1):
@@ -235,6 +266,12 @@ class MetricsHierarchy:
         indices_branches_target = indices_branches_target.repeat(1, topk) # (nb_pred, top_k)
         _, indices_branches_in = probas_branches_input.topk(topk , dim=1) # (nb_pred, top_k), (nb_pred, top_k)
         acc = torch.sum(torch.any(indices_branches_in == indices_branches_target, dim=1), dim=0) / indices_branches_in.shape[0]
+
+        if (topk == 1):
+            self.metrics[MetricsLabels.accuracy_top1].update(acc)
+        
+        if (topk == 5):
+            self.metrics[MetricsLabels.accuracy_top5].update(acc)
         return acc
 
     def accuracy_topk_1_5(self, output, target, label_matrix, device):
@@ -283,10 +320,3 @@ class MetricsHierarchy:
         # self.d_rule_respect_percentage(output, target, label_matrix)
         # self.e_rule_respect_percentage(output, target, label_matrix)
         self.accuracy_topk_1_5(output, target, label_matrix, device)
-
-    def update_metrics(self, metrics_hierarchy_batch):
-        """Mettre à jour les métriques de l'objet en y ajoutant les valeurs des métriques d'un autre objet"""
-        if not isinstance(metrics_hierarchy_batch, MetricsHierarchy):
-            raise ValueError("Le paramètre doit être un objet de type MetricsHierarchy")
-        for key, value in self.metrics.items():
-            self.metrics[key] = value + metrics_hierarchy_batch.metrics[key]

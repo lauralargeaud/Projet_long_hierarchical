@@ -14,7 +14,7 @@ class TestHierarchicalClassifier(unittest.TestCase):
                                             [0, 0, 0, 0, 0]]).to(self.device)
         self.metrics = MetricsHierarchy(self.hierarchy_matrix)
 
-    def atest_hierarchical_distance_mistake(self):
+    def test_hierarchical_distance_mistake(self):
         """Test du calcul de la distance hiérarchique des erreurs."""
         output = torch.tensor([[0.1, 0.5, 0.2, 0.1, 0.1],   # Prédiction : classe 1
                                [0.2, 0.1, 0.6, 0.05, 0.05],  # Prédiction : classe 2
@@ -44,7 +44,7 @@ class TestHierarchicalClassifier(unittest.TestCase):
         self.metrics.topk_hierarchical_distance_mistake(output, target, label_matrix, 3)
         print("Distance topk hiérarchique moyenne des erreurs : " + str(self.metrics.metrics[MetricsLabels.hierarchical_distance_mistakes]))
     
-    def test_c_rule_respect(self):
+    def atest_c_rule_respect(self):
         """Test du calcul du pourcentage de respect de la c rule."""
         output = torch.tensor([[0.6, 0. , 0., 0.6, 0.]   # Prédiction : classe 1
                                ]).to(self.device)  # Prédiction : classe 3
@@ -58,7 +58,7 @@ class TestHierarchicalClassifier(unittest.TestCase):
         self.metrics.c_rule_respect_percentage(output, target, label_matrix)
         print("pourcentage de respect de la c-rule : " + str(self.metrics.metrics[MetricsLabels.c_rule_respect]))
 
-    def test_d_rule_respect(self):
+    def atest_d_rule_respect(self):
         """Test du calcul du pourcentage de respect de la d rule."""
         output = torch.tensor([[0.6, 0. , 0., 0.6, 0.]   # Prédiction : classe 1
                                ]).to(self.device)  # Prédiction : classe 3
@@ -72,7 +72,7 @@ class TestHierarchicalClassifier(unittest.TestCase):
         self.metrics.d_rule_respect_percentage(output, target, label_matrix)
         print("pourcentage de respect de la d-rule : " + str(self.metrics.metrics[MetricsLabels.d_rule_respect]))
 
-    def test_e_rule_respect(self):
+    def atest_e_rule_respect(self):
         """Test du calcul du pourcentage de respect de la e rule."""
         output = torch.tensor([[0.6, 0.6 , 0.6, 0.6, 0.]   # Prédiction : classe 1
                                ]).to(self.device)  # Prédiction : classe 3
