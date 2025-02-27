@@ -117,3 +117,10 @@ def get_branches_label(most_probable_branches_indices_in, most_probable_branches
 if __name__ == "__main__":
    path_to_csv_tree = "data/simple/hierarchy_test.csv"
    get_tree_matrices(path_to_csv_tree, verbose=True)
+
+def get_csv_header(file_path):
+    import csv
+    with open(file_path, newline='', encoding='utf-8') as csvfile:
+        reader = csv.reader(csvfile)
+        header = next(reader)  # Read the first row
+    return header

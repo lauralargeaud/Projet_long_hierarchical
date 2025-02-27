@@ -531,13 +531,15 @@ def main():
         save_confusion_matrix(cm, output_filename, classes_labels, folder=args.results_dir)
         df = save_metrics(cm, folder=args.results_dir, filename="metrics_branches.csv", classes=classes_labels, hierarchy_name="branches")
 
+        header_list = get_csv_header(args.csv_tree)
+        print('header_list',header_list)
         if args.logicseg:
             # construire la matrice de confusion pour chaque hauteur de l'arbre
             for hauteur in range(1,h):
-                cm = load_confusion_matrix(os.path.join(args.results_dir, "cm_"+str(hauteur)+".out"))
-                output_filename = "im_"+str(hauteur)+"_cm.jpg"
+                cm = load_confusion_matrix(os.path.join(args.results_dir, "cm_"+ header_list[hauteur] +".out"))
+                output_filename = "cm_im_"+header_list[hauteur]+".jpg"
                 save_confusion_matrix(cm, output_filename, labels_par_hauteur[hauteur], folder=args.results_dir)
-                next_df = save_metrics(cm, folder=args.results_dir, filename=f"metrics_{hauteur}.csv", classes=labels_par_hauteur[hauteur], hierarchy_name="hauteur_"+str(hauteur))
+                next_df = save_metrics(cm, folder=args.results_dir, filename=f"metrics_{header_list[hauteur]}.csv", classes=labels_par_hauteur[hauteur], hierarchy_name="hauteur_"+header_list[hauteur])
                 df = pd.concat([df, next_df])
         
         df.to_csv(os.path.join(args.results_dir, "metrics_all.csv"), index=False)
