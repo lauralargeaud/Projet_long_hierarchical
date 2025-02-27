@@ -546,7 +546,8 @@ def main():
             parents = get_parents(hierarchy_lines_without_names)
             hierarchy_names = hierarchy_lines[0]
             hierarchy_names.reverse()
-            os.mkdir(os.path.join(args.results_dir, "results_from_leaves"))
+            if not os.path.isdir(os.path.join(args.results_dir, "results_from_leaves")):
+                os.mkdir(os.path.join(args.results_dir, "results_from_leaves"))
             save_confusion_matrix_and_metrics(os.path.join(args.results_dir, "results_from_leaves"), os.path.join(args.results_dir, "cm_branch.out"), classes, parents, hierarchy_names)
 
             header_list = get_csv_header(args.csv_tree)
