@@ -540,6 +540,15 @@ def main():
             save_confusion_matrix(cm_normalized, output_filename_norm, classes_labels, folder=args.results_dir)
             df = save_metrics(cm, folder=args.results_dir, filename="metrics_branches.csv", classes=classes_labels, hierarchy_name="branches")
 
+            classes = classes_labels
+            hierarchy_lines = read_csv(args.csv_tree)
+            hierarchy_lines_without_names = hierarchy_lines[1:]
+            parents = get_parents(hierarchy_lines_without_names)
+            hierarchy_names = hierarchy_lines[0]
+            hierarchy_names.reverse()
+            os.mkdir(os.path.join(args.results_dir, "results_from_leaves"))
+            save_confusion_matrix_and_metrics(os.path.join(args.results_dir, "results_from_leaves"), os.path.join(args.results_dir, "cm_branch.out"), classes, parents, hierarchy_names)
+
             header_list = get_csv_header(args.csv_tree)
             # construire la matrice de confusion pour chaque hauteur de l'arbre
             for hauteur in range(h):
@@ -557,6 +566,22 @@ def main():
             
             df.to_csv(os.path.join(args.results_dir, "metrics_all.csv"), index=False)
 
+            path_output_csv = os.path.join(args.results_dir, "results_from_leaves", "metric_F1_perfs.csv")
+            # build the right csv file from metrics_all.csv without the lines whose "Etage" is "branches"
+            # TODO: ajouter la racine au csv ? (elle y est dans le csv de Edgar)
+            # Attention il faut que le csv contienne les données calculées sur des matrices de confusion non normalisées
+            build_F1_perfs_csv(os.path.join(args.results_dir, "results_from_leaves", "metrics_all.csv"), path_output_csv, args.csv_tree)
+                # call the function
+            color_list = get_custom_color_list(saturation_factor=1.25)
+            plot_hierarchical_perfs(perfs_csv=path_output_csv,
+                                        metric_to_plot="F1-score",
+                                        cmap_list=color_list,
+                                        show=False,
+                                        html_output=os.path.join(args.results_dir, "F1_perfs.html"),
+                                        png_output=os.path.join(args.results_dir, "F1_perfs.png"),
+                                        remove_lines=False,
+                                        font_size=32)
+
         else:
             classes = load_classnames(args.class_map)
 
@@ -565,7 +590,7 @@ def main():
             parents = get_parents(hierarchy_lines_without_names)
             hierarchy_names = hierarchy_lines[0]
             hierarchy_names.reverse()
-            save_confusion_matrix_and_metrics(args.results_dir, os.path.basename(args.results_dir), classes, parents, hierarchy_names)
+            save_confusion_matrix_and_metrics(args.results_dir, os.path.join(args.results_dir, "confusion_matrix.out"), classes, parents, hierarchy_names)
 
         # build the circle figure showing the F1 score for each node
         path_output_csv = os.path.join(args.results_dir, "metric_F1_perfs.csv")
