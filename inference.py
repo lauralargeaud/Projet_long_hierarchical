@@ -579,7 +579,7 @@ def main():
                                 metric_to_plot="F1-score",
                                 cmap_list=color_list,
                                 show=False,
-                                html_output=os.path.join(args.results_dir, "F1_perfs.csv"),
+                                html_output=os.path.join(args.results_dir, "F1_perfs.html"),
                                 png_output=os.path.join(args.results_dir, "F1_perfs.png"),
                                 remove_lines=False,
                                 font_size=32)
