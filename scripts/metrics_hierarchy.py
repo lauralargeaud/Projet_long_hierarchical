@@ -1,6 +1,5 @@
 import torch
-from scripts.logic_seg_utils import get_logicseg_predictions
-from ..timm.utils import AverageMeter
+from logic_seg_utils import get_logicseg_predictions
 
 class MetricsLabels:
     """Classe pour stocker les labels des différentes métriques"""
@@ -53,7 +52,7 @@ class MetricsHierarchy:
 
     def get_metrics_string(self):
         # Generate a single string with all metrics
-        metrics_str = "\n".join([f"{label}: {meter.average():.4f}" for label, meter in self.metrics.items()])
+        metrics_str = "\n".join([f"{label}: {meter.avg:.4f}" for label, meter in self.metrics.items()])
         return metrics_str
     
 
@@ -170,20 +169,22 @@ class MetricsHierarchy:
         batch_size, num_classes = output.shape
 
         # Seuil pour binariser les prédictions (0 ou 1)
+        '''A VERIFIER !!!'''
         output_pred = (output > 0.5).float()  # Matrice binaire (batch_size, num_classes)
 
 
         # Calcul des activations des super-classes via la matrice H (Hiérarchie)
         H = self.H.float()  # Matrice hiérarchique (num_classes, num_classes)
-        Hs = ((output_pred.T).repeat(1,num_classes) == 1) & (H == 1) 
+        Hs = (torch.repeat_interleave(output_pred.T, repeats=num_classes, dim=1) == 1) & (H.repeat(1,batch_size) == 1)
         Hs = torch.sum(Hs.float(),dim=0)
+        print(Hs)
 
         enfants  = torch.sum(H,dim=0)
         enfants_batch = enfants.repeat(batch_size,1)  # (batch_size, num_classes)
 
         # Vérifier que si une classe est activée, sa super-classe l'est aussi
         # Si une classe est activée mais pas sa super-classe, cela viole la règle
-        violation_mask = (output_pred > 0) & (Hs == 0) & (enfants_batch != 0)  # (num_classes, batch_size)
+        violation_mask = (output_pred > 0) & (Hs.reshape(batch_size, num_classes) == 0) & (enfants_batch != 0)  # (num_classes, batch_size)
          
         # Compter les échantillons respectant la règle (aucune violation)
         batch_respect = (torch.sum(violation_mask, dim=1) == 0).float()  # (batch_size,)

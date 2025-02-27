@@ -14,7 +14,24 @@ class TestHierarchicalClassifier(unittest.TestCase):
                                             [0, 0, 0, 0, 0]]).to(self.device)
         self.metrics = MetricsHierarchy(self.hierarchy_matrix)
 
-    def test_hierarchical_distance_mistake(self):
+    def test_all(self):
+        """Exécute le calcul de toutes les métriques via compute_all_metrics."""
+        output = torch.tensor([[0.1, 0.5, 0.2, 0.1, 0.1],
+                               [0.2, 0.1, 0.6, 0.05, 0.05],
+                               [0.3, 0.1, 0.1, 0.4, 0.1]]).to(self.device)
+        target = torch.tensor([
+            [1, 0, 0, 0, 0],
+            [0, 0, 1, 0, 0],
+            [0, 0, 0, 1, 0]
+        ]).to(self.device)
+
+        # Calcul de toutes les métriques
+        self.metrics.compute_all_metrics(output, target)
+
+        # Affichage des résultats des métriques
+        print(self.metrics.get_metrics_string())
+
+    def atest_hierarchical_distance_mistake(self):
         """Test du calcul de la distance hiérarchique des erreurs."""
         output = torch.tensor([[0.1, 0.5, 0.2, 0.1, 0.1],   # Prédiction : classe 1
                                [0.2, 0.1, 0.6, 0.05, 0.05],  # Prédiction : classe 2
@@ -26,7 +43,7 @@ class TestHierarchicalClassifier(unittest.TestCase):
 
         label_matrix = torch.eye(self.num_classes).to(self.device)  # Matrice identité pour simplifier
 
-        self.metrics.hierarchical_distance_mistake(output, target, label_matrix)
+        self.metrics.hierarchical_distance_mistake(output, target)
         print("Distance hiérarchique moyenne des erreurs : " + str(self.metrics.metrics[MetricsLabels.hierarchical_distance_mistakes]))
     
     def atest_topk_hierarchical_distance_mistake(self):
@@ -41,7 +58,7 @@ class TestHierarchicalClassifier(unittest.TestCase):
 
         label_matrix = torch.eye(self.num_classes).to(self.device)  # Matrice identité pour simplifier
 
-        self.metrics.topk_hierarchical_distance_mistake(output, target, label_matrix, 3)
+        self.metrics.topk_hierarchical_distance_mistake(output, target, 3)
         print("Distance topk hiérarchique moyenne des erreurs : " + str(self.metrics.metrics[MetricsLabels.hierarchical_distance_mistakes]))
     
     def atest_c_rule_respect(self):
@@ -55,7 +72,7 @@ class TestHierarchicalClassifier(unittest.TestCase):
 
         label_matrix = torch.eye(self.num_classes).to(self.device)  # Matrice identité pour simplifier
 
-        self.metrics.c_rule_respect_percentage(output, target, label_matrix)
+        self.metrics.c_rule_respect_percentage(output, target)
         print("pourcentage de respect de la c-rule : " + str(self.metrics.metrics[MetricsLabels.c_rule_respect]))
 
     def atest_d_rule_respect(self):
@@ -83,7 +100,7 @@ class TestHierarchicalClassifier(unittest.TestCase):
 
         label_matrix = torch.eye(self.num_classes).to(self.device)  # Matrice identité pour simplifier
 
-        self.metrics.e_rule_respect_percentage(output, target, label_matrix)
+        self.metrics.e_rule_respect_percentage(output, target)
         print("pourcentage de respect de la e-rule : " + str(self.metrics.metrics[MetricsLabels.e_rule_respect]))
 
 if __name__ == "__main__":
