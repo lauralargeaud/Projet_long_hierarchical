@@ -554,6 +554,15 @@ def main():
             df = pd.concat([df, next_df])
         
         df.to_csv(os.path.join(args.results_dir, "metrics_all.csv"), index=False)
+    elif not args.no_console_results:
+        classes = load_classnames(args.class_map)
+
+        hierarchy_lines = read_csv(args.csv_tree)
+        hierarchy_lines_without_names = hierarchy_lines[1:]
+        parents = get_parents(hierarchy_lines_without_names)
+        hierarchy_names = hierarchy_lines[0]
+        hierarchy_names.reverse()
+        save_confusion_matrix_and_metrics(args.results_dir, os.path.basename(args.results_dir), classes, parents, hierarchy_names)
 
         # build the circle figure showing the F1 score for each node
             # build the right csv file from metrics_all.csv without the lines whose "Etage" is "branches"

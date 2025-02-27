@@ -1,11 +1,13 @@
 import os
 from unidecode import unidecode
+import json
 
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import csv
+from sklearn.preprocessing import normalize
 
 from scripts.read_yaml import compute_model_name
 from scripts.hierarchy_better_mistakes_utils import read_csv
@@ -88,9 +90,9 @@ def show_results_from_csv_summarys(filename1, filename2, model_name1, model_name
 
     fig, ax1 = plt.subplots(figsize=(10, 6))
 
-    ax1.plot(data1['epoch'], data1['train_loss'], label=f'{model_name1} Train Loss', color='red', linestyle='--')
+    ax1.plot(data1['epoch'], data1['train_loss_globale'], label=f'{model_name1} Train Loss', color='red', linestyle='--')
     ax1.plot(data1['epoch'], data1['eval_loss'], label=f'{model_name1} Eval Loss', color='salmon')
-    ax1.plot(data2['epoch'], data2['train_loss'], label=f'{model_name2} Train Loss', color='green', linestyle='--')
+    ax1.plot(data2['epoch'], data2['train_loss_globale'], label=f'{model_name2} Train Loss', color='green', linestyle='--')
     ax1.plot(data2['epoch'], data2['eval_loss'], label=f'{model_name2} Eval Loss', color='lime')
     ax1.set_xlabel("Epochs")
     ax1.set_ylabel("Loss")
@@ -300,3 +302,67 @@ def build_F1_perfs_csv(df, path_generated_csv, path_hierarchy):
     new_df["Taxon_level"] = new_df["Name"].map(taxon_levels)
 
     new_df.to_csv(path_generated_csv, index=False)
+
+def save_confusion_matrix_and_metrics(output_folder, name, classes, parents, hierarchy_names):
+    filename_cm_leaves = os.path.join(output_folder, "confusion_matrix.out")
+    cm_leaves = load_confusion_matrix(filename_cm_leaves)
+    save_confusion_matrix(cm_leaves, f"confusion_matrix_{hierarchy_names[0]}.png", classes, folder=output_folder)
+    df = save_metrics(cm_leaves, output_folder, f"metrics_{hierarchy_names[0]}.csv", classes, hierarchy_names[0])
+    next_cm = cm_leaves
+    next_classes = classes
+    for i in range(1, len(hierarchy_names)):
+        next_cm, next_classes = get_parent_confusion_matrix(next_cm, next_classes, parents)
+        next_cm_norm = normalize(next_cm, axis=1, norm='l1')
+        save_confusion_matrix(next_cm, f"confusion_matrix_{hierarchy_names[i]}.png", next_classes, folder=output_folder)
+        save_confusion_matrix(next_cm_norm, f"confusion_matrix_norm_{hierarchy_names[i]}.png", next_classes, folder=output_folder)
+        next_df = save_metrics(next_cm, output_folder, f"metrics_{hierarchy_names[i]}.csv", next_classes, hierarchy_names[i])
+        df = pd.concat([df, next_df])
+    
+    df.to_csv(os.path.join(output_folder, "metrics_all.csv"), index=False)
+    tree = create_tree_json(df, parents)
+    with open(os.path.join(output_folder, "tree.json"), "w") as outfile: 
+        json.dump(tree, outfile)
+
+def create_tree_json(df, parents):
+    childrens = {}
+    for k, v in parents.items():
+        if v not in childrens:
+            childrens[v] = [k]
+        else:
+            childrens[v].append(k)
+
+    root_row = df.iloc[-2]
+    root = {
+        "name": root_row["Classe"], 
+        "pred": root_row["Pred"], 
+        "true": root_row["True"], 
+        "tp": root_row["TP"], 
+        "fp": root_row["FP"], 
+        "fn": root_row["FN"], 
+        "precision": root_row["Précision"], 
+        "recall": root_row["Rappel"], 
+        "f1-score": root_row["F1-score"], 
+        "children": []
+    }
+    for child in childrens[root_row["Classe"]]:
+        create_tree(df, child, root, childrens)
+    return root
+    
+def create_tree(df, name, root, childrens):
+    row = df[df["Classe"] == name]
+    node = {
+        "name": row["Classe"].values[0], 
+        "pred": row["Pred"].values[0], 
+        "true": row["True"].values[0], 
+        "tp": row["TP"].values[0], 
+        "fp": row["FP"].values[0], 
+        "fn": row["FN"].values[0], 
+        "precision": row["Précision"].values[0], 
+        "recall": row["Rappel"].values[0], 
+        "f1-score": row["F1-score"].values[0], 
+        "children": []
+    }
+    root["children"].append(node)
+    if name in childrens:
+        for child in childrens[name]:
+            create_tree(df, child, node, childrens)
