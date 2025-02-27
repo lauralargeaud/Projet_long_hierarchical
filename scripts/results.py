@@ -305,9 +305,8 @@ def build_F1_perfs_csv(path_metrics_all, path_generated_csv, path_hierarchy):
 
     new_df.to_csv(path_generated_csv, index=False)
 
-def save_confusion_matrix_and_metrics(output_folder, name, classes, parents, hierarchy_names):
-    filename_cm_leaves = os.path.join(output_folder, "confusion_matrix.out")
-    cm_leaves = load_confusion_matrix(filename_cm_leaves)
+def save_confusion_matrix_and_metrics(output_folder, cm_leaves_path, classes, parents, hierarchy_names):
+    cm_leaves = load_confusion_matrix(cm_leaves_path)
     save_confusion_matrix(cm_leaves, f"confusion_matrix_{hierarchy_names[0]}.png", classes, folder=output_folder)
     df = save_metrics(cm_leaves, output_folder, f"metrics_{hierarchy_names[0]}.csv", classes, hierarchy_names[0])
     next_cm = cm_leaves

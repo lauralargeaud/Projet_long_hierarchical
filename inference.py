@@ -540,6 +540,8 @@ def main():
         save_confusion_matrix(cm_normalized, output_filename_norm, classes_labels, folder=args.results_dir)
         df = save_metrics(cm, folder=args.results_dir, filename="metrics_branches.csv", classes=classes_labels, hierarchy_name="branches")
 
+        save_confusion_matrix_and_metrics(args.results_dir, os.path.basename(args.results_dir), classes, parents, hierarchy_names)
+
         header_list = get_csv_header(args.csv_tree)
         # construire la matrice de confusion pour chaque hauteur de l'arbre
         for hauteur in range(h):
@@ -552,7 +554,7 @@ def main():
             output_filename_norm = "cm_im_norm_"+header_list[hauteur]+".jpg"
             save_confusion_matrix(cm_normalized, output_filename, labels_par_hauteur[hauteur], folder=args.results_dir)
             save_confusion_matrix(cm_normalized, output_filename_norm, labels_par_hauteur[hauteur], folder=args.results_dir)
-            next_df = save_metrics(cm, folder=args.results_dir, filename=f"metrics_{header_list[hauteur]}.csv", classes=labels_par_hauteur[hauteur], hierarchy_name="hauteur_"+header_list[hauteur])
+            next_df = save_metrics(cm, folder=args.results_dir, filename=f"metrics_{header_list[hauteur]}.csv", classes=labels_par_hauteur[hauteur], hierarchy_name=header_list[hauteur])
             df = pd.concat([df, next_df])
         
         df.to_csv(os.path.join(args.results_dir, "metrics_all.csv"), index=False)
@@ -565,12 +567,11 @@ def main():
         parents = get_parents(hierarchy_lines_without_names)
         hierarchy_names = hierarchy_lines[0]
         hierarchy_names.reverse()
-        save_confusion_matrix_and_metrics(args.results_dir, os.path.basename(args.results_dir), classes, parents, hierarchy_names)
+        save_confusion_matrix_and_metrics(args.results_dir, os.path.join(args.results_dir, "confusion_matrix.out"), classes, parents, hierarchy_names)
 
     # build the circle figure showing the F1 score for each node
     path_output_csv = os.path.join(args.results_dir, "metric_F1_perfs.csv")
         # build the right csv file from metrics_all.csv without the lines whose "Etage" is "branches"
-        # TODO: ajouter la racine au csv ? (elle y est dans le csv de Edgar)
         # Attention il faut que le csv contienne les données calculées sur des matrices de confusion non normalisées
     build_F1_perfs_csv(os.path.join(args.results_dir, "metrics_all.csv"), path_output_csv, args.csv_tree)
         # call the function
