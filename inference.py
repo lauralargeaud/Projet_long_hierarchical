@@ -524,65 +524,65 @@ def main():
     for fmt in args.results_format:
         save_results(df, results_filename, fmt)
 
-    # if not args.no_console_results and args.logicseg:
-    if args.logicseg:
-        print(f'--result')
-        # print(df.set_index(args.filename_col).to_json(orient='index', indent=4))
-        # print("Top 1 accuracy: ", top1.item())
-        # print("Top 5 accuracy: ", top5.item())
-        for key, value in metrics_hierarchy.metrics.items():
-            print(key + ": ", value.item())
-        cm = load_confusion_matrix(os.path.join(args.results_dir, "cm_branch.out"))
-        cm_normalized = load_confusion_matrix(os.path.join(args.results_dir, "cm_norm_branch.out"))
-        output_filename = "cm_branches.jpg"
-        output_filename_norm = "cm_norm_branches.jpg"
-        save_confusion_matrix(cm, output_filename, classes_labels, folder=args.results_dir)
-        save_confusion_matrix(cm_normalized, output_filename_norm, classes_labels, folder=args.results_dir)
-        df = save_metrics(cm, folder=args.results_dir, filename="metrics_branches.csv", classes=classes_labels, hierarchy_name="branches")
+    if args.conf_matrix:
+        if args.logicseg:
+            print(f'--result')
+            # print(df.set_index(args.filename_col).to_json(orient='index', indent=4))
+            # print("Top 1 accuracy: ", top1.item())
+            # print("Top 5 accuracy: ", top5.item())
+            for key, value in metrics_hierarchy.metrics.items():
+                print(key + ": ", value.item())
+            cm = load_confusion_matrix(os.path.join(args.results_dir, "cm_branch.out"))
+            cm_normalized = load_confusion_matrix(os.path.join(args.results_dir, "cm_norm_branch.out"))
+            output_filename = "cm_branches.jpg"
+            output_filename_norm = "cm_norm_branches.jpg"
+            save_confusion_matrix(cm, output_filename, classes_labels, folder=args.results_dir)
+            save_confusion_matrix(cm_normalized, output_filename_norm, classes_labels, folder=args.results_dir)
+            df = save_metrics(cm, folder=args.results_dir, filename="metrics_branches.csv", classes=classes_labels, hierarchy_name="branches")
 
-        header_list = get_csv_header(args.csv_tree)
-        # construire la matrice de confusion pour chaque hauteur de l'arbre
-        for hauteur in range(h):
-            cm = load_confusion_matrix(os.path.join(args.results_dir, "cm_"+header_list[hauteur]+".out"))
-            cm_normalized = load_confusion_matrix(os.path.join(args.results_dir, "cm_norm_"+header_list[hauteur]+".out"))
-            if hauteur == 0:
-                cm = np.expand_dims(cm, (0,1)) # shape (1,1)
-                cm_normalized = np.expand_dims(cm_normalized, (0,1)) # shape (1,1)
-            output_filename = "cm_im_"+header_list[hauteur]+".jpg"
-            output_filename_norm = "cm_im_norm_"+header_list[hauteur]+".jpg"
-            save_confusion_matrix(cm_normalized, output_filename, labels_par_hauteur[hauteur], folder=args.results_dir)
-            save_confusion_matrix(cm_normalized, output_filename_norm, labels_par_hauteur[hauteur], folder=args.results_dir)
-            next_df = save_metrics(cm, folder=args.results_dir, filename=f"metrics_{header_list[hauteur]}.csv", classes=labels_par_hauteur[hauteur], hierarchy_name="hauteur_"+header_list[hauteur])
-            df = pd.concat([df, next_df])
-        
-        df.to_csv(os.path.join(args.results_dir, "metrics_all.csv"), index=False)
+            header_list = get_csv_header(args.csv_tree)
+            # construire la matrice de confusion pour chaque hauteur de l'arbre
+            for hauteur in range(h):
+                cm = load_confusion_matrix(os.path.join(args.results_dir, "cm_"+header_list[hauteur]+".out"))
+                cm_normalized = load_confusion_matrix(os.path.join(args.results_dir, "cm_norm_"+header_list[hauteur]+".out"))
+                if hauteur == 0:
+                    cm = np.expand_dims(cm, (0,1)) # shape (1,1)
+                    cm_normalized = np.expand_dims(cm_normalized, (0,1)) # shape (1,1)
+                output_filename = "cm_im_"+header_list[hauteur]+".jpg"
+                output_filename_norm = "cm_im_norm_"+header_list[hauteur]+".jpg"
+                save_confusion_matrix(cm_normalized, output_filename, labels_par_hauteur[hauteur], folder=args.results_dir)
+                save_confusion_matrix(cm_normalized, output_filename_norm, labels_par_hauteur[hauteur], folder=args.results_dir)
+                next_df = save_metrics(cm, folder=args.results_dir, filename=f"metrics_{header_list[hauteur]}.csv", classes=labels_par_hauteur[hauteur], hierarchy_name="hauteur_"+header_list[hauteur])
+                df = pd.concat([df, next_df])
+            
+            df.to_csv(os.path.join(args.results_dir, "metrics_all.csv"), index=False)
 
-    else:
-        classes = load_classnames(args.class_map)
+        else:
+            classes = load_classnames(args.class_map)
 
-        hierarchy_lines = read_csv(args.csv_tree)
-        hierarchy_lines_without_names = hierarchy_lines[1:]
-        parents = get_parents(hierarchy_lines_without_names)
-        hierarchy_names = hierarchy_lines[0]
-        hierarchy_names.reverse()
-        save_confusion_matrix_and_metrics(args.results_dir, os.path.basename(args.results_dir), classes, parents, hierarchy_names)
+            hierarchy_lines = read_csv(args.csv_tree)
+            hierarchy_lines_without_names = hierarchy_lines[1:]
+            parents = get_parents(hierarchy_lines_without_names)
+            hierarchy_names = hierarchy_lines[0]
+            hierarchy_names.reverse()
+            save_confusion_matrix_and_metrics(args.results_dir, os.path.basename(args.results_dir), classes, parents, hierarchy_names)
 
-    # build the circle figure showing the F1 score for each node
-    path_output_csv = os.path.join(args.results_dir, "metric_F1_perfs.csv")
-        # build the right csv file from metrics_all.csv without the lines whose "Etage" is "branches"
-        # TODO: ajouter la racine au csv ? (elle y est dans le csv de Edgar)
-        # Attention il faut que le csv contienne les données calculées sur des matrices de confusion non normalisées
-    build_F1_perfs_csv(os.path.join(args.results_dir, "metrics_all.csv"), path_output_csv, args.csv_tree)
-        # call the function
-    color_list = get_custom_color_list(saturation_factor=1.25)
-    plot_hierarchical_perfs(perfs_csv=path_output_csv,
-                                metric_to_plot="F1-score",
-                                cmap_list=color_list,
-                                show=False,
-                                html_output=os.path.join(args.results_dir, "F1_perfs.html"),
-                                png_output=os.path.join(args.results_dir, "F1_perfs.png"),
-                                remove_lines=False,
-                                font_size=32)
+        # build the circle figure showing the F1 score for each node
+        path_output_csv = os.path.join(args.results_dir, "metric_F1_perfs.csv")
+            # build the right csv file from metrics_all.csv without the lines whose "Etage" is "branches"
+            # TODO: ajouter la racine au csv ? (elle y est dans le csv de Edgar)
+            # Attention il faut que le csv contienne les données calculées sur des matrices de confusion non normalisées
+        build_F1_perfs_csv(os.path.join(args.results_dir, "metrics_all.csv"), path_output_csv, args.csv_tree)
+            # call the function
+        color_list = get_custom_color_list(saturation_factor=1.25)
+        plot_hierarchical_perfs(perfs_csv=path_output_csv,
+                                    metric_to_plot="F1-score",
+                                    cmap_list=color_list,
+                                    show=False,
+                                    html_output=os.path.join(args.results_dir, "F1_perfs.html"),
+                                    png_output=os.path.join(args.results_dir, "F1_perfs.png"),
+                                    remove_lines=False,
+                                    font_size=32)
 
 def save_results(df, results_filename, results_format='csv', filename_col='filename'):
     np.set_printoptions(threshold=maxsize)
