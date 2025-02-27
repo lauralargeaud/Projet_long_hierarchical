@@ -274,7 +274,9 @@ def get_taxonLevel(hierarchy_lines):
 
 # df contient les données de metrics_all.csv
 # on veut construire le csv requis par plot_hierarchical_perf
-def build_F1_perfs_csv(df, path_generated_csv, path_hierarchy):
+def build_F1_perfs_csv(path_metrics_all, path_generated_csv, path_hierarchy):
+
+    df = pd.read_csv(path_metrics_all)
 
     df_filtered = df[df["Etage"] != "branches"]
     df_filtered = df_filtered[df_filtered["Classe"] != "Moyenne"]
