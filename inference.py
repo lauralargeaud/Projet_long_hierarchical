@@ -453,7 +453,6 @@ def main():
         copy_filepath = os.path.join(args.results_dir, "args.yaml")
         shutil.copy(args_filepath, copy_filepath)
         if args.logicseg:
-
             # construire la matrice de confusion des feuilles
             cm_all_ids_preds = np.concatenate(cm_all_ids_preds, axis=0)
             cm_all_targets = np.concatenate(cm_all_targets, axis=0)
@@ -545,7 +544,7 @@ def main():
                 cm = load_confusion_matrix(os.path.join(args.results_dir, "cm_"+header_list[hauteur]+".out"))
                 cm_norm = load_confusion_matrix(os.path.join(args.results_dir, "cm_norm_"+header_list[hauteur]+".out"))
                 if hauteur > 0:
-                    output_filename = "im_"+header_list[hauteur]+"_cm.jpg"
+                    output_filename = "cm_im_"+header_list[hauteur]+".jpg"
                     save_confusion_matrix(cm_norm, output_filename, labels_par_hauteur[hauteur], folder=args.results_dir)
                 next_df = save_metrics(cm, folder=args.results_dir, filename=f"metrics_{header_list[hauteur]}.csv", classes=labels_par_hauteur[hauteur], hierarchy_name="hauteur_"+header_list[hauteur])
                 df = pd.concat([df, next_df])
