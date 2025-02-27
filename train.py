@@ -1092,7 +1092,7 @@ def train_one_epoch(
     #losses_m = utils.AverageMeter()
     losses_dict = dict()
     losses_m = dict()
-    losses_m["loss_globale"] = utils.AverageMeter()
+    losses_m["loss"] = utils.AverageMeter()
     if args.logicseg:
         losses_m["C_loss"] = utils.AverageMeter()
         losses_m["D_loss"] = utils.AverageMeter()
@@ -1192,7 +1192,7 @@ def train_one_epoch(
             _backward(loss)
 
         if losses_dict != None:
-            losses_dict["loss_globale"] = loss
+            losses_dict["loss"] = loss
             
         #losses_m.update(loss.item() * accum_steps, input.size(0))
         for key in list(losses_dict.keys()):
@@ -1224,7 +1224,7 @@ def train_one_epoch(
             lrl = [param_group['lr'] for param_group in optimizer.param_groups]
             lr = sum(lrl) / len(lrl)
 
-            loss_avg, loss_now = losses_m["loss_globale"].avg, losses_m["loss_globale"].val
+            loss_avg, loss_now = losses_m["loss"].avg, losses_m["loss"].val
             if args.distributed:
                 # synchronize current step and avg loss, each process keeps its own running avg
                 loss_avg = utils.reduce_tensor(loss.new([loss_avg]), args.world_size).item()
@@ -1258,7 +1258,7 @@ def train_one_epoch(
             saver.save_recovery(epoch, batch_idx=update_idx)
 
         if lr_scheduler is not None:
-            lr_scheduler.step_update(num_updates=num_updates, metric=losses_m["loss_globale"].avg)
+            lr_scheduler.step_update(num_updates=num_updates, metric=losses_m["loss"].avg)
 
         update_sample_count = 0
         data_start_time = time.time()
