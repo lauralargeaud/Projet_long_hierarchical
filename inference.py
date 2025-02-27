@@ -528,11 +528,11 @@ def main():
     if args.conf_matrix:
         if args.logicseg:
             print(f'--result')
-            # print(df.set_index(args.filename_col).to_json(orient='index', indent=4))
-            # print("Top 1 accuracy: ", top1.item())
-            # print("Top 5 accuracy: ", top5.item())
-            for key, value in metrics_hierarchy.metrics.items():
-                print(key + ": ", value.item())
+            with open(os.path.join(args.results_dir, "metrics_results.txt"), "w") as fichier:
+                for key, value in metrics_hierarchy.metrics.items():
+                    print(key + ": ", value.item())
+                    # écrire aussi dans le fichier des résultats
+                    fichier.write(key + ": " + str(value.item()) + "\n")
             cm = load_confusion_matrix(os.path.join(args.results_dir, "cm_branch.out"))
             cm_normalized = load_confusion_matrix(os.path.join(args.results_dir, "cm_norm_branch.out"))
             output_filename = "cm_branches.jpg"
@@ -547,7 +547,8 @@ def main():
             parents = get_parents(hierarchy_lines_without_names)
             hierarchy_names = hierarchy_lines[0]
             hierarchy_names.reverse()
-            os.mkdir(os.path.join(args.results_dir, "results_from_leaves"))
+            if not os.path.isdir(os.path.join(args.results_dir, "results_from_leaves")):
+                os.mkdir(os.path.join(args.results_dir, "results_from_leaves"))
             save_confusion_matrix_and_metrics(os.path.join(args.results_dir, "results_from_leaves"), os.path.join(args.results_dir, "cm_branch.out"), classes, parents, hierarchy_names)
 
             header_list = get_csv_header(args.csv_tree)
@@ -569,7 +570,6 @@ def main():
 
             path_output_csv = os.path.join(args.results_dir, "results_from_leaves", "metric_F1_perfs.csv")
             # build the right csv file from metrics_all.csv without the lines whose "Etage" is "branches"
-            # TODO: ajouter la racine au csv ? (elle y est dans le csv de Edgar)
             # Attention il faut que le csv contienne les données calculées sur des matrices de confusion non normalisées
             build_F1_perfs_csv(os.path.join(args.results_dir, "results_from_leaves", "metrics_all.csv"), path_output_csv, args.csv_tree)
                 # call the function
