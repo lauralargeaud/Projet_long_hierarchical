@@ -546,8 +546,8 @@ def main():
             cm = load_confusion_matrix(os.path.join(args.results_dir, "cm_"+header_list[hauteur]+".out"))
             cm_normalized = load_confusion_matrix(os.path.join(args.results_dir, "cm_norm_"+header_list[hauteur]+".out"))
             if hauteur == 0:
-                cm = np.expand_dims(cm, (0,1)) # shape (1,)
-                cm_normalized = np.expand_dims(cm_normalized, (1,1)) # shape (1,)
+                cm = np.expand_dims(cm, (0,1)) # shape (1,1)
+                cm_normalized = np.expand_dims(cm_normalized, (0,1)) # shape (1,1)
             output_filename = "cm_im_"+header_list[hauteur]+".jpg"
             output_filename_norm = "cm_im_norm_"+header_list[hauteur]+".jpg"
             save_confusion_matrix(cm_normalized, output_filename, labels_par_hauteur[hauteur], folder=args.results_dir)
