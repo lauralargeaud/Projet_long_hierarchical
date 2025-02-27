@@ -531,7 +531,7 @@ def main():
                 for key, value in metrics_hierarchy.metrics.items():
                     print(key + ": ", value.item())
                     # écrire aussi dans le fichier des résultats
-                    fichier.write(key + ": ", value.item() + "\n")
+                    fichier.write(key + ": ", value.item(), "\n")
             cm = load_confusion_matrix(os.path.join(args.results_dir, "cm_branch.out"))
             cm_normalized = load_confusion_matrix(os.path.join(args.results_dir, "cm_norm_branch.out"))
             output_filename = "cm_branches.jpg"
