@@ -1,12 +1,14 @@
 import os
+from unidecode import unidecode
 
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib
 import seaborn as sns
 import numpy as np
+import csv
 
 from scripts.read_yaml import compute_model_name
+from scripts.hierarchy_better_mistakes_utils import read_csv
 
 def generate_barplots(values, labels, title, filename, folder="output/img/"):
     plt.figure(figsize=(10, 5))
@@ -15,7 +17,34 @@ def generate_barplots(values, labels, title, filename, folder="output/img/"):
     plt.ylabel('Valeurs')
     plt.title(title)
     plt.xticks(rotation=45)
+    plt.tight_layout()
     plt.savefig(os.path.join(folder, filename))
+
+
+def display_models_barplots(test_output_folder, output_folder="output/img", hierarchy_filename="data/small-collomboles/hierarchy.csv"):
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    hierarchy_lines = read_csv(hierarchy_filename)
+    hierarchy_names = hierarchy_lines[0]
+    
+    metrics = ["Précision", "Rappel", "F1-score"]
+    values = {metric: {hierarchy_name: [] for hierarchy_name in hierarchy_names} for metric in metrics}
+    labels = []
+    for folder in os.listdir(test_output_folder):
+        csv_path = os.path.join(test_output_folder, folder, "metrics_all.csv")
+        args_path = os.path.join(test_output_folder, folder, "args.yaml")
+        title, _ = compute_model_name(args_path)
+        labels.append(title)
+
+        df = pd.read_csv(csv_path)
+        for name in hierarchy_names:
+            line = df[(df['Etage'] == name) & (df['Classe'] == 'Moyenne')]
+            for metric in metrics:
+                values[metric][name].append(line[metric].values[0])
+    for metric, hierarchy in values.items():
+        for name, data in hierarchy.items():
+            generate_barplots(data, labels, f"{metric} {name}", f"{unidecode(metric).lower()}_{name}.png")
 
 def show_results_from_csv_summary(filename, title, model_name, folder="output/img"):
     """
@@ -214,3 +243,60 @@ def get_parent_confusion_matrix(cm, classes, parents):
             next_cm[next_class_1_id, next_class_2_id] += cm[i,j]
 
     return next_cm, next_classes
+
+
+def read_csv(filename):
+    """
+    Read CSV.
+    """
+    lines = []
+    with open(filename, newline="", encoding="utf-8") as csvfile:
+        reader = csv.reader(csvfile)
+        for row in reader:
+            lines.append(row)
+    return lines
+
+def get_parents(hierarchy_lines):
+    parents = {}
+    for line in hierarchy_lines:
+        for i, node in enumerate(line[1:]):
+            parents[node] = line[i]
+    return parents
+
+def get_taxonLevel(hierarchy_lines):
+    taxon_levels = {}
+    for line in hierarchy_lines[1:]:
+        for i, node in enumerate(line):
+            taxon_levels[node] = hierarchy_lines[0][i]
+    return taxon_levels
+
+# df contient les données de metrics_all.csv
+# on veut construire le csv requis par plot_hierarchical_perf
+def build_F1_perfs_csv(df, path_generated_csv, path_hierarchy):
+
+    df_filtered = df[df["Etage"] != "branches"]
+    df_filtered = df_filtered[df_filtered["Classe"] != "Moyenne"]
+    
+    # Construire le nouveau DataFrame
+    new_df = pd.DataFrame({
+        "Taxon_level": None,  # non renseigné
+        "Name": df_filtered["Classe"],
+        "Parent": None,  # Parent non renseigné
+        "Count": df_filtered["True"],
+        "F1-score": df_filtered["F1-score"]
+    })
+
+    # Trier par ordre alphabétique des 'Name'
+    new_df = new_df.sort_values(by=["Name"])
+
+    hierarchy_filename = path_hierarchy
+    hierarchy_lines = read_csv(hierarchy_filename)
+    hierarchy_lines_without_names = hierarchy_lines[1:]
+    parents = get_parents(hierarchy_lines_without_names)
+    new_df["Parent"] = new_df["Name"].map(parents)
+
+    taxon_levels = get_taxonLevel(hierarchy_lines)
+    taxon_levels = dict(sorted(taxon_levels.items()))
+    new_df["Taxon_level"] = new_df["Name"].map(taxon_levels)
+
+    new_df.to_csv(path_generated_csv, index=False)
