@@ -15,6 +15,9 @@ def read_yaml(filepath):
         print("Erreur lors de la lecture du YAML :", e)
 
 def compute_model_name(filepath):
+    """
+    Compute model name from args.yaml file.
+    """
     data = read_yaml(filepath)
     modified_logicseg = data["modified_logicseg"] if "modified_logicseg" in data else False
     logicseg = data["logicseg"]
@@ -39,6 +42,9 @@ def compute_model_name(filepath):
             return "CCE", "cce"
 
 def get_method(data):
+    """
+    Get the method use in logicseg.
+    """
     if "method" in data:
         return data["method"]
     else:
@@ -52,6 +58,9 @@ def get_method(data):
             return "error"
 
 def extract_data_from_yaml(filepath):
+    """
+    Extract and print data from args.yaml file.
+    """
     data = read_yaml(filepath)
     modified_logicseg = data["modified_logicseg"] if "modified_logicseg" in data else False
     logicseg = data["logicseg"]

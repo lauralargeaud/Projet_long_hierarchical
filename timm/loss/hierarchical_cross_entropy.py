@@ -5,7 +5,6 @@ Hierarchical Cross Entropy
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
 
 class HierarchicalCrossEntropy(nn.Module):
     

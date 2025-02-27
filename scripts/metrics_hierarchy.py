@@ -2,7 +2,9 @@ import torch
 from scripts.logic_seg_utils import get_logicseg_predictions
 
 class MetricsLabels:
-    """Classe pour stocker les labels des différentes métriques"""
+    """
+    Classe pour stocker les labels des différentes métriques
+    """
 
     accuracy_top1 = "Top 1 accuracy"
     accuracy_top5 = "Top 5 accuracy"
@@ -14,10 +16,14 @@ class MetricsLabels:
 
 
 class MetricsHierarchy:
-    """Classe pour calculer et stocker différentes métriques de performance d'une IA."""
+    """
+    Classe pour calculer et stocker différentes métriques de performance d'une IA.
+    """
 
     def __init__(self, H : torch.Tensor):
-        """Initialise le dictionnaire pour stocker les métriques."""
+        """
+        Initialise le dictionnaire pour stocker les métriques.
+        """
         self.metrics = {
             MetricsLabels.accuracy_top1: torch.tensor(-1),
             MetricsLabels.accuracy_top5: torch.tensor(-1),
@@ -33,11 +39,13 @@ class MetricsHierarchy:
     
     
     def lca_height(self, node1 : int, node2: int):
-        """Trouve la distance qui sépare les nœuds du Lowest Common Ancestor.
+        """
+        Trouve la distance qui sépare les nœuds du Lowest Common Ancestor.
 
         :param node1: Premier nœud.
         :param node2: Deuxième nœud.
-        :return: (LCA, distance de node1 au LCA, distance de node2 au LCA)"""
+        :return: (LCA, distance de node1 au LCA, distance de node2 au LCA)
+        """
            
         distance = 0
         current_nodes = [-1,-2]
@@ -228,8 +236,10 @@ class MetricsHierarchy:
 
 
     def topk_accuracy_logicseg(self, probas_branches_input, onehot_targets, topk=1):
-        """Generic function that computes the topk accuracy (= the accuracy over the topk top predictions) 
-        for the specified values of topk"""
+        """
+        Generic function that computes the topk accuracy (= the accuracy over the topk top predictions) 
+        for the specified values of topk.
+        """
         topk = min(topk,probas_branches_input.shape[1])
         _, indices_branches_target = onehot_targets.topk(1, dim=1) # (nb_pred, 1), (nb_pred, 1)
         indices_branches_target = indices_branches_target.repeat(1, topk) # (nb_pred, top_k)
@@ -262,20 +272,28 @@ class MetricsHierarchy:
 
 
     def reset_metrics(self):
-        """Réinitialise les métriques stockées."""
+        """
+        Réinitialise les métriques stockées.
+        """
         self.metrics = {key: -1 for key in self.metrics}
 
     def setZero(self):
-        """Défini la valeur de toutes les métriques à 0"""
+        """
+        Défini la valeur de toutes les métriques à 0.
+        """
         self.metrics = {key: 0 for key in self.metrics}
 
     def divide(self, n):
-        """Diviser toutes les métriques par n."""
+        """
+        Diviser toutes les métriques par n.
+        """
         for key, value in self.metrics.items():
             self.metrics[key] = value / n
 
     def compute_metrics(self, output, target, label_matrix, device):
-        """Compute all the define metrics using the given data"""
+        """
+        Compute all the define metrics using the given data.
+        """
         label_matrix = torch.tensor(label_matrix, dtype=torch.float32).to(self.device)
         # self.hierarchical_distance_mistake(output, target, label_matrix)
         # self.topk_hierarchical_distance_mistake(output, target, label_matrix)
@@ -285,7 +303,9 @@ class MetricsHierarchy:
         self.accuracy_topk_1_5(output, target, label_matrix, device)
 
     def update_metrics(self, metrics_hierarchy_batch):
-        """Mettre à jour les métriques de l'objet en y ajoutant les valeurs des métriques d'un autre objet"""
+        """
+        Mettre à jour les métriques de l'objet en y ajoutant les valeurs des métriques d'un autre objet.
+        """
         if not isinstance(metrics_hierarchy_batch, MetricsHierarchy):
             raise ValueError("Le paramètre doit être un objet de type MetricsHierarchy")
         for key, value in self.metrics.items():

@@ -3,18 +3,9 @@ import sys
 from collections import defaultdict
 import numpy as np
 
-np.set_printoptions(threshold=sys.maxsize)
+from scripts.utils import read_csv
 
-def read_csv(filename):
-    """
-    Read CSV.
-    """
-    lines = []
-    with open(filename, newline="", encoding="utf-8") as csvfile:
-        reader = csv.reader(csvfile)
-        for row in reader:
-            lines.append(row)
-    return lines
+np.set_printoptions(threshold=sys.maxsize)
 
 def build_tree(data):
     """
@@ -76,6 +67,9 @@ def compute_L(hierarchy_lines, nodes_to_id, leafs_to_id):
     return L
 
 def compute_full_L(hierarchy_lines, nodes_to_id, leafs_to_id):
+    """
+    Compute L matrix with leaves.
+    """
     h = len(hierarchy_lines[0])
     L = np.zeros((len(nodes_to_id)+len(leafs_to_id), len(leafs_to_id)))
     for line in hierarchy_lines:
@@ -98,37 +92,13 @@ def get_path_from_leafs(hierarchy_lines, nodes_to_id):
         paths.append(path)
     return paths
 
-def get_parents(hierarchy_lines):
-    parents = {}
-    for line in hierarchy_lines:
-        for i, node in enumerate(line[1:]):
-            parents[node] = line[i]
-    return parents
-
-
 def get_hce_tree_data(tree_filename):
+    """
+    Get L and h from the tree.
+    """
     tree_lines = read_csv(tree_filename)
     tree_lines_without_names = tree_lines[1:]
     _, _, nodes_to_id, leafs_to_id = get_id_from_nodes(tree_lines_without_names)
     L = compute_full_L(tree_lines_without_names, nodes_to_id, leafs_to_id)
     h = len(tree_lines[0]) - 1
     return L, h
-
-if __name__ == "__main__":
-    hierarchy_filename = "data/small-collomboles/hierarchy_test.csv"
-    hierarchy_lines = read_csv(hierarchy_filename)
-    hierarchy_lines_without_names = hierarchy_lines[1:]
-    
-    tree = build_tree(hierarchy_lines)
-    print("============= Tree =============")
-    print_tree(tree)
-    print("================================")
-
-    nodes, leafs, nodes_to_id, leafs_to_id = get_id_from_nodes(hierarchy_lines_without_names)
-    print("nodes:", nodes_to_id)    
-    print("leafs:", leafs_to_id)
-
-    L = compute_L(hierarchy_lines_without_names, nodes_to_id, leafs_to_id)
-    paths = get_path_from_leafs(hierarchy_lines_without_names, nodes_to_id)
-    for i in range(len(L)):
-        print(L[i,:], nodes[i])

@@ -6,34 +6,38 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-import csv
 from sklearn.preprocessing import normalize
 
 from scripts.read_yaml import compute_model_name
 from scripts.hierarchy_better_mistakes_utils import read_csv
+from scripts.utils import read_csv, get_parents, get_taxon_level
 
-def generate_barplots(values, labels, title, filename, folder="output/img/"):
+def generate_barplots(values, labels, title, filename, folder="output/img"):
+    """
+    Generate barplot.
+    """
     plt.figure(figsize=(10, 5))
     plt.bar(labels, values, color='skyblue')
     plt.xlabel('Catégories')
     plt.ylabel('Valeurs')
+    plt.ylim([0, 1])
     plt.title(title)
     plt.xticks(rotation=45)
     
-    # Ajouter les valeurs au-dessus des barres
     for i, v in enumerate(values):
         plt.text(i, v + max(values) * -0.10, f"{v:.3f}", ha='center', fontsize=10, fontweight='bold')
     
     plt.tight_layout()
     
-    # Vérifier si le dossier existe, sinon le créer
     os.makedirs(folder, exist_ok=True)
     
     plt.savefig(os.path.join(folder, filename))
-    plt.close()  # Fermer la figure après sauvegarde pour éviter des problèmes d'affichage
-
+    plt.close()
 
 def display_models_barplots(test_output_folder, output_folder="output/img", hierarchy_filename="data/small-collomboles/hierarchy.csv"):
+    """
+    Generates barplots for differents metrics for differentes models.
+    """
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
@@ -167,17 +171,6 @@ def save_confusion_matrix(cm, output_filename, classes, folder="output/img"):
     
     return cm
 
-def load_classnames(filename):
-    """
-    Load classnames from a file.
-    """
-    classes = []
-    with open(filename, 'r') as f:
-        data = f.readlines()
-        for line in data:
-            classes.append(line.replace('\n', ''))
-    return classes
-
 def calculate_metrics(cm):
     """
     Compute F1-score, Precision and Recall from a confusion matrix.
@@ -257,36 +250,12 @@ def get_parent_confusion_matrix(cm, classes, parents):
 
     return next_cm, next_classes
 
-
-def read_csv(filename):
-    """
-    Read CSV.
-    """
-    lines = []
-    with open(filename, newline="", encoding="utf-8") as csvfile:
-        reader = csv.reader(csvfile)
-        for row in reader:
-            lines.append(row)
-    return lines
-
-def get_parents(hierarchy_lines):
-    parents = {}
-    for line in hierarchy_lines:
-        for i, node in enumerate(line[1:]):
-            parents[node] = line[i]
-    return parents
-
-def get_taxonLevel(hierarchy_lines):
-    taxon_levels = {}
-    for line in hierarchy_lines[1:]:
-        for i, node in enumerate(line):
-            taxon_levels[node] = hierarchy_lines[0][i]
-    return taxon_levels
-
 # df contient les données de metrics_all.csv
 # on veut construire le csv requis par plot_hierarchical_perf
 def build_F1_perfs_csv(path_metrics_all, path_generated_csv, path_hierarchy):
-
+    """
+    Build F1-score in csv file.
+    """
     df = pd.read_csv(path_metrics_all)
 
     df_filtered = df[df["Etage"] != "branches"]
@@ -310,13 +279,16 @@ def build_F1_perfs_csv(path_metrics_all, path_generated_csv, path_hierarchy):
     parents = get_parents(hierarchy_lines_without_names)
     new_df["Parent"] = new_df["Name"].map(parents)
 
-    taxon_levels = get_taxonLevel(hierarchy_lines)
+    taxon_levels = get_taxon_level(hierarchy_lines)
     taxon_levels = dict(sorted(taxon_levels.items()))
     new_df["Taxon_level"] = new_df["Name"].map(taxon_levels)
 
     new_df.to_csv(path_generated_csv, index=False)
 
 def save_confusion_matrix_and_metrics(output_folder, cm_leaves_path, classes, parents, hierarchy_names):
+    """
+    Save confusion matrix and metrics for each layer in files.
+    """
     cm_leaves = load_confusion_matrix(cm_leaves_path)
     save_confusion_matrix(cm_leaves, f"confusion_matrix_{hierarchy_names[0]}.png", classes, folder=output_folder)
     df = save_metrics(cm_leaves, output_folder, f"metrics_{hierarchy_names[0]}.csv", classes, hierarchy_names[0])
@@ -336,6 +308,9 @@ def save_confusion_matrix_and_metrics(output_folder, cm_leaves_path, classes, pa
         json.dump(tree, outfile)
 
 def create_tree_json(df, parents):
+    """
+    Create a tree with metrics from a dataframe.
+    """
     childrens = {}
     for k, v in parents.items():
         if v not in childrens:
@@ -361,6 +336,9 @@ def create_tree_json(df, parents):
     return root
     
 def create_tree(df, name, root, childrens):
+    """
+    Create a tree with metrics from a dataframe.
+    """
     row = df[df["Classe"] == name]
     node = {
         "name": row["Classe"].values[0], 

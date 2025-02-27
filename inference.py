@@ -31,6 +31,7 @@ from scripts.logic_seg_utils import *
 from scripts.results import *
 from scripts.metrics_hierarchy import *
 from scripts.hierarchical_perfs_plot import *
+from scripts.utils import *
 
 try:
     from apex import amp
