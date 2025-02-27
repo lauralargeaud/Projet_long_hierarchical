@@ -540,6 +540,12 @@ def main():
             save_confusion_matrix(cm_normalized, output_filename_norm, classes_labels, folder=args.results_dir)
             df = save_metrics(cm, folder=args.results_dir, filename="metrics_branches.csv", classes=classes_labels, hierarchy_name="branches")
 
+            classes = classes_labels
+            hierarchy_lines = read_csv(args.csv_tree)
+            hierarchy_lines_without_names = hierarchy_lines[1:]
+            parents = get_parents(hierarchy_lines_without_names)
+            hierarchy_names = hierarchy_lines[0]
+            hierarchy_names.reverse()
             save_confusion_matrix_and_metrics(os.path.join(args.results_dir, "results_from_leaves"), os.path.join(args.results_dir, "cm_branch.out"), classes, parents, hierarchy_names)
 
             header_list = get_csv_header(args.csv_tree)
