@@ -527,7 +527,7 @@ def main():
     if args.conf_matrix:
         if args.logicseg:
             print(f'--result')
-            with open("mon_fichier.txt", "w") as fichier:
+            with open(os.path.join(args.results_dir, "metrics_results.txt"), "w") as fichier:
                 for key, value in metrics_hierarchy.metrics.items():
                     print(key + ": ", value.item())
                     # écrire aussi dans le fichier des résultats
