@@ -842,7 +842,6 @@ def main():
     # setup loss function
     if args.logicseg: #FIXME: no mixup/label_smoothing management
         H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=False)
-        matrice_H = H_raw
         La_raw = get_layer_matrix(args.csv_tree, verbose=False)
         train_loss_fn = LogicSegLoss(args.logicseg_method, H_raw, P_raw, M_raw, La_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.target_loss_weight, args.alpha_layer, args.asl_gamma_pos, args.asl_gamma_neg, args.asl_thresh_shifting)
         validate_loss_fn = LogicSegLoss(args.logicseg_method, H_raw, P_raw, M_raw, La_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.target_loss_weight, args.alpha_layer, args.asl_gamma_pos, args.asl_gamma_neg, args.asl_thresh_shifting)
