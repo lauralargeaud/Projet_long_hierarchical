@@ -61,8 +61,8 @@ class MetricsHierarchy:
         self.hierarchical_distance_mistake(output, target)
         self.topk_hierarchical_distance_mistake(output, target, 5)
         #self.c_rule_respect_percentage(output, target)
-        self.d_rule_respect_percentage(output, target)
-        self.e_rule_respect_percentage(output, target)
+        #self.d_rule_respect_percentage(output, target)
+        #self.e_rule_respect_percentage(output, target)
 
 
     
