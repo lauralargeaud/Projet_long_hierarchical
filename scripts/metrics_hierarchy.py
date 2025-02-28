@@ -1,5 +1,5 @@
 import torch
-from logic_seg_utils import get_logicseg_predictions
+from scripts.logic_seg_utils import get_logicseg_predictions
 
 class MetricsLabels:
     """Classe pour stocker les labels des différentes métriques"""
