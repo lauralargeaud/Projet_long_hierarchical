@@ -172,14 +172,11 @@ class MetricsHierarchy:
         Returns:
             float: Pourcentage des échantillons respectant la C-Rule.
         """
-        batch_size, num_classes = output.shape
-        batch_sizeh, num_classesh = self.H.shape
-        print("output: " + str(batch_size) + " x " + str(num_classes))
-        print("H: " + str(batch_sizeh) + " x " + str(num_classesh))
+        batch_size, num_classes = output.shape()
 
         # Seuil pour binariser les prédictions (0 ou 1)
         '''A VERIFIER !!!'''
-        output_pred = (output > 0.5).float()  # Matrice binaire (batch_size, num_classes)
+        output_pred = (output > 0.01).float()  # Matrice binaire (batch_size, num_classes)
 
 
         # Calcul des activations des super-classes via la matrice H (Hiérarchie)
