@@ -456,6 +456,8 @@ def _parse_args():
 
 
 def main():
+    global matrice_H
+    
     utils.setup_default_logging()
     args, args_text = _parse_args()
 
