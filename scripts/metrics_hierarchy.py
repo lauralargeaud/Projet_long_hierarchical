@@ -1,5 +1,5 @@
 import torch
-from logic_seg_utils import get_logicseg_predictions
+from scripts.logic_seg_utils import get_logicseg_predictions
 
 class MetricsLabels:
     """Classe pour stocker les labels des différentes métriques"""
@@ -34,7 +34,7 @@ class AverageMeter:
 class MetricsHierarchy:
     """Classe pour calculer et stocker différentes métriques de performance d'une IA."""
 
-    def __init__(self, H : torch.Tensor):
+    def __init__(self, H : torch.Tensor, device):
         """Initialise le dictionnaire pour stocker les métriques."""
         self.metrics = {
             MetricsLabels.accuracy_top1: AverageMeter(),
@@ -46,9 +46,8 @@ class MetricsHierarchy:
             MetricsLabels.e_rule_respect: AverageMeter(),
         }
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.H = torch.tensor(H, dtype=torch.float32).to(self.device) #torch tensor
-    
+        self.device = device
+        self.H = torch.tensor(H, dtype=torch.float32).to(self.device) #torch tensor    
 
     def get_metrics_string(self):
         # Generate a single string with all metrics
@@ -61,35 +60,42 @@ class MetricsHierarchy:
         self.topk_accuracy_logicseg(output, target, 5)
         self.hierarchical_distance_mistake(output, target)
         self.topk_hierarchical_distance_mistake(output, target, 5)
-        self.c_rule_respect_percentage(output, target)
-        self.d_rule_respect_percentage(output, target)
-        self.e_rule_respect_percentage(output, target)
+        #self.c_rule_respect_percentage(output, target)
+        #self.d_rule_respect_percentage(output, target)
+        #self.e_rule_respect_percentage(output, target)
 
 
     
-    def lca_height(self, node1 : int, node2: int):
-        """Trouve la distance qui sépare les nœuds du Lowest Common Ancestor.
+    def lca_height(self, node1: int, node2: int):
+        """Trouve la distance qui sépare node1 de leur Lowest Common Ancestor (LCA).
 
         :param node1: Premier nœud.
         :param node2: Deuxième nœud.
-        :return: (LCA, distance de node1 au LCA, distance de node2 au LCA)"""
-           
-        distance = 0
-        current_nodes = [-1,-2]
-        
-        while current_nodes[0] != current_nodes[1]:
-            parents = torch.where(self.H[:, list(current_nodes)] == 1)[0].tolist()  # Trouver les parents
+        :return: distance de node1 au LCA
+        """
+        distance_node1 = 0
+        current_node1 = node1
+        current_node2 = node2
 
-            if (len(parents) == 0):
-                raise Exception("The node have no parent")
-            if (len(parents) > 2):
+        while current_node1 != current_node2:
+            parents1 = torch.where(self.H[:, current_node1] == 1)[0].tolist()
+            parents2 = torch.where(self.H[:, current_node2] == 1)[0].tolist()
+
+            if len(parents1) == 0:
+                parents1 = [current_node1]
+                distance_node1 -= 1
+            if len(parents2) == 0:
+                parents2 = [current_node2]
+            if len(parents1) > 1 or len(parents2) > 1:
                 raise Exception("2 or more parents for one node")
             
-            current_nodes = parents  # Continuer avec les nouveaux parents
-            if (current_nodes[0] != current_nodes[1]):
-                distance += 1
+            distance_node1 += 1
 
-        return distance
+            # Mise à jour des parents pour continuer la recherche
+            current_node1 = parents1[0]
+            current_node2 = parents2[0]
+
+        return distance_node1
     
 
     def hierarchical_distance_mistake(self, output, target):
@@ -209,7 +215,7 @@ class MetricsHierarchy:
         batch_size, num_classes = output.shape
 
         # Seuil pour binariser les prédictions (0 ou 1)
-        output_pred = (output > 0.5).float()  # Matrice binaire (batch_size, num_classes)
+        output_pred = (output > 0.5).float().to(self.device)  # Matrice binaire (batch_size, num_classes)
 
         # Calcul des activations des super-classes via la matrice H (Hiérarchie)
         H = self.H.float()  # Matrice hiérarchique (num_classes, num_classes)

@@ -47,7 +47,7 @@ from timm.utils import ApexScaler, NativeScaler
 from scripts.logic_seg_utils import *
 from scripts.hierarchy_better_mistakes_utils import get_hce_tree_data
 from scripts.metrics_logicseg import topk_accuracy_logicseg
-from scripts.metrics_hierarchical import *
+
 
 try:
     from apex import amp
@@ -456,6 +456,8 @@ def _parse_args():
 
 
 def main():
+    global matrice_H
+
     utils.setup_default_logging()
     args, args_text = _parse_args()
 
@@ -1360,7 +1362,7 @@ def validate(
                 acc5 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=5)
 
                 """TO TEST"""
-                hierarchical_metrics = MetricsHierarchy(matrice_H)
+                hierarchical_metrics = MetricsHierarchy(matrice_H, device)
                 hierarchical_metrics.compute_all_metrics(logicseg_predictions, onehot_targets)
                         
 
