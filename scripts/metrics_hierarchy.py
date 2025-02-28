@@ -208,7 +208,7 @@ class MetricsHierarchy:
         batch_size, num_classes = output.shape
 
         # Seuil pour binariser les prédictions (0 ou 1)
-        output_pred = (output > 0.5).float()  # Matrice binaire (batch_size, num_classes)
+        output_pred = (output > 0.5).float().to(self.device)  # Matrice binaire (batch_size, num_classes)
 
         # Calcul des activations des super-classes via la matrice H (Hiérarchie)
         H = self.H.float()  # Matrice hiérarchique (num_classes, num_classes)
