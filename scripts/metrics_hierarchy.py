@@ -172,7 +172,7 @@ class MetricsHierarchy:
         Returns:
             float: Pourcentage des échantillons respectant la C-Rule.
         """
-        batch_size, num_classes = output.shape()
+        batch_size, num_classes = output.shape
 
         # Seuil pour binariser les prédictions (0 ou 1)
         '''A VERIFIER !!!'''
