@@ -66,29 +66,36 @@ class MetricsHierarchy:
 
 
     
-    def lca_height(self, node1 : int, node2: int):
-        """Trouve la distance qui sépare les nœuds du Lowest Common Ancestor.
+    def lca_height(self, node1: int, node2: int):
+        """Trouve la distance qui sépare node1 de leur Lowest Common Ancestor (LCA).
 
         :param node1: Premier nœud.
         :param node2: Deuxième nœud.
-        :return: (LCA, distance de node1 au LCA, distance de node2 au LCA)"""
-           
-        distance = 0
-        current_nodes = [node1, node2]
-        
-        while current_nodes[0] != current_nodes[1]:
-            parents = torch.where(self.H[:, list(current_nodes)] == 1)[0].tolist()  # Trouver les parents
+        :return: distance de node1 au LCA
+        """
+        distance_node1 = 0
+        current_node1 = node1
+        current_node2 = node2
 
-            if (len(parents) == 0):
-                raise Exception("The node have no parent")
-            if (len(parents) > 2):
+        while current_node1 != current_node2:
+            parents1 = torch.where(self.H[:, current_node1] == 1)[0].tolist()
+            parents2 = torch.where(self.H[:, current_node2] == 1)[0].tolist()
+
+            if len(parents1) == 0:
+                parents1 = [current_node1]
+                distance_node1 -= 1
+            if len(parents2) == 0:
+                parents2 = [current_node2]
+            if len(parents1) > 1 or len(parents2) > 1:
                 raise Exception("2 or more parents for one node")
             
-            current_nodes = parents  # Continuer avec les nouveaux parents
-            if (current_nodes[0] != current_nodes[1]):
-                distance += 1
+            distance_node1 += 1
 
-        return distance
+            # Mise à jour des parents pour continuer la recherche
+            current_node1 = parents1[0]
+            current_node2 = parents2[0]
+
+        return distance_node1
     
 
     def hierarchical_distance_mistake(self, output, target):
