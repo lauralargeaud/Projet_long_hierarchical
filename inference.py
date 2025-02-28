@@ -31,6 +31,7 @@ from scripts.logic_seg_utils import *
 from scripts.results import *
 from scripts.metrics_hierarchy import *
 from scripts.hierarchical_perfs_plot import *
+from scripts.Logicseg_message_passing import *
 
 try:
     from apex import amp
@@ -133,6 +134,8 @@ parser.add_argument('--conf-matrix', action='store_true', default=False,
 # Custom parameter for LogicSeg
 parser.add_argument('--logicseg', action='store_true', default=False,
                    help='Apply logicseg processing to output.')
+parser.add_argument('--message-passing', action='store_true', default=False,
+                   help='Apply logicseg message passing processing to output.')
 parser.add_argument('--csv-tree', default="./", help="Path to hierarchy csv")
 
 scripting_group = parser.add_mutually_exclusive_group()
@@ -355,6 +358,8 @@ def main():
                 cm_all_targets.append(target.cpu().numpy())
 
             if args.logicseg:
+                if args.message_passing:
+                    output = message_passing(output, La, device)
                 # appliquer la sigmoid
                 output = torch.sigmoid(output)
                 # calculer la probabilité associée à chaque branche
