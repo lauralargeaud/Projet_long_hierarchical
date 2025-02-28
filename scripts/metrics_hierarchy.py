@@ -55,14 +55,14 @@ class MetricsHierarchy:
         return metrics_str
     
 
-    def compute_all_metrics(self, output, target):
+    def compute_all_metrics(self, output, target, branches_and_nodes):
         self.topk_accuracy_logicseg(output, target, 1)
         self.topk_accuracy_logicseg(output, target, 5)
         self.hierarchical_distance_mistake(output, target)
         self.topk_hierarchical_distance_mistake(output, target, 5)
-        self.c_rule_respect_percentage(output, target)
-        #self.d_rule_respect_percentage(output, target)
-        #self.e_rule_respect_percentage(output, target)
+        self.c_rule_respect_percentage(branches_and_nodes, target)
+        self.d_rule_respect_percentage(branches_and_nodes, target)
+        self.e_rule_respect_percentage(branches_and_nodes, target)
 
 
     

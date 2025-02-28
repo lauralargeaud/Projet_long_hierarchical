@@ -1365,7 +1365,7 @@ def validate(
                 """TO TEST"""
 
                 hierarchical_metrics = MetricsHierarchy(matrice_H, device)
-                hierarchical_metrics.compute_all_metrics(logicseg_predictions, onehot_targets)
+                hierarchical_metrics.compute_all_metrics(logicseg_predictions, onehot_targets, output)
                         
 
             else:
