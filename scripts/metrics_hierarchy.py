@@ -174,8 +174,8 @@ class MetricsHierarchy:
         """
         batch_size, num_classes = output.shape
         batch_sizeh, num_classesh = self.H.shape
-        print("output: " + batch_size + " x " + num_classes)
-        print("H: " + batch_sizeh + " x " + num_classesh)
+        print("output: " + str(batch_size) + " x " + str(num_classes))
+        print("H: " + str(batch_sizeh) + " x " + str(num_classesh))
 
         # Seuil pour binariser les prédictions (0 ou 1)
         '''A VERIFIER !!!'''
