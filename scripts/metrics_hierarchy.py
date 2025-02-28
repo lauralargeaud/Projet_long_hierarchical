@@ -55,14 +55,14 @@ class MetricsHierarchy:
         return metrics_str
     
 
-    def compute_all_metrics(self, output, target):
+    def compute_all_metrics(self, output, target, branches_and_nodes):
         self.topk_accuracy_logicseg(output, target, 1)
         self.topk_accuracy_logicseg(output, target, 5)
         self.hierarchical_distance_mistake(output, target)
         self.topk_hierarchical_distance_mistake(output, target, 5)
-        #self.c_rule_respect_percentage(output, target)
-        #self.d_rule_respect_percentage(output, target)
-        #self.e_rule_respect_percentage(output, target)
+        self.c_rule_respect_percentage(branches_and_nodes, target)
+        self.d_rule_respect_percentage(branches_and_nodes, target)
+        self.e_rule_respect_percentage(branches_and_nodes, target)
 
 
     
@@ -176,14 +176,13 @@ class MetricsHierarchy:
 
         # Seuil pour binariser les prédictions (0 ou 1)
         '''A VERIFIER !!!'''
-        output_pred = (output > 0.5).float()  # Matrice binaire (batch_size, num_classes)
+        output_pred = (output > 0.01).float()  # Matrice binaire (batch_size, num_classes)
 
 
         # Calcul des activations des super-classes via la matrice H (Hiérarchie)
         H = self.H.float()  # Matrice hiérarchique (num_classes, num_classes)
         Hs = (torch.repeat_interleave(output_pred.T, repeats=num_classes, dim=1) == 1) & (H.repeat(1,batch_size) == 1)
         Hs = torch.sum(Hs.float(),dim=0)
-        print(Hs)
 
         enfants  = torch.sum(H,dim=0)
         enfants_batch = enfants.repeat(batch_size,1)  # (batch_size, num_classes)
