@@ -62,7 +62,7 @@ class MetricsHierarchy:
         self.topk_accuracy_logicseg(output, target, 5)
         self.hierarchical_distance_mistake(output, target)
         self.topk_hierarchical_distance_mistake(output, target, 5)
-        self.c_rule_respect_percentage(output, target)
+        #self.c_rule_respect_percentage(output, target)
         self.d_rule_respect_percentage(output, target)
         self.e_rule_respect_percentage(output, target)
 
