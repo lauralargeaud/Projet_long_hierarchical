@@ -74,7 +74,7 @@ class MetricsHierarchy:
         :return: (LCA, distance de node1 au LCA, distance de node2 au LCA)"""
            
         distance = 0
-        current_nodes = [-1,-2]
+        current_nodes = [node1, node2]
         
         while current_nodes[0] != current_nodes[1]:
             parents = torch.where(self.H[:, list(current_nodes)] == 1)[0].tolist()  # Trouver les parents
