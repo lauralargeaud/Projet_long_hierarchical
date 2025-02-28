@@ -173,6 +173,9 @@ class MetricsHierarchy:
             float: Pourcentage des échantillons respectant la C-Rule.
         """
         batch_size, num_classes = output.shape
+        batch_sizeh, num_classesh = self.H.shape
+        print("output: " + batch_size + " x " + num_classes)
+        print("H: " + batch_sizeh + " x " + num_classesh)
 
         # Seuil pour binariser les prédictions (0 ou 1)
         '''A VERIFIER !!!'''
@@ -183,7 +186,6 @@ class MetricsHierarchy:
         H = self.H.float()  # Matrice hiérarchique (num_classes, num_classes)
         Hs = (torch.repeat_interleave(output_pred.T, repeats=num_classes, dim=1) == 1) & (H.repeat(1,batch_size) == 1)
         Hs = torch.sum(Hs.float(),dim=0)
-        print(Hs)
 
         enfants  = torch.sum(H,dim=0)
         enfants_batch = enfants.repeat(batch_size,1)  # (batch_size, num_classes)
