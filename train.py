@@ -1363,6 +1363,8 @@ def validate(
                 acc5 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=5)
 
                 """TO TEST"""
+                z,zz = output.shape()
+                print(str(z) + " x " str(zz))
                 hierarchical_metrics = MetricsHierarchy(matrice_H, device)
                 hierarchical_metrics.compute_all_metrics(logicseg_predictions, onehot_targets)
                         
