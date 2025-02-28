@@ -48,6 +48,7 @@ class MetricsHierarchy:
 
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.H = torch.tensor(H, dtype=torch.float32).to(self.device) #torch tensor
+        print(self.H)
     
 
     def get_metrics_string(self):
