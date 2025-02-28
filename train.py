@@ -457,7 +457,7 @@ def _parse_args():
 
 def main():
     global matrice_H
-    
+
     utils.setup_default_logging()
     args, args_text = _parse_args()
 
@@ -1363,7 +1363,6 @@ def validate(
                 acc5 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=5)
 
                 """TO TEST"""
-                _logger.info(matrice_H)
                 hierarchical_metrics = MetricsHierarchy(matrice_H)
                 hierarchical_metrics.compute_all_metrics(logicseg_predictions, onehot_targets)
                         
