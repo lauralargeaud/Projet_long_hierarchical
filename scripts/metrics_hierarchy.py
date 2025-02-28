@@ -34,7 +34,7 @@ class AverageMeter:
 class MetricsHierarchy:
     """Classe pour calculer et stocker différentes métriques de performance d'une IA."""
 
-    def __init__(self, H : torch.Tensor):
+    def __init__(self, H : torch.Tensor, device):
         """Initialise le dictionnaire pour stocker les métriques."""
         self.metrics = {
             MetricsLabels.accuracy_top1: AverageMeter(),
@@ -46,10 +46,8 @@ class MetricsHierarchy:
             MetricsLabels.e_rule_respect: AverageMeter(),
         }
 
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.H = torch.tensor(H, dtype=torch.float32).to(self.device) #torch tensor
-        print(self.H)
-    
+        self.device = device
+        self.H = torch.tensor(H, dtype=torch.float32).to(self.device) #torch tensor    
 
     def get_metrics_string(self):
         # Generate a single string with all metrics
