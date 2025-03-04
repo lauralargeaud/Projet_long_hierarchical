@@ -173,7 +173,7 @@ class MetricsHierarchy:
             float: Pourcentage des échantillons respectant la C-Rule.
         """
 
-        L = L.to(self.device)
+        L = torch.tensor(L, dtype = torch.float32).to(self.device)
         batch_size, num_classes = output.shape
         tree_height, _ = L.shape
 
