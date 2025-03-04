@@ -178,8 +178,29 @@ class MetricsHierarchy:
         output_pred = torch.repeat_interleave(output.T, repeats=tree_height, dim=1)
         augmented_L = L.repeat(batch_size,1)
 
+        print("dim des matrices")
         print(output_pred.shape)
         print(augmented_L.shape)
+
+        output_pred = output_pred*augmented_L
+
+        _, indices = torch.max(output_pred, dim = 1)
+
+        print("les indices")
+        print(indices)
+        out = torch.zeros(batch_size, num_classes)
+
+        compteur = 0
+        num_ligne = 0
+        for i in indices:
+            out[num_ligne, i] = 1
+            compteur += 1
+            if compteur == tree_height:
+                compteur = 0
+                num_ligne += 1
+        
+        output_pred = out
+        
 
 
         # Calcul des activations des super-classes via la matrice H (Hiérarchie)
