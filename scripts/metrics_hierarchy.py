@@ -190,7 +190,7 @@ class MetricsHierarchy:
 
         print("les indices")
         print(indices)
-        out = torch.zeros(batch_size, num_classes)
+        out = torch.zeros(batch_size, num_classes).to(self.device)
 
         compteur = 0
         num_ligne = 0
