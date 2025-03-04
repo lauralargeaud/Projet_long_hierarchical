@@ -55,14 +55,14 @@ class MetricsHierarchy:
         return metrics_str
     
 
-    def compute_all_metrics(self, output, target, branches_and_nodes):
+    def compute_all_metrics(self, output, target, branches_and_nodes, L):
         self.topk_accuracy_logicseg(output, target, 1)
         self.topk_accuracy_logicseg(output, target, 5)
         self.hierarchical_distance_mistake(output, target)
         self.topk_hierarchical_distance_mistake(output, target, 5)
-        self.c_rule_respect_percentage(branches_and_nodes, target)
-        self.d_rule_respect_percentage(branches_and_nodes, target)
-        self.e_rule_respect_percentage(branches_and_nodes, target)
+        self.c_rule_respect_percentage(branches_and_nodes, L)
+        self.d_rule_respect_percentage(branches_and_nodes)
+        self.e_rule_respect_percentage(branches_and_nodes)
 
 
     
@@ -161,7 +161,7 @@ class MetricsHierarchy:
         # Stocker le résultat
         self.metrics[MetricsLabels.topk_hierarchical_distance_mistakes.format(k)].update(total_distance / target.size(0))
 
-    def c_rule_respect_percentage(self, output: torch.Tensor, target):
+    def c_rule_respect_percentage(self, output: torch.Tensor, L):
         """
         Calcule le pourcentage d'échantillons respectant la C-Rule.
 
@@ -172,11 +172,37 @@ class MetricsHierarchy:
         Returns:
             float: Pourcentage des échantillons respectant la C-Rule.
         """
-        batch_size, num_classes = output.shape
 
-        # Seuil pour binariser les prédictions (0 ou 1)
-        '''A VERIFIER !!!'''
-        output_pred = (output > 0.01).float()  # Matrice binaire (batch_size, num_classes)
+        L = L.to(self.device)
+        batch_size, num_classes = output.shape
+        tree_height, _ = L.shape
+
+        output_pred = torch.repeat_interleave(output.T, repeats=tree_height, dim=1)
+        augmented_L = L.T.repeat(batch_size,1)
+
+        print("dim des matrices")
+        print(output_pred.shape)
+        print(augmented_L.shape)
+
+        output_pred = output_pred*augmented_L
+
+        _, indices = torch.max(output_pred, dim = 1)
+
+        print("les indices")
+        print(indices)
+        out = torch.zeros(batch_size, num_classes)
+
+        compteur = 0
+        num_ligne = 0
+        for i in indices:
+            out[num_ligne, i] = 1
+            compteur += 1
+            if compteur == tree_height:
+                compteur = 0
+                num_ligne += 1
+        
+        output_pred = out
+        
 
 
         # Calcul des activations des super-classes via la matrice H (Hiérarchie)
@@ -200,7 +226,7 @@ class MetricsHierarchy:
 
 
 
-    def d_rule_respect_percentage(self, output: torch.Tensor, target):
+    def d_rule_respect_percentage(self, output: torch.Tensor):
         """
         Calcule le pourcentage d'échantillons respectant la D-Rule.
 
@@ -236,7 +262,7 @@ class MetricsHierarchy:
 
 
 
-    def  e_rule_respect_percentage(self, output: torch.Tensor, target):
+    def  e_rule_respect_percentage(self, output: torch.Tensor):
         """
         Calcule le pourcentage d'échantillons respectant la E-Rule.
 
@@ -317,6 +343,13 @@ class MetricsHierarchy:
         for key, value in self.metrics.items():
             self.metrics[key] = value / n
 
+      
+    def compute_tree_matrix(self):
+        '''Retourne une matrice contenant les noeuds triés par hauteur dans l'arbre'''
+
+    
+
+    """Fonction non mise a jour"""
     def compute_metrics(self, output, target, label_matrix, device):
         """Compute all the define metrics using the given data"""
         label_matrix = torch.tensor(label_matrix, dtype=torch.float32).to(self.device)

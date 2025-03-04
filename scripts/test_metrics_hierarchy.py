@@ -12,7 +12,7 @@ class TestHierarchicalClassifier(unittest.TestCase):
                                             [0, 0, 0, 0, 1],
                                             [0, 0, 0, 0, 0], 
                                             [0, 0, 0, 0, 0]]).to(self.device)
-        self.metrics = MetricsHierarchy(self.hierarchy_matrix)
+        self.metrics = MetricsHierarchy(self.hierarchy_matrix, self.device)
 
     def test_all(self):
         """Exécute le calcul de toutes les métriques via compute_all_metrics."""
