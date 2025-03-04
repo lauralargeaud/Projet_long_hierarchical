@@ -212,6 +212,7 @@ class MetricsHierarchy:
         """
         batch_size, num_classes = output.shape
 
+        L = torch.tensor(L, dtype = torch.float32).to(self.device)
         # Seuil pour binariser les prédictions (0 ou 1)
         batch_size, num_classes, output_pred = self.seuil(output, L)
 
