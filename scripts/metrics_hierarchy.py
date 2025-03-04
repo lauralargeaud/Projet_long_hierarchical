@@ -186,7 +186,7 @@ class MetricsHierarchy:
 
         output_pred = output_pred*augmented_L
 
-        _, indices = torch.max(output_pred, dim = 1)
+        _, indices = torch.max(output_pred, dim = 0)
 
         print("les indices")
         print(indices)
@@ -195,7 +195,7 @@ class MetricsHierarchy:
         compteur = 0
         num_ligne = 0
         for i in indices:
-            out[num_ligne, i] = 1
+            out[i, num_ligne] = 1
             compteur += 1
             if compteur == tree_height:
                 compteur = 0
