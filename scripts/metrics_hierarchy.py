@@ -176,7 +176,7 @@ class MetricsHierarchy:
         tree_height, _ = L.shape
 
         output_pred = torch.repeat_interleave(output.T, repeats=tree_height, dim=1)
-        augmented_L = L.repeat(batch_size,1)
+        augmented_L = L.T.repeat(batch_size,1)
 
         print("dim des matrices")
         print(output_pred.shape)
