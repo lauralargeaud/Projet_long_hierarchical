@@ -61,7 +61,7 @@ class MetricsHierarchy:
         self.hierarchical_distance_mistake(output, target)
         self.topk_hierarchical_distance_mistake(output, target, 5)
         self.c_rule_respect_percentage(branches_and_nodes, L)
-        self.d_rule_respect_percentage(branches_and_nodes, L)
+        self.d_rule_respect_percentage(branches_and_nodes)
         self.e_rule_respect_percentage(branches_and_nodes)
 
 
@@ -224,7 +224,7 @@ class MetricsHierarchy:
 
 
 
-    def d_rule_respect_percentage(self, output: torch.Tensor, target):
+    def d_rule_respect_percentage(self, output: torch.Tensor):
         """
         Calcule le pourcentage d'échantillons respectant la D-Rule.
 
@@ -260,7 +260,7 @@ class MetricsHierarchy:
 
 
 
-    def  e_rule_respect_percentage(self, output: torch.Tensor, target):
+    def  e_rule_respect_percentage(self, output: torch.Tensor):
         """
         Calcule le pourcentage d'échantillons respectant la E-Rule.
 
