@@ -172,6 +172,8 @@ class MetricsHierarchy:
         Returns:
             float: Pourcentage des échantillons respectant la C-Rule.
         """
+
+        L = L.to(self.device)
         batch_size, num_classes = output.shape
         tree_height, _ = L.shape
 
