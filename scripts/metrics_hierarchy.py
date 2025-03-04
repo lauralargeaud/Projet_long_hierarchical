@@ -195,7 +195,7 @@ class MetricsHierarchy:
         compteur = 0
         num_ligne = 0
         for i in indices:
-            out[i, num_ligne] = 1
+            out[num_ligne, i] = 1
             compteur += 1
             if compteur == tree_height:
                 compteur = 0
