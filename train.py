@@ -437,6 +437,7 @@ group.add_argument('--wandb-resume-id', default='', type=str, metavar='ID',
                    help='If resuming a run, the id of the run in wandb')
 
 matrice_H = 0
+matrice_L = 0
 
 def _parse_args():
     # Do we have a config file to parse?
@@ -456,7 +457,7 @@ def _parse_args():
 
 
 def main():
-    global matrice_H
+    global matrice_H, matrice_L
 
     utils.setup_default_logging()
     args, args_text = _parse_args()
@@ -845,6 +846,7 @@ def main():
     if args.logicseg: #FIXME: no mixup/label_smoothing management
         H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=False)
         matrice_H = H_raw
+        matrice_L = La_raw
         La_raw = get_layer_matrix(args.csv_tree, verbose=False)
         train_loss_fn = LogicSegLoss(args.logicseg_method, H_raw, P_raw, M_raw, La_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.target_loss_weight, args.alpha_layer, args.asl_gamma_pos, args.asl_gamma_neg, args.asl_thresh_shifting)
         validate_loss_fn = LogicSegLoss(args.logicseg_method, H_raw, P_raw, M_raw, La_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.target_loss_weight, args.alpha_layer, args.asl_gamma_pos, args.asl_gamma_neg, args.asl_thresh_shifting)
