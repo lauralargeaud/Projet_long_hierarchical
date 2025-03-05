@@ -20,7 +20,8 @@ class MessagePassing:
         # e_rule OK
         # output += self.c_score(output)
         output += self.c_score(output) + self.d_score(output) + self.e_score(output) # (batch_size, N)
-        print("output avant softmax", output)
+        # print("output avant softmax", output)
+        
         # Idea: for each level of the tree, extract the corresponding subset of output and apply the softmax on it.
         # Then, update output with its softmax-normalized values for the current level
         for l in range(0, self.h): # each level starting from the leaves
@@ -67,7 +68,7 @@ class MessagePassing:
         # print("probas_prod", probas_prod) # KO (pour le noeud 2 on n'a pas la bonne valeur)
         d_mat = torch.sum(H_rep, dim=1) - probas_parents + probas_prod # (batch_size, N)
         d_mat = d_mat * probas_parents # (batch_size, N)
-        print("hd", d_mat)
+        # print("hd", d_mat)
         return d_mat
 
     def e_score(self, output):
@@ -78,11 +79,7 @@ class MessagePassing:
 
         probas_melee = probas_peers * output.unsqueeze(1).repeat(1, self.N, 1) # (batch_size, N, N)
 
-        print("probas_peers", probas_peers[0,:,:])
-
         m = torch.maximum(self.P.sum(dim=1).unsqueeze(0), torch.tensor(1)) # (1, N)
-
-        print("m", m)
 
         h_e = -1 + probas_melee.sum(dim=1) / m # (batch_size, N)
 
@@ -92,5 +89,5 @@ class MessagePassing:
         # e_mat = torch.sum(probas_peers * he_rep, dim=1) / m 
 
 
-        print("he", e_mat)
+        # print("he", e_mat)
         return e_mat

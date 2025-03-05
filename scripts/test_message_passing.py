@@ -31,7 +31,7 @@ def test_messsage_passing():
 
     y_pred = mess_pass.process(y_pred)
 
-    print(y_pred)
+    print("y_pred", y_pred)
 
 test_messsage_passing()
 
