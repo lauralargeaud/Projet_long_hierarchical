@@ -18,7 +18,7 @@ def generate_barplots(values, labels, title, filename, folder="output/img"):
     """
     plt.figure(figsize=(10, 5))
     plt.bar(labels, values, color='skyblue')
-    plt.xlabel('Catégories')
+    plt.xlabel('Modèles')
     plt.ylabel('Valeurs')
     plt.ylim([0, 1])
     plt.title(title)
@@ -48,7 +48,6 @@ def display_models_barplots(test_output_folder, output_folder="output/img", hier
     values = {metric: {hierarchy_name: [] for hierarchy_name in hierarchy_names} for metric in metrics}
     labels = []
     for folder in os.listdir(test_output_folder):
-        print(folder)
         csv_path = os.path.join(test_output_folder, folder, "metrics_all.csv")
         args_path = os.path.join(test_output_folder, folder, "args.yaml")
         title, _ = compute_model_name(args_path)
@@ -61,6 +60,44 @@ def display_models_barplots(test_output_folder, output_folder="output/img", hier
                 values[metric][name].append(line[metric].values[0])
     for metric, hierarchy in values.items():
         for name, data in hierarchy.items():
+            generate_barplots(data, labels, f"{metric} {name}", f"{unidecode(metric).lower()}_{name}.png")
+
+def display_models_barplots_multiple(test_output_folder, output_folder="output/img", hierarchy_filename="data/small-collomboles/hierarchy.csv"):
+    """
+    Generates barplots for differents metrics for differentes models.
+    """
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    hierarchy_lines = read_csv(hierarchy_filename)
+    hierarchy_names = hierarchy_lines[0]
+    
+    metrics = ["Précision", "Rappel", "F1-score"]
+    labels = set()
+    for folder in os.listdir(test_output_folder):
+        csv_path = os.path.join(test_output_folder, folder, "metrics_all.csv")
+        args_path = os.path.join(test_output_folder, folder, "args.yaml")
+        title, _ = compute_model_name(args_path)
+        labels.add(title)
+    labels = sorted(list(labels))
+    values = {metric: {hierarchy_name: {label: [] for label in labels} for hierarchy_name in hierarchy_names} for metric in metrics}
+    for folder in sorted(os.listdir(test_output_folder)):
+        csv_path = os.path.join(test_output_folder, folder, "metrics_all.csv")
+        args_path = os.path.join(test_output_folder, folder, "args.yaml")
+        title, _ = compute_model_name(args_path)
+        df = pd.read_csv(csv_path)
+        for name in hierarchy_names:
+            line = df[(df['Etage'] == name) & (df['Classe'] == 'Moyenne')]
+            for metric in metrics:
+                print(metric, name, title)
+                values[metric][name][title].append(line[metric].values[0])
+    print(labels)
+    for metric, hierarchy in values.items():
+        for name, data_dict in hierarchy.items():
+            data = []
+            for label in labels:
+                data.append(np.mean(data_dict[label]))
+                print(metric, name, np.mean(data_dict[label]), data_dict[label])
             generate_barplots(data, labels, f"{metric} {name}", f"{unidecode(metric).lower()}_{name}.png")
 
 def show_results_from_csv_summary(filename, title, model_name, folder="output/img"):
