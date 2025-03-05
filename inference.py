@@ -337,7 +337,7 @@ def main():
             La_raw = get_layer_matrix(args.csv_tree, verbose=False) 
             if args.message_passing:
                     message_passing = MessagePassing(H_raw, P_raw, M_raw, La_raw, args.message_passing_iter_count, device)
-            metrics_hierarchy = MetricsHierarchy(H_raw)
+            metrics_hierarchy = MetricsHierarchy(H_raw, device)
             metrics_hierarchy.setZero()
             # construire la laebl_matrix
             label_matrix, _, index_to_node = get_label_matrix(args.csv_tree)
