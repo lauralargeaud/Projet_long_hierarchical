@@ -354,7 +354,7 @@ class MetricsHierarchy:
         """
         label_matrix = torch.tensor(label_matrix, dtype=torch.float32).to(self.device)
         self.hierarchical_distance_mistake(output, target)
-        self.topk_hierarchical_distance_mistake(output, target, topk=1)
+        self.topk_hierarchical_distance_mistake(output, target, k=1)
         self.topk_hierarchical_distance_mistake(output, target)
         self.c_rule_respect_percentage(output, label_matrix)
         self.d_rule_respect_percentage(output, label_matrix)
