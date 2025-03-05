@@ -11,6 +11,7 @@ class MessagePassing:
         self.iter_count = iter_count
         self.N = self.H.shape[1]
         self.batch_size = None
+        self.device = device
 
     # output: shape = (batch_size, N)
     def update(self, output):
@@ -61,7 +62,7 @@ class MessagePassing:
         probas_parents = H_rep * output_rep # (batch_size, N , N) avec probas_fils[id_batch, :, id_noeud] = les probas du parent du noeud id_noeud
         probas_parents = torch.sum(probas_parents, dim=1)
         # print("probas_parents", probas_parents) # OK
-        peers_rep = (self.P + torch.eye(self.N)).T.unsqueeze(0).repeat(self.batch_size, 1, 1) # (batch_size, N, N)
+        peers_rep = (self.P + torch.eye(self.N).to(self.device)).T.unsqueeze(0).repeat(self.batch_size, 1, 1) # (batch_size, N, N)
         probas_peers = peers_rep * output_rep # (batch_size, N, N)
         # print("Tranche de la 1e image du batch", probas_peers[0,:,:])
         probas_prod = probas_parents * torch.max(probas_peers, dim=1).values # (batch_size, N) On somme car on travail sur les parents => au plus 1 parent
