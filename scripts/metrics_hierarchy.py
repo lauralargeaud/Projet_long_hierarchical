@@ -362,7 +362,11 @@ class MetricsHierarchy:
     def compute_tree_matrix(self):
         '''Retourne une matrice contenant les noeuds triés par hauteur dans l'arbre'''
 
-    
+    def update_metrics(self, other):
+        """" Ne pas supprimer cette fonction. """
+        """Ajouter la valeur des métriques d'un autre objet à l'objet courant."""
+        for key, value in self.metrics.items():
+            self.metrics[key] = value + other.metrics[key]
 
     """Fonction non mise a jour"""
     def compute_metrics(self, output, target, label_matrix, device):
