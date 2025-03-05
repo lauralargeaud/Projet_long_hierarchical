@@ -15,11 +15,11 @@ class MessagePassing:
     # output: shape = (batch_size, N)
     def update(self, output):
         """One iterationof the message passing algorithm"""
-        # c_rule 
+        # c_rule OK
         # d_rule OK
-        # e_rule 
-        output += self.c_score(output)
-        # output += self.c_score(output) + self.d_score(output) + self.e_score(output) # (batch_size, N)
+        # e_rule OK
+        # output += self.c_score(output)
+        output += self.c_score(output) + self.d_score(output) + self.e_score(output) # (batch_size, N)
         print("output avant softmax", output)
         # Idea: for each level of the tree, extract the corresponding subset of output and apply the softmax on it.
         # Then, update output with its softmax-normalized values for the current level
@@ -43,20 +43,14 @@ class MessagePassing:
         """Pour chaque v_i = output[id_batch, i], le terme somme{proba(fils(i)).hC(fils(i),i)} stocké dans result[id_batch, i]"""
         # 1 − s[fils_v] + s[fils_v]·s[v]
         H_rep = self.H.T.unsqueeze(0).repeat(self.batch_size, 1, 1) # (batch_size, N, N)
-        print("H_rep", H_rep[0,:,:])
         output_rep = output.unsqueeze(2).repeat(1, 1, self.N) # (batch_size, N, N)
         probas_fils = H_rep * output_rep # (batch_size, N , N) avec probas_fils[id_batch, :, id_noeud] = les probas des fils du noeud id_noeud
-        print("proba_fils", probas_fils[0,:,:])
-        probas_prod = probas_fils * output_rep # (batch_size, N, N)
-        print("output_rep", output_rep[0,:,:])
-        print("probas_prod", probas_prod[0,:,:])
+        probas_noeuds_rep = output_rep.transpose(1, 2)
+        probas_prod = probas_fils * probas_noeuds_rep # (batch_size, N, N)
         c_mat = H_rep - probas_fils + probas_prod # (batch_size, N, N)
         c_mat = c_mat * probas_fils # (batch_size, N, N)
         nb_fils = torch.sum(H_rep, dim=1) # (batch_size, N) avec nb_fils[id_batch, 0] le nombre de fils de la racine
-        print("nb_fils", nb_fils)
-        print("max nb_fils", torch.maximum(nb_fils, torch.tensor(1)))
-        result = torch.sum(c_mat, dim=1) / torch.maximum(nb_fils, torch.tensor(1)) # (batch_size, N) TODO: vérifier qu'on doit faire le torch.maximum(...)
-        print("hc", result)
+        result = torch.sum(c_mat, dim=1) / torch.maximum(nb_fils, torch.tensor(1)) # (batch_size, N)
         return result
 
     def d_score(self, output):
@@ -84,11 +78,19 @@ class MessagePassing:
 
         probas_melee = probas_peers * output.unsqueeze(1).repeat(1, self.N, 1) # (batch_size, N, N)
 
-        m = torch.maximum(self.P.sum(dim=1).unsqueeze(0), torch.tensor(1)) # (batch_size, N)
+        print("probas_peers", probas_peers[0,:,:])
 
-        e_m = -1 + probas_melee.sum(dim=1) / m # (batch_size, N)
+        m = torch.maximum(self.P.sum(dim=1).unsqueeze(0), torch.tensor(1)) # (1, N)
 
-        e_mat = e_m * (probas_peers.sum(dim=1) / m) # (batch_size, N)
+        print("m", m)
+
+        h_e = -1 + probas_melee.sum(dim=1) / m # (batch_size, N)
+
+        e_mat = h_e * (probas_peers.sum(dim=1) / m) # (batch_size, N)
+
+        # he_rep = h_e.unsqueeze(2).repeat(1, 1, self.N)
+        # e_mat = torch.sum(probas_peers * he_rep, dim=1) / m 
+
 
         print("he", e_mat)
         return e_mat
