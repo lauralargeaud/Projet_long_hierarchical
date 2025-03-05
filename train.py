@@ -27,6 +27,8 @@ from datetime import datetime
 from functools import partial
 import matplotlib as plt
 
+from scripts.logic_seg_utils import create_class_to_labels, get_logicseg_predictions
+from scripts.metrics_hierarchy import MetricsHierarchy
 import torch
 import torch.nn as nn
 import torchvision.utils
@@ -45,6 +47,7 @@ from timm.utils import ApexScaler, NativeScaler
 from scripts.logic_seg_utils import *
 from scripts.hierarchy_better_mistakes_utils import get_hce_tree_data
 from scripts.metrics_logicseg import topk_accuracy_logicseg
+
 
 try:
     from apex import amp
@@ -433,6 +436,8 @@ group.add_argument('--wandb-tags', default=[], type=str, nargs='+',
 group.add_argument('--wandb-resume-id', default='', type=str, metavar='ID',
                    help='If resuming a run, the id of the run in wandb')
 
+matrice_H = 0
+matrice_L = 0
 
 def _parse_args():
     # Do we have a config file to parse?
@@ -452,6 +457,8 @@ def _parse_args():
 
 
 def main():
+    global matrice_H, matrice_L
+
     utils.setup_default_logging()
     args, args_text = _parse_args()
 
@@ -838,7 +845,9 @@ def main():
     # setup loss function
     if args.logicseg: #FIXME: no mixup/label_smoothing management
         H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=False)
+        matrice_H = H_raw
         La_raw = get_layer_matrix(args.csv_tree, verbose=False)
+        matrice_L = La_raw
         train_loss_fn = LogicSegLoss(args.logicseg_method, H_raw, P_raw, M_raw, La_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.target_loss_weight, args.alpha_layer, args.asl_gamma_pos, args.asl_gamma_neg, args.asl_thresh_shifting)
         validate_loss_fn = LogicSegLoss(args.logicseg_method, H_raw, P_raw, M_raw, La_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.target_loss_weight, args.alpha_layer, args.asl_gamma_pos, args.asl_gamma_neg, args.asl_thresh_shifting)
     elif args.hce_loss:
@@ -1354,6 +1363,13 @@ def validate(
                 onehot_targets = get_logicseg_predictions(target, label_matrix, device)
                 acc1 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=1)
                 acc5 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=5)
+
+                """TO TEST"""
+
+                hierarchical_metrics = MetricsHierarchy(matrice_H, device)
+                hierarchical_metrics.compute_all_metrics(logicseg_predictions, onehot_targets, output, matrice_L)
+                        
+
             else:
                 acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
                 acc1 = acc1 / 100
@@ -1379,13 +1395,24 @@ def validate(
             end = time.time()
             if utils.is_primary(args) and (last_batch or batch_idx % args.log_interval == 0):
                 log_name = 'Test' + log_suffix
-                _logger.info(
-                    f'{log_name}: [{batch_idx:>4d}/{last_idx}]  '
-                    f'Time: {batch_time_m.val:.3f} ({batch_time_m.avg:.3f})  '
-                    f'Loss: {losses_m.val:>7.3f} ({losses_m.avg:>6.3f})  '
-                    f'Acc@1: {acc1_m.val:>7.3f} ({acc1_m.avg:>7.3f})  '
-                    f'Acc@5: {acc5_m.val:>7.3f} ({acc5_m.avg:>7.3f})'
-                )
+
+                '''TO TEST'''
+                if args.logicseg:
+                    _logger.info(
+                        f'{log_name}: [{batch_idx:>4d}/{last_idx}]  '
+                        f'Time: {batch_time_m.val:.3f} ({batch_time_m.avg:.3f})  '
+                        f'Loss: {losses_m.val:>7.3f} ({losses_m.avg:>6.3f})  '
+                        + hierarchical_metrics.get_metrics_string()
+                    )
+                
+                else:
+                    _logger.info(
+                        f'{log_name}: [{batch_idx:>4d}/{last_idx}]  '
+                        f'Time: {batch_time_m.val:.3f} ({batch_time_m.avg:.3f})  '
+                        f'Loss: {losses_m.val:>7.3f} ({losses_m.avg:>6.3f})  '
+                        f'Acc@1: {acc1_m.val:>7.3f} ({acc1_m.avg:>7.3f})  '
+                        f'Acc@5: {acc5_m.val:>7.3f} ({acc5_m.avg:>7.3f})'
+                    )
 
     metrics = OrderedDict([('loss', losses_m.avg), ('top1', acc1_m.avg), ('top5', acc5_m.avg)])
 

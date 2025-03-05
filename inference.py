@@ -32,6 +32,7 @@ from scripts.results import *
 from scripts.metrics_hierarchy import *
 from scripts.hierarchical_perfs_plot import *
 from scripts.utils import *
+from scripts.Logicseg_message_passing import *
 
 try:
     from apex import amp
@@ -134,6 +135,10 @@ parser.add_argument('--conf-matrix', action='store_true', default=False,
 # Custom parameter for LogicSeg
 parser.add_argument('--logicseg', action='store_true', default=False,
                    help='Apply logicseg processing to output.')
+parser.add_argument('--message-passing', action='store_true', default=False,
+                   help='Apply logicseg message passing processing to output.')
+parser.add_argument('--message-passing-iter-count', type=int, default=3,
+                   help='number of iteration of the message passing.')
 parser.add_argument('--csv-tree', default="./", help="Path to hierarchy csv")
 
 scripting_group = parser.add_mutually_exclusive_group()
@@ -328,7 +333,9 @@ def main():
         if args.logicseg:
             # top1 = 0
             # top5 = 0
-            H_raw, _, _ = get_tree_matrices(args.csv_tree, verbose=False)
+            H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=False)
+            if args.message_passing:
+                    message_passing = MessagePassing(H_raw, P_raw, M_raw, args.message_passing_iter_count, device)
             metrics_hierarchy = MetricsHierarchy(H_raw)
             metrics_hierarchy.setZero()
             # construire la laebl_matrix
@@ -356,6 +363,8 @@ def main():
                 cm_all_targets.append(target.cpu().numpy())
 
             if args.logicseg:
+                if args.message_passing:
+                    output = message_passing.process(output)
                 # appliquer la sigmoid
                 output = torch.sigmoid(output)
                 # calculer la probabilité associée à chaque branche
