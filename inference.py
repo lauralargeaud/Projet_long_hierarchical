@@ -541,9 +541,9 @@ def main():
             print(f'--result')
             with open(os.path.join(args.results_dir, "metrics_results.txt"), "w") as fichier:
                 for key, value in metrics_hierarchy.metrics.items():
-                    print(key + ": ", value.avg.item())
+                    print(key + ": ", value.avg)
                     # écrire aussi dans le fichier des résultats
-                    fichier.write(key + ": " + str(value.avg.item()) + "\n")
+                    fichier.write(key + ": " + str(value.avg) + "\n")
             cm = load_confusion_matrix(os.path.join(args.results_dir, "cm_branch.out"))
             cm_normalized = load_confusion_matrix(os.path.join(args.results_dir, "cm_norm_branch.out"))
             output_filename = "cm_branches.jpg"
