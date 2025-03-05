@@ -344,14 +344,6 @@ class MetricsHierarchy:
         Réinitialise les métriques stockées.
         """
         self.metrics = {key: -1 for key in self.metrics}
-
-    def divide(self, n):
-        """
-        Diviser toutes les métriques par n.
-        """
-        for key, value in self.metrics.items():
-            self.metrics[key] = value / n
-
       
     def compute_tree_matrix(self):
         '''Retourne une matrice contenant les noeuds triés par hauteur dans l'arbre'''

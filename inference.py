@@ -445,11 +445,11 @@ def main():
                 _logger.info('Predict: [{0}/{1}] Time {batch_time.val:.3f} ({batch_time.avg:.3f})'.format(
                     batch_idx, len(loader), batch_time=batch_time))
 
-        if args.logicseg:
-            # mettre à jour les variables des métriques
-            # top1 = top1 / nb_batches
-            # top5 = top5 / nb_batches
-            metrics_hierarchy.divide(nb_batches)
+        # if args.logicseg:
+        #     # mettre à jour les variables des métriques
+        #     # top1 = top1 / nb_batches
+        #     # top5 = top5 / nb_batches
+        #     metrics_hierarchy.divide(nb_batches)
 
     all_indices = np.concatenate(all_indices, axis=0) if all_indices else None
     all_labels = np.concatenate(all_labels, axis=0) if all_labels else None
@@ -541,7 +541,7 @@ def main():
             print(f'--result')
             with open(os.path.join(args.results_dir, "metrics_results.txt"), "w") as fichier:
                 for key, value in metrics_hierarchy.metrics.items():
-                    print(key + ": ", value.item())
+                    print(key + ": ", value.avg.item())
                     # écrire aussi dans le fichier des résultats
                     fichier.write(key + ": " + str(value.item()) + "\n")
             cm = load_confusion_matrix(os.path.join(args.results_dir, "cm_branch.out"))
