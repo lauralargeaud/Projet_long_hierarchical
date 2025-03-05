@@ -335,8 +335,8 @@ class MetricsHierarchy:
         acc5 = self.topk_accuracy_logicseg(probas_branches_input, onehot_targets, topk=5)
 
         # Stocker les résultats
-        self.metrics[MetricsLabels.accuracy_top1] = acc1
-        self.metrics[MetricsLabels.accuracy_top5] = acc5
+        self.metrics[MetricsLabels.accuracy_top1].update(acc1)
+        self.metrics[MetricsLabels.accuracy_top5].update(acc5)
 
 
     def reset_metrics(self):
@@ -344,12 +344,6 @@ class MetricsHierarchy:
         Réinitialise les métriques stockées.
         """
         self.metrics = {key: -1 for key in self.metrics}
-
-    def setZero(self):
-        """
-        Défini la valeur de toutes les métriques à 0.
-        """
-        self.metrics = {key: 0 for key in self.metrics}
 
     def divide(self, n):
         """
@@ -361,12 +355,6 @@ class MetricsHierarchy:
       
     def compute_tree_matrix(self):
         '''Retourne une matrice contenant les noeuds triés par hauteur dans l'arbre'''
-
-    def update_metrics(self, other):
-        """" Ne pas supprimer cette fonction. """
-        """Ajouter la valeur des métriques d'un autre objet à l'objet courant."""
-        for key, value in self.metrics.items():
-            self.metrics[key] = value + other.metrics[key]
 
     """Fonction non mise a jour"""
     def compute_metrics(self, output, target, label_matrix, device):
