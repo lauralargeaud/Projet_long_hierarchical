@@ -64,21 +64,11 @@ class TestHierarchicalClassifier(unittest.TestCase):
 
         label_matrix = torch.eye(self.num_classes).to(self.device)  # Matrice identité pour simplifier
 
-<<<<<<< HEAD
-        self.metrics.topk_hierarchical_distance_mistake(output, target, label_matrix, 3)
-        print("Distance top-k hiérarchique moyenne des erreurs : " + str(self.metrics.metrics[MetricsLabels.hierarchical_distance_mistakes]))
-    
-    def test_c_rule_respect(self):
-        """
-        Test du calcul du pourcentage de respect de la c rule.
-        """
-=======
         self.metrics.topk_hierarchical_distance_mistake(output, target, 3)
         print("Distance topk hiérarchique moyenne des erreurs : " + str(self.metrics.metrics[MetricsLabels.hierarchical_distance_mistakes]))
     
     def atest_c_rule_respect(self):
         """Test du calcul du pourcentage de respect de la c rule."""
->>>>>>> f3834073064cea5c996a65c13f1fa5b9f5d3af6d
         output = torch.tensor([[0.6, 0. , 0., 0.6, 0.]   # Prédiction : classe 1
                                ]).to(self.device)  # Prédiction : classe 3
         
@@ -88,21 +78,11 @@ class TestHierarchicalClassifier(unittest.TestCase):
 
         label_matrix = torch.eye(self.num_classes).to(self.device)  # Matrice identité pour simplifier
 
-<<<<<<< HEAD
-        self.metrics.c_rule_respect_percentage(output, target, label_matrix)
-        print("Pourcentage de respect de la c-rule : " + str(self.metrics.metrics[MetricsLabels.c_rule_respect]))
-
-    def test_d_rule_respect(self):
-        """
-        Test du calcul du pourcentage de respect de la d rule.
-        """
-=======
         self.metrics.c_rule_respect_percentage(output, target)
         print("pourcentage de respect de la c-rule : " + str(self.metrics.metrics[MetricsLabels.c_rule_respect]))
 
     def atest_d_rule_respect(self):
         """Test du calcul du pourcentage de respect de la d rule."""
->>>>>>> f3834073064cea5c996a65c13f1fa5b9f5d3af6d
         output = torch.tensor([[0.6, 0. , 0., 0.6, 0.]   # Prédiction : classe 1
                                ]).to(self.device)  # Prédiction : classe 3
         
@@ -115,15 +95,8 @@ class TestHierarchicalClassifier(unittest.TestCase):
         self.metrics.d_rule_respect_percentage(output, target, label_matrix)
         print("Pourcentage de respect de la d-rule : " + str(self.metrics.metrics[MetricsLabels.d_rule_respect]))
 
-<<<<<<< HEAD
-    def test_e_rule_respect(self):
-        """
-        Test du calcul du pourcentage de respect de la e rule.
-        """
-=======
     def atest_e_rule_respect(self):
         """Test du calcul du pourcentage de respect de la e rule."""
->>>>>>> f3834073064cea5c996a65c13f1fa5b9f5d3af6d
         output = torch.tensor([[0.6, 0.6 , 0.6, 0.6, 0.]   # Prédiction : classe 1
                                ]).to(self.device)  # Prédiction : classe 3
         
@@ -133,13 +106,8 @@ class TestHierarchicalClassifier(unittest.TestCase):
 
         label_matrix = torch.eye(self.num_classes).to(self.device)  # Matrice identité pour simplifier
 
-<<<<<<< HEAD
-        self.metrics.e_rule_respect_percentage(output, target, label_matrix)
-        print("Pourcentage de respect de la e-rule : " + str(self.metrics.metrics[MetricsLabels.e_rule_respect]))
-=======
         self.metrics.e_rule_respect_percentage(output, target)
         print("pourcentage de respect de la e-rule : " + str(self.metrics.metrics[MetricsLabels.e_rule_respect]))
->>>>>>> f3834073064cea5c996a65c13f1fa5b9f5d3af6d
 
 if __name__ == "__main__":
     unittest.main()
