@@ -68,7 +68,7 @@ def build_hierarchy_tensors(hierarchy_csv: str,
 
     # Créer les dictionnaires d'indexation des nœuds internes et des feuilles
     internal_node_to_index, leaf_to_index, internal_nodes_heights = build_index_nodes(
-        df_hierarchy, hierarchy_levels)
+        df_hierarchy, hierarchy_levels, device)
 
     internal_nodes_idx, leaves_idx = map_and_vectorize_hierarchy(
         df_hierarchy, hierarchy_levels, internal_node_to_index, leaf_to_index, device)
@@ -90,7 +90,7 @@ def build_hierarchy_tensors(hierarchy_csv: str,
 
 def build_index_nodes(df_hierarchy: pd.DataFrame, 
                       hierarchy_levels: list[str], 
-                      device="cpu"
+                      device: torch.device
                       ) -> tuple[dict[str, int], dict[str, int], torch.Tensor]:
     """
     Génère les dictionnaires d'indexation des noeuds internes et des feuilles,
