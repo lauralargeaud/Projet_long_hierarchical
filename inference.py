@@ -375,7 +375,9 @@ def main():
                 metrics_hierarchy_batch = MetricsHierarchy(H_raw, device)
                 metrics_hierarchy_batch.compute_metrics(output, target, label_matrix, device)
                 # mettre à jour les métriques globales
-                metrics_hierarchy.update_metrics(metrics_hierarchy_batch)
+                # metrics_hierarchy.update_metrics(metrics_hierarchy_batch)
+                for key, value in metrics_hierarchy.items():
+                    metrics_hierarchy.metrics[key].update(metrics_hierarchy_batch.metrics[key].value)
                 # calculer l'accuracy top1
                 # acc1 =  topk_accuracy_logicseg(logicseg_predictions, onehot_targets)
                 # top1 += acc1
