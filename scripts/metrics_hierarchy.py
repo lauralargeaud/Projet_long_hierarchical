@@ -335,8 +335,8 @@ class MetricsHierarchy:
         acc5 = self.topk_accuracy_logicseg(probas_branches_input, onehot_targets, topk=5)
 
         # Stocker les résultats
-        self.metrics[MetricsLabels.accuracy_top1].update(acc1)
-        self.metrics[MetricsLabels.accuracy_top5].update(acc5)
+        self.metrics[MetricsLabels.accuracy_top1].update(acc1.item())
+        self.metrics[MetricsLabels.accuracy_top5].update(acc5.item())
 
 
     def reset_metrics(self):
