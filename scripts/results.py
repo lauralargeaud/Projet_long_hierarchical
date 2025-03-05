@@ -34,6 +34,29 @@ def generate_barplots(values, labels, title, filename, folder="output/img"):
     plt.savefig(os.path.join(folder, filename))
     plt.close()
 
+def generate_boxplots(values, labels, title, filename, folder="output/img"):
+    """
+    Generate boxplot.
+    """
+    print(values)
+    plt.figure(figsize=(10, 5))
+    plt.boxplot(values, labels=labels)
+    plt.xlabel('Modèles')
+    plt.ylabel('Valeurs')
+    # plt.ylim([0, 1])
+    plt.title(title)
+    plt.xticks(rotation=45)
+    
+    # for i, v in enumerate(values):
+        # plt.text(i, v + max(values) * -0.10, f"{v:.3f}", ha='center', fontsize=10, fontweight='bold')
+    
+    plt.tight_layout()
+    
+    os.makedirs(folder, exist_ok=True)
+    
+    plt.savefig(os.path.join(folder, filename))
+    plt.close()
+
 def display_models_barplots(test_output_folder, output_folder="output/img", hierarchy_filename="data/small-collomboles/hierarchy.csv"):
     """
     Generates barplots for differents metrics for differentes models.
@@ -91,14 +114,17 @@ def display_models_barplots_multiple(test_output_folder, output_folder="output/i
             for metric in metrics:
                 print(metric, name, title)
                 values[metric][name][title].append(line[metric].values[0])
-    print(labels)
     for metric, hierarchy in values.items():
         for name, data_dict in hierarchy.items():
-            data = []
+            data_barplot = []
+            data_boxplot = []
             for label in labels:
-                data.append(np.mean(data_dict[label]))
+                data_barplot.append(np.mean(data_dict[label]))
+                data_boxplot.append(data_dict[label])
                 print(metric, name, np.mean(data_dict[label]), data_dict[label])
-            generate_barplots(data, labels, f"{metric} {name}", f"{unidecode(metric).lower()}_{name}.png")
+            print(data_dict)
+            generate_barplots(data_barplot, labels, f"{metric} {name}", f"{unidecode(metric).lower()}_{name}_barplot.png")
+            generate_boxplots(data_boxplot, labels, f"{metric} {name}", f"{unidecode(metric).lower()}_{name}_boxplot.png")
 
 def show_results_from_csv_summary(filename, title, model_name, folder="output/img"):
     """
