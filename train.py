@@ -703,6 +703,9 @@ def main():
 
     # If logicSeg is used we create the class map file just before creating the dataset
     if args.logicseg:
+        # Create the class map folder if it does not exist
+        if not os.path.exists(args.class_map):
+            os.makedirs(args.class_map)
         create_class_to_labels(args.csv_tree, args.class_map, verbose=False)
 
     dataset_train = create_dataset(
