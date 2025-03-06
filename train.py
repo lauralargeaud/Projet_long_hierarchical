@@ -47,6 +47,7 @@ from timm.utils import ApexScaler, NativeScaler
 from scripts.logic_seg_utils import *
 from scripts.hierarchy_better_mistakes_utils import get_hce_tree_data
 from scripts.metrics_logicseg import topk_accuracy_logicseg
+from scripts.soft_labels_utils import compute_soft_labels, build_hierarchy_tensors
 
 
 try:
