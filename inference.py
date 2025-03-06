@@ -373,9 +373,9 @@ def main():
                 onehot_targets = get_logicseg_predictions(target, label_matrix, device) # (nb_pred, nb_feuilles) one hot encoding des feuilles cibles
                 # calculer les métriques sur les prédictions réalisées dans le batch courant
                 metrics_hierarchy_batch = MetricsHierarchy(H_raw, device)
-                metrics_hierarchy_batch.compute_metrics(output, target, label_matrix, device)
+                metrics_hierarchy.compute_metrics(output, target, label_matrix, device)
                 # mettre à jour les métriques globales
-                # metrics_hierarchy.update_metrics(metrics_hierarchy_batch)
+                metrics_hierarchy.update_metrics(metrics_hierarchy_batch)
                 for key, value in metrics_hierarchy.metrics.items():
                     metrics_hierarchy.metrics[key].update(metrics_hierarchy_batch.metrics[key].val)
                 # calculer l'accuracy top1
