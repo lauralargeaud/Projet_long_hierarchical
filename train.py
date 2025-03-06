@@ -969,6 +969,14 @@ def main():
         if args.logicseg:
             label_matrix, _, _ = get_label_matrix(args.csv_tree)
 
+        nodes_to_leaves = None
+        internal_nodes_heights = None
+        if args.softlabels:
+            nodes_to_leaves, internal_nodes_heights = build_hierarchy_tensors(
+                args.csv_tree,
+                hierarchy_levels=["species", "genus", "family", "order", "class"]
+            )
+
         for epoch in range(start_epoch, num_epochs):
             if hasattr(dataset_train, 'set_epoch'):
                 dataset_train.set_epoch(epoch)
@@ -991,7 +999,9 @@ def main():
                 model_ema=model_ema,
                 mixup_fn=mixup_fn,
                 num_updates_total=num_epochs * updates_per_epoch,
-                label_matrix=label_matrix
+                label_matrix=label_matrix,
+                nodes_to_leaves=nodes_to_leaves,
+                internal_nodes_heights=internal_nodes_heights
             )
 
             if args.distributed and args.dist_bn in ('broadcast', 'reduce'):
