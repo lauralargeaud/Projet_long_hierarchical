@@ -1094,7 +1094,9 @@ def train_one_epoch(
         model_ema=None,
         mixup_fn=None,
         num_updates_total=None,
-        label_matrix=None
+        label_matrix=None,
+        nodes_to_leaves=None,
+        internal_nodes_heights=None
 ):
     if args.mixup_off_epoch and epoch >= args.mixup_off_epoch:
         if args.prefetcher and loader.mixup_enabled:
@@ -1144,6 +1146,15 @@ def train_one_epoch(
                 input, target = mixup_fn(input, target)
         if args.channels_last:
             input = input.contiguous(memory_format=torch.channels_last)
+
+        if args.softlabels:
+            target = compute_soft_labels(
+                target,
+                nodes_to_leaves=nodes_to_leaves,
+                internal_nodes_heights=internal_nodes_heights,
+                beta=args.softlabels_beta,
+                device=device
+            )
 
         # multiply by accum steps to get equivalent for full update
         data_time_m.update(accum_steps * (time.time() - data_start_time))
