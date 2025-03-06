@@ -47,6 +47,7 @@ from timm.utils import ApexScaler, NativeScaler
 from scripts.logic_seg_utils import *
 from scripts.hierarchy_better_mistakes_utils import get_hce_tree_data
 from scripts.metrics_logicseg import topk_accuracy_logicseg
+from scripts.soft_labels_utils import compute_soft_labels, build_hierarchy_tensors
 
 
 try:
@@ -350,6 +351,8 @@ group.add_argument('--logicseg-method', default="bce",
                    help='Set the loss used to compute the error between ouput and target (ce, bce, asl, multi_bce).')
 group.add_argument('--csv-tree', default=None,
                    help='path to csv describing the tree structure of the labels.')
+group.add_argument('--softlabels', action='store_true', default=False,
+    help='Convert ground-truth labels to soft labels before calculating the loss.')
 
 # The following arguments are for implemented this way to facilitate testing, they might change in the future
 group.add_argument('--crule-loss-weight', type=float, default=0.2,
@@ -372,6 +375,8 @@ group.add_argument('--asl-thresh-shifting', type=float, default=1,
                    help='Set the threshold coef used for the probability shifting in the ASL')
 group.add_argument('--hce-alpha', type=float, default=0.1,
                    help='Set the alpha of the hce loss.')
+group.add_argument('--softlabels-beta', type=float, default=10.,
+    help='Beta parameter for soft_labels transformation')
 
 # Batch norm parameters (only works with gen_efficientnet based models currently)
 group = parser.add_argument_group('Batch norm parameters', 'Only works with gen_efficientnet based models currently.')
