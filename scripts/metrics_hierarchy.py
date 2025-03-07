@@ -345,7 +345,10 @@ class MetricsHierarchy:
         self.metrics = {key: -1 for key in self.metrics}
       
     def compute_tree_matrix(self):
-        '''Retourne une matrice contenant les noeuds triés par hauteur dans l'arbre'''
+        """
+        Retourne une matrice contenant les noeuds triés par hauteur dans l'arbre
+        """
+        pass
 
     """Fonction non mise a jour"""
     def compute_metrics(self, output, target, label_matrix, device):
