@@ -21,6 +21,7 @@ def compute_model_name(filepath):
     data = read_yaml(filepath)
     modified_logicseg = data["modified_logicseg"] if "modified_logicseg" in data else False
     logicseg = data["logicseg"]
+    softlabel = data.get("softlabels", False)
     is_logicseg = modified_logicseg or logicseg
     if is_logicseg:
         method = data["logicseg_method"]
@@ -30,6 +31,9 @@ def compute_model_name(filepath):
             return "LogicSeg (Multi BCE)", "logicseg_multibce"
         else:
             return "LogicSeg", "logicseg"
+    elif softlabel:
+        softlabels_beta = data["softlabels_beta"]
+        return f"Soft Label (Beta={softlabels_beta})", f"soft_label_{str(softlabels_beta).replace(".", "_")}"
     else:
         hce = data["hce_loss"]
         bce = data["bce_loss"]

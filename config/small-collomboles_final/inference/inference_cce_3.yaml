@@ -1,0 +1,11 @@
+model: resnet50
+checkpoint: "output/train_bis/CCE__3/model_best.pth.tar"
+data_dir: "data/small-collomboles/dataset/test"
+class_map: "data/small-collomboles/class_mapping.txt"
+csv_tree: "data/small-collomboles/hierarchy.csv"
+num_classes: 79
+
+results_dir: "output/test_bis/cce_3"
+results_file: "test_cce_3"
+
+conf_matrix: True

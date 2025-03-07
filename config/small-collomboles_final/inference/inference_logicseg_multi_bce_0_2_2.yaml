@@ -1,0 +1,13 @@
+model: resnet50
+checkpoint: "output/train_bis/LOGICSEG_MULTI_BCE_0_2__2/model_best.pth.tar"
+data_dir: "data/small-collomboles/dataset/test"
+num_classes: 136
+
+results_dir: "output/test_bis/logicseg_multi_bce_0_2_2"
+results_file: "test_logicseg_multi_bce_0_2_2"
+
+conf_matrix: True
+
+csv_tree: "data/small-collomboles/hierarchy.csv"
+logicseg: True
+class_map: "classmap/classmap.pkl"
