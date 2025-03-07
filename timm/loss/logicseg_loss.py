@@ -2,11 +2,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from logicseg.c_rule_loss import CRuleLoss
-from logicseg.d_rule_loss import DRuleLoss
-from logicseg.e_rule_loss import ERuleLoss
-from logicseg.asym_loss import ASL
-from logicseg.multi_bce_loss import MultiBCE
+from timm.loss.logicseg.c_rule_loss import CRuleLoss
+from timm.loss.logicseg.d_rule_loss import DRuleLoss
+from timm.loss.logicseg.e_rule_loss import ERuleLoss
+from timm.loss.logicseg.asym_loss import ASL
+from timm.loss.logicseg.multi_bce_loss import MultiBCE
 
 class LogicSegLoss(nn.Module):
     def __init__(self, method, H_raw, P_raw, M_raw, La_raw, alpha_c, alpha_d, alpha_e, alpha_target_loss, alpha_layer, gamma_pos = 1, gamma_neg = 1, thresh_shifting = 0): # H_raw is a np array
