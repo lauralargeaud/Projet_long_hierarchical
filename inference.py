@@ -182,6 +182,8 @@ parser.add_argument('--exclude-output', action='store_true', default=False,
 parser.add_argument('--no-console-results', action='store_true', default=False,
                     help='disable printing the inference results to the console')
 
+
+
 def _parse_args():
     # Do we have a config file to parse?
     args_config, remaining = config_parser.parse_known_args()
@@ -335,14 +337,16 @@ def main():
             # top5 = 0
             H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=False)
             La_raw = get_layer_matrix(args.csv_tree, verbose=False) 
+
             if args.message_passing:
                     message_passing = MessagePassing(H_raw, P_raw, M_raw, La_raw, args.message_passing_iter_count, device)
             metrics_hierarchy = MetricsHierarchy(H_raw, device)
-            # metrics_hierarchy.setZero()
-            # construire la laebl_matrix
+
+            # construire la label_matrix
             label_matrix, _, index_to_node = get_label_matrix(args.csv_tree)
             class_to_label = get_class_to_label(label_matrix, index_to_node)
             classes_labels = np.array(list(class_to_label.keys()))
+
             # données utiles pour la matrice de confusion pour chaque hauteur de l'arbre
             La = torch.tensor(La_raw).to(device) # (hauteur, nb_noeuds); La[i,j] = 1 si le noeud d'index j est de profondeur i, sinon 0
             h = La.shape[0] # hauteur de l'
@@ -372,12 +376,10 @@ def main():
                 # construire le label onehot associé à chaque branche
                 onehot_targets = get_logicseg_predictions(target, label_matrix, device) # (nb_pred, nb_feuilles) one hot encoding des feuilles cibles
                 # calculer les métriques sur les prédictions réalisées dans le batch courant
-                metrics_hierarchy_batch = MetricsHierarchy(H_raw, device)
-                metrics_hierarchy.compute_metrics(output, target, label_matrix, device)
+                metrics_hierarchy.compute_all_metrics(logicseg_predictions, onehot_targets, output, La)
+                # 
+                
                 # mettre à jour les métriques globales
-                metrics_hierarchy.update_metrics(metrics_hierarchy_batch)
-                for key, value in metrics_hierarchy.metrics.items():
-                    metrics_hierarchy.metrics[key].update(metrics_hierarchy_batch.metrics[key].val)
                 # calculer l'accuracy top1
                 # acc1 =  topk_accuracy_logicseg(logicseg_predictions, onehot_targets)
                 # top1 += acc1
@@ -445,11 +447,6 @@ def main():
                 _logger.info('Predict: [{0}/{1}] Time {batch_time.val:.3f} ({batch_time.avg:.3f})'.format(
                     batch_idx, len(loader), batch_time=batch_time))
 
-        # if args.logicseg:
-        #     # mettre à jour les variables des métriques
-        #     # top1 = top1 / nb_batches
-        #     # top5 = top5 / nb_batches
-        #     metrics_hierarchy.divide(nb_batches)
 
     all_indices = np.concatenate(all_indices, axis=0) if all_indices else None
     all_labels = np.concatenate(all_labels, axis=0) if all_labels else None
@@ -540,10 +537,10 @@ def main():
         if args.logicseg:
             print(f'--result')
             with open(os.path.join(args.results_dir, "metrics_results.txt"), "w") as fichier:
-                for key, value in metrics_hierarchy.metrics.items():
-                    print(key + ": ", value.avg)
-                    # écrire aussi dans le fichier des résultats
-                    fichier.write(key + ": " + str(value.avg) + "\n")
+                metrics_str = metrics_hierarchy.get_metrics_string()
+                fichier.write(metrics_str)
+                print(metrics_str)
+
             cm = load_confusion_matrix(os.path.join(args.results_dir, "cm_branch.out"))
             cm_normalized = load_confusion_matrix(os.path.join(args.results_dir, "cm_norm_branch.out"))
             output_filename = "cm_branches.jpg"

@@ -343,6 +343,17 @@ class MetricsHierarchy:
         Réinitialise les métriques stockées.
         """
         self.metrics = {key: -1 for key in self.metrics}
+
+    def setZero(self):
+        """Défini la valeur de toutes les métriques à 0"""
+        self.metrics = {key: 0 for key in self.metrics}
+
+    '''Fonction non mise a jour'''
+    def divide(self, n):
+        """Diviser toutes les métriques par n."""
+        for key, value in self.metrics.items():
+            self.metrics[key] = value / n
+
       
     def compute_tree_matrix(self):
         """

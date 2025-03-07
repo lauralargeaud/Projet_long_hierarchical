@@ -14,13 +14,13 @@ def test_loss_forward():
     alpha_d = 1
     alpha_e = 1
     alpha_bce = 1
-    criterion = LogicSegLoss(H_raw, P_raw, M_raw, alpha_c, alpha_d, alpha_e, alpha_bce)
+    criterion = LogicSegLoss("bce", H_raw, P_raw, M_raw, [], alpha_c, alpha_d, alpha_e, alpha_bce, [])
     
     y_true = torch.tensor([[1.0, 1.0, 0.01, 1.0, 0.01, 0.01, 0.01], [1.0, 0.01, 1.0, 0.01, 0.01, 1.0, 0.01]], dtype=torch.float32)
 
 
     # cas de prédictions parfaites
-    y_pred = torch.tensor([[0.99, 0.99, 0.01, 0.99, 0.01, 0.01, 0.01], [0.99, 0.01, 0.99, 0.01, 0.01, 0.99, 0.01]], dtype=torch.float32)
+    y_pred = torch.tensor([[1.0, 1.0, 0.01, 1.0, 0.01, 0.01, 0.01], [1.0, 0.01, 1.0, 0.01, 0.01, 1.0, 0.01]], dtype=torch.float32)
     print("Cas de préditions parfaites:")
     loss = criterion.forward(y_pred, y_true, True)
 
