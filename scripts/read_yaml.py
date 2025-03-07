@@ -23,7 +23,7 @@ def compute_model_name(filepath):
     logicseg = data["logicseg"]
     is_logicseg = modified_logicseg or logicseg
     if is_logicseg:
-        method = data["method"]
+        method = data["logicseg_method"]
         if method == "bce":
             return "LogicSeg (BCE)", "logicseg_bce"
         elif method == "multi_bce":

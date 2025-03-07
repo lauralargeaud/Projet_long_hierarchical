@@ -12,7 +12,7 @@ from scripts.read_yaml import compute_model_name
 from scripts.hierarchy_better_mistakes_utils import read_csv
 from scripts.utils import read_csv, get_parents, get_taxon_level
 
-def generate_barplots(values, labels, title, filename, folder="output/img"):
+def generate_barplots(values, labels, title, filename, output_folder="output/img"):
     """
     Generate barplot.
     """
@@ -29,12 +29,12 @@ def generate_barplots(values, labels, title, filename, folder="output/img"):
     
     plt.tight_layout()
     
-    os.makedirs(folder, exist_ok=True)
+    os.makedirs(output_folder, exist_ok=True)
     
-    plt.savefig(os.path.join(folder, filename))
+    plt.savefig(os.path.join(output_folder, filename))
     plt.close()
 
-def generate_boxplots(values, labels, title, filename, folder="output/img"):
+def generate_boxplots(values, labels, title, filename, output_folder="output/img"):
     """
     Generate boxplot.
     """
@@ -52,9 +52,9 @@ def generate_boxplots(values, labels, title, filename, folder="output/img"):
     
     plt.tight_layout()
     
-    os.makedirs(folder, exist_ok=True)
+    os.makedirs(output_folder, exist_ok=True)
     
-    plt.savefig(os.path.join(folder, filename))
+    plt.savefig(os.path.join(output_folder, filename))
     plt.close()
 
 def display_models_barplots(test_output_folder, output_folder="output/img", hierarchy_filename="data/small-collomboles/hierarchy.csv"):
@@ -83,7 +83,8 @@ def display_models_barplots(test_output_folder, output_folder="output/img", hier
                 values[metric][name].append(line[metric].values[0])
     for metric, hierarchy in values.items():
         for name, data in hierarchy.items():
-            generate_barplots(data, labels, f"{metric} {name}", f"{unidecode(metric).lower()}_{name}.png")
+            img_output_folder = os.path.join(output_folder, name, metric)
+            generate_barplots(data, labels, f"{metric} {name}", f"{unidecode(metric).lower()}_{name}.png", output_folder=img_output_folder)
 
 def display_models_barplots_multiple(test_output_folder, output_folder="output/img", hierarchy_filename="data/small-collomboles/hierarchy.csv"):
     """
@@ -123,13 +124,16 @@ def display_models_barplots_multiple(test_output_folder, output_folder="output/i
                 data_boxplot.append(data_dict[label])
                 print(metric, name, np.mean(data_dict[label]), data_dict[label])
             print(data_dict)
-            generate_barplots(data_barplot, labels, f"{metric} {name}", f"{unidecode(metric).lower()}_{name}_barplot.png")
-            generate_boxplots(data_boxplot, labels, f"{metric} {name}", f"{unidecode(metric).lower()}_{name}_boxplot.png")
+            img_output_folder = os.path.join(output_folder, name, metric)
+            generate_barplots(data_barplot, labels, f"{metric} {name}", f"{unidecode(metric).lower()}_{name}_barplot.png", output_folder=img_output_folder)
+            generate_boxplots(data_boxplot, labels, f"{metric} {name}", f"{unidecode(metric).lower()}_{name}_boxplot.png", output_folder=img_output_folder)
 
-def show_results_from_csv_summary(filename, title, model_name, folder="output/img"):
+def show_results_from_csv_summary(filename, title, model_name, output_folder="output/img"):
     """
     Show results from summary csv produced by TIMM.
     """
+    os.makedirs(output_folder, exist_ok=True)
+
     data = pd.read_csv(filename)
 
     fig, ax1 = plt.subplots(figsize=(10, 6))
@@ -141,7 +145,7 @@ def show_results_from_csv_summary(filename, title, model_name, folder="output/im
     ax1.legend(loc="upper right")
     ax1.set_title(f'{title} Training and Evaluation Loss')
     ax1.grid()
-    fig.savefig(os.path.join(folder, f'loss_summary_{model_name.lower().replace(" ", "_")}'))
+    fig.savefig(os.path.join(output_folder, f'loss_summary_{model_name.lower().replace(" ", "_")}'))
 
     fig, ax2 = plt.subplots(figsize=(10, 6))
     ax2.plot(data['epoch'], data['eval_top1'], label='Eval Top-1 Accuracy', color='green')
@@ -157,7 +161,8 @@ def show_results_from_csv_summary(filename, title, model_name, folder="output/im
     ax2.set_title(f"{title} Accuracy")
     ax2.grid()
 
-    fig.savefig(os.path.join(folder, f'acc_summary_{model_name.lower().replace(" ", "_")}'))
+
+    fig.savefig(os.path.join(output_folder, f'acc_summary_{model_name.lower().replace(" ", "_")}'))
 
 def show_results_from_csv_summarys(filename1, filename2, model_name1, model_name2, folder="output/img"):
     """
@@ -199,7 +204,7 @@ def show_results_from_csv_summarys(filename1, filename2, model_name1, model_name
 
     plt.show()
 
-def display_models_summary(train_output_folder, output_folder="output/img"):
+def display_models_summary(train_output_folder, output_folder="output/img/summary"):
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
@@ -207,7 +212,8 @@ def display_models_summary(train_output_folder, output_folder="output/img"):
         summary_path = os.path.join(train_output_folder, folder, "summary.csv")
         args_path = os.path.join(train_output_folder, folder, "args.yaml")
         title, model_filename = compute_model_name(args_path)
-        show_results_from_csv_summary(summary_path, title, model_filename, output_folder)
+        model_output_folder = os.path.join(output_folder, folder)
+        show_results_from_csv_summary(summary_path, title, model_filename, model_output_folder)
 
 def load_confusion_matrix(filename):
     """
