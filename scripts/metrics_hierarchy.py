@@ -341,6 +341,7 @@ class MetricsHierarchy:
         """Défini la valeur de toutes les métriques à 0"""
         self.metrics = {key: 0 for key in self.metrics}
 
+    '''Fonction non mise a jour'''
     def divide(self, n):
         """Diviser toutes les métriques par n."""
         for key, value in self.metrics.items():
