@@ -336,15 +336,17 @@ def main():
             # top1 = 0
             # top5 = 0
             H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=False)
+            La_raw = get_layer_matrix(args.csv_tree, verbose=False) 
 
             if args.message_passing:
                     message_passing = MessagePassing(H_raw, P_raw, M_raw, La_raw, args.message_passing_iter_count, device)
             metrics_hierarchy = MetricsHierarchy(H_raw, device)
-            # metrics_hierarchy.setZero()
-            # construire la laebl_matrix
+
+            # construire la label_matrix
             label_matrix, _, index_to_node = get_label_matrix(args.csv_tree)
             class_to_label = get_class_to_label(label_matrix, index_to_node)
             classes_labels = np.array(list(class_to_label.keys()))
+
             # données utiles pour la matrice de confusion pour chaque hauteur de l'arbre
             La = torch.tensor(La_raw).to(device) # (hauteur, nb_noeuds); La[i,j] = 1 si le noeud d'index j est de profondeur i, sinon 0
             h = La.shape[0] # hauteur de l'
@@ -374,7 +376,7 @@ def main():
                 # construire le label onehot associé à chaque branche
                 onehot_targets = get_logicseg_predictions(target, label_matrix, device) # (nb_pred, nb_feuilles) one hot encoding des feuilles cibles
                 # calculer les métriques sur les prédictions réalisées dans le batch courant
-                metrics_hierarchy.compute_all_metrics(logicseg_predictions, onehot_targets, output, La_raw)
+                metrics_hierarchy.compute_all_metrics(logicseg_predictions, onehot_targets, output, La)
                 
                 # mettre à jour les métriques globales
                 # calculer l'accuracy top1
