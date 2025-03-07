@@ -377,6 +377,7 @@ def main():
                 onehot_targets = get_logicseg_predictions(target, label_matrix, device) # (nb_pred, nb_feuilles) one hot encoding des feuilles cibles
                 # calculer les métriques sur les prédictions réalisées dans le batch courant
                 metrics_hierarchy.compute_all_metrics(logicseg_predictions, onehot_targets, output, La)
+                # 
                 
                 # mettre à jour les métriques globales
                 # calculer l'accuracy top1
@@ -536,7 +537,9 @@ def main():
         if args.logicseg:
             print(f'--result')
             with open(os.path.join(args.results_dir, "metrics_results.txt"), "w") as fichier:
-                fichier.write(metrics_hierarchy.get_metrics_string())
+                metrics_str = metrics_hierarchy.get_metrics_string()
+                fichier.write(metrics_str)
+                print(metrics_str)
 
             cm = load_confusion_matrix(os.path.join(args.results_dir, "cm_branch.out"))
             cm_normalized = load_confusion_matrix(os.path.join(args.results_dir, "cm_norm_branch.out"))
