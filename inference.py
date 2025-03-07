@@ -331,12 +331,13 @@ def main():
     use_probs = args.output_type == 'prob'
     metrics_hierarchy = None
     nb_batches = 0
+    print(to_label)
     with torch.no_grad():
         if args.logicseg:
             # top1 = 0
             # top5 = 0
             H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=False)
-            La_raw = get_layer_matrix(args.csv_tree, verbose=False) 
+            La_raw = get_layer_matrix(args.csv_tree, verbose=False)
 
             if args.message_passing:
                     message_passing = MessagePassing(H_raw, P_raw, M_raw, La_raw, args.message_passing_iter_count, device)

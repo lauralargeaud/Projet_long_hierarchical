@@ -132,3 +132,10 @@ def get_branches_label(most_probable_branches_indices_in, most_probable_branches
     for i in range(most_probable_branches_indices_in.shape[1]):
       predicted_classes[p,i] = "pred: " + classes[most_probable_branches_indices_in[p,i]] + ", label:  " + classes[most_probable_branches_indices_target[p,i]]
   return predicted_classes
+
+
+def add_nodes_to_output(path_to_csv_tree, output):
+  H_raw, P_raw, M_raw = get_tree_matrices(path_to_csv_tree, verbose=False)
+  La_raw = get_layer_matrix(path_to_csv_tree, verbose=False)
+
+  
