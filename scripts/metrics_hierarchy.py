@@ -313,30 +313,29 @@ class MetricsHierarchy:
         
         if (topk == 5):
             self.metrics[MetricsLabels.accuracy_top5].update(acc)
-        return acc
 
-    def accuracy_topk_1_5(self, output, target, label_matrix, device):
-        """
-        Calcule la précision top-1 et top-5 pour la segmentation logique.
+    # def accuracy_topk_1_5(self, output, target, label_matrix, device):
+    #     """
+    #     Calcule la précision top-1 et top-5 pour la segmentation logique.
 
-        Args:
-            output (torch.Tensor): Prédictions du modèle (logits).
-            target (torch.Tensor): Labels réels.
-            label_matrix (torch.Tensor): Matrice des labels.
+    #     Args:
+    #         output (torch.Tensor): Prédictions du modèle (logits).
+    #         target (torch.Tensor): Labels réels.
+    #         label_matrix (torch.Tensor): Matrice des labels.
 
-        """
-        probas_branches_input = get_logicseg_predictions(output, label_matrix, device)
-        onehot_targets = get_logicseg_predictions(target, label_matrix, device)
+    #     """
+    #     probas_branches_input = get_logicseg_predictions(output, label_matrix, device)
+    #     onehot_targets = get_logicseg_predictions(target, label_matrix, device)
 
-        # Top-1 Accuracy
-        acc1 = self.topk_accuracy_logicseg(probas_branches_input, onehot_targets, topk=1)
+    #     # Top-1 Accuracy
+    #     acc1 = self.topk_accuracy_logicseg(probas_branches_input, onehot_targets, topk=1)
 
-        # Top-5 Accuracy
-        acc5 = self.topk_accuracy_logicseg(probas_branches_input, onehot_targets, topk=5)
+    #     # Top-5 Accuracy
+    #     acc5 = self.topk_accuracy_logicseg(probas_branches_input, onehot_targets, topk=5)
 
-        # Stocker les résultats
-        self.metrics[MetricsLabels.accuracy_top1] = acc1
-        self.metrics[MetricsLabels.accuracy_top5] = acc5
+    #     # Stocker les résultats
+    #     self.metrics[MetricsLabels.accuracy_top1].update(acc1.item())
+    #     self.metrics[MetricsLabels.accuracy_top5].update(acc5.item())
 
 
     def reset_metrics(self):
@@ -344,25 +343,9 @@ class MetricsHierarchy:
         Réinitialise les métriques stockées.
         """
         self.metrics = {key: -1 for key in self.metrics}
-
-    def setZero(self):
-        """
-        Défini la valeur de toutes les métriques à 0.
-        """
-        self.metrics = {key: 0 for key in self.metrics}
-
-    def divide(self, n):
-        """
-        Diviser toutes les métriques par n.
-        """
-        for key, value in self.metrics.items():
-            self.metrics[key] = value / n
-
       
     def compute_tree_matrix(self):
         '''Retourne une matrice contenant les noeuds triés par hauteur dans l'arbre'''
-
-    
 
     """Fonction non mise a jour"""
     def compute_metrics(self, output, target, label_matrix, device):
@@ -370,9 +353,12 @@ class MetricsHierarchy:
         Compute all the define metrics using the given data.
         """
         label_matrix = torch.tensor(label_matrix, dtype=torch.float32).to(self.device)
-        # self.hierarchical_distance_mistake(output, target, label_matrix)
-        # self.topk_hierarchical_distance_mistake(output, target, label_matrix)
-        # self.c_rule_respect_percentage(output, target, label_matrix)
-        # self.d_rule_respect_percentage(output, target, label_matrix)
-        # self.e_rule_respect_percentage(output, target, label_matrix)
-        self.accuracy_topk_1_5(output, target, label_matrix, device)
+        self.hierarchical_distance_mistake(output, target)
+        self.topk_hierarchical_distance_mistake(output, target, k=1)
+        self.topk_hierarchical_distance_mistake(output, target)
+        self.c_rule_respect_percentage(output, label_matrix)
+        self.d_rule_respect_percentage(output, label_matrix)
+        self.e_rule_respect_percentage(output)
+        # self.accuracy_topk_1_5(output, target, label_matrix, device)
+        self.topk_accuracy_logicseg(output, target, topk=1)
+        self.topk_accuracy_logicseg(output, target, topk=5)

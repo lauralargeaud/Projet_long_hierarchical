@@ -10,7 +10,9 @@ import numpy as np
 def compute_soft_labels(y_true: torch.Tensor, 
                        beta: torch.float,
                        nodes_to_leaves: torch.Tensor,
-                       internal_nodes_heights: torch.Tensor):
+                       internal_nodes_heights: torch.Tensor,
+                       device: torch.device
+                       ) -> torch.Tensor:
   """
   Calcule le soft label en utilisant la matrice des hauteurs LCA.
 
@@ -23,7 +25,7 @@ def compute_soft_labels(y_true: torch.Tensor,
   Returns:
       torch.Tensor: Tenseur des soft labels (batch_size, num_classes)
   """
-  batch_size = y_true.shape[0]  # Taille du batch
+  y_true = y_true.to(device)
   
   # Trouver les indices des labels y_true
   y_true_idx = torch.argmax(y_true, dim=1) # (batch_size,)
@@ -68,7 +70,7 @@ def build_hierarchy_tensors(hierarchy_csv: str,
 
     # Créer les dictionnaires d'indexation des nœuds internes et des feuilles
     internal_node_to_index, leaf_to_index, internal_nodes_heights = build_index_nodes(
-        df_hierarchy, hierarchy_levels)
+        df_hierarchy, hierarchy_levels, device=device)
 
     internal_nodes_idx, leaves_idx = map_and_vectorize_hierarchy(
         df_hierarchy, hierarchy_levels, internal_node_to_index, leaf_to_index, device)
@@ -90,7 +92,7 @@ def build_hierarchy_tensors(hierarchy_csv: str,
 
 def build_index_nodes(df_hierarchy: pd.DataFrame, 
                       hierarchy_levels: list[str], 
-                      device="cpu"
+                      device: torch.device
                       ) -> tuple[dict[str, int], dict[str, int], torch.Tensor]:
     """
     Génère les dictionnaires d'indexation des noeuds internes et des feuilles,

@@ -22,16 +22,16 @@ def test_messsage_passing():
     La_raw = [[1.0,0,0,0,0,0,0], 
               [0,1.0,1.0,0,0,0,0],
               [0,0,0,1.0,1.0,1.0,1.0]]
-    y_pred = torch.tensor([[0.9, 1, 0, 1, 0, 0, 0],
-                           [1, 1, 0, 0, 0, 0, 0],
+    y_pred = torch.tensor([[1, 1, 0, 1, 0, 0, 0],
+                           [1, 1, 0.1, 0.1, 0.1, 0.1, 0.1],
                            [0.9, 0.1, 0.5, 0.99, 0.01, 0.5, 0.01], 
                            [0.9, 0.9, 0.05, 0.99, 0.01, 0.01, 0.01]], dtype=torch.float32)
 
-    mess_pass = MessagePassing(H_raw, P_raw, M_raw, La_raw, 1, "cpu")
+    mess_pass = MessagePassing(H_raw, P_raw, M_raw, La_raw, 2, "cpu")
 
     y_pred = mess_pass.process(y_pred)
 
-    print(y_pred)
+    print("y_pred", y_pred)
 
 test_messsage_passing()
 
