@@ -331,8 +331,8 @@ def main():
     use_probs = args.output_type == 'prob'
     metrics_hierarchy = None
     nb_batches = 0
-    print("to label: ")
-    print(to_label)
+
+
     with torch.no_grad():
         if args.logicseg:
             # top1 = 0
@@ -363,6 +363,7 @@ def main():
             if use_probs:
                 output = output.softmax(-1)
 
+            print(output)
             if args.conf_matrix and not args.logicseg:
                 _, ids_preds = torch.max(output, 1)
                 cm_all_ids_preds.append(ids_preds.cpu().numpy())
