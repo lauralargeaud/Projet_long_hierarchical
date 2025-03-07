@@ -331,6 +331,7 @@ def main():
     use_probs = args.output_type == 'prob'
     metrics_hierarchy = None
     nb_batches = 0
+    print("to label: ")
     print(to_label)
     with torch.no_grad():
         if args.logicseg:
