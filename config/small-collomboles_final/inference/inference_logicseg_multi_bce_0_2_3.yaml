@@ -1,10 +1,10 @@
 model: resnet50
-checkpoint: "output/train/LOGICSEG_BCE/model_best.pth.tar"
+checkpoint: "output/train_bis/LOGICSEG_MULTI_BCE_0_2__3/model_best.pth.tar"
 data_dir: "data/small-collomboles/dataset/test"
 num_classes: 136
 
-results_dir: "output/test/logicseg_bce"
-results_file: "test_logicseg_bce"
+results_dir: "output/test_bis/logicseg_multi_bce_0_2_3"
+results_file: "test_logicseg_multi_bce_0_2_3"
 
 conf_matrix: True
 

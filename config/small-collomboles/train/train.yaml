@@ -31,7 +31,7 @@ crule_loss_weight: 0.2
 drule_loss_weight: 0.2
 erule_loss_weight: 0.2
 bce_loss_weight: 1
-method: "multi_bce"
+logicseg_method: "multi_bce"
 
 # Augmentation
 drop_path: 0.05 

@@ -11,6 +11,9 @@ from scripts.utils import *
 from scripts.logic_seg_utils import *
 
 def test_hce():
+    """
+    Test HCE loss.
+    """
     tree_filename = "data/small-collomboles/hierarchy_test.csv"
     tree_lines = read_csv(tree_filename)
     tree_lines_without_names = tree_lines[1:]
@@ -52,6 +55,9 @@ def test_hce():
     print("Valeur de la perte HXE :", loss_value.item())
 
 def test_modified_logiqseg_loss():
+    """
+    Test multi BCE loss of logicseg.
+    """
     tree_filename = "/mnt/c/Users/rubcr/OneDrive/Bureau/projet_long/pytorch-image-models-bees/scripts/data_test/hierarchy_test.csv"
     La_raw = get_layer_matrix(tree_filename)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -71,34 +77,3 @@ def test_modified_logiqseg_loss():
     loss2 = loss_fn.forward_old(y_pred, target)
     print("Valeur de la perte 1:", loss1.item())
     print("Valeur de la perte 2:", loss2.item())
-
-
-def print_results():
-    # filename_cce = "output/train/CCE-resnet50_a1_in1k/summary.csv"
-    # filename_hce_0_1 = "output/train/HCE-a0.1-resnet50_a1_in1k/summary.csv"
-    # filename_hce_0_5 = "output/train/HCE-a0.5-resnet50_a1_in1k/summary.csv"
-    # show_results_from_csv_summary_cce_hce_alpha(filename_cce, filename_hce_0_1, filename_hce_0_5)
-    filename_classes = "data/small-collomboles/class_mapping.txt"
-    classes = load_classnames(filename_classes)
-
-    hierarchy_filename = "data/small-collomboles/hierarchy.csv"
-    hierarchy_lines = read_csv(hierarchy_filename)
-    hierarchy_lines_without_names = hierarchy_lines[1:]
-    parents = get_parents(hierarchy_lines_without_names)
-    hierarchy_names = hierarchy_lines[0]
-    hierarchy_names.reverse()
-    output_folder_bce = "output/test/bce"
-    output_folder_cce = "output/test/cce"
-    output_folder_hce_0_1 = "output/test/hce_0_1"
-    output_folder_hce_0_5 = "output/test/hce_0_5"
-    save_confusion_matrix_and_metrics(output_folder_bce, "bce", classes, parents, hierarchy_names)
-    save_confusion_matrix_and_metrics(output_folder_cce, "cce", classes, parents, hierarchy_names)
-    save_confusion_matrix_and_metrics(output_folder_hce_0_1, "hce_0_1", classes, parents, hierarchy_names)
-    save_confusion_matrix_and_metrics(output_folder_hce_0_5, "hce_0_5", classes, parents, hierarchy_names)
-
-if __name__ == "__main__":
-    # test_hce()
-    # print_results()
-    # test_modified_logiqseg_loss()
-    display_models_summary("output/train")
-    display_models_barplots("output/test", output_folder="output/img")

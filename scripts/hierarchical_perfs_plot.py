@@ -119,10 +119,7 @@ def get_custom_color_list(saturation_factor=1.0):
 
     return color_list
 
-
-# Usage Example:
-run = False
-if run:
+if __name__ == "__main__":
     color_list = get_custom_color_list(saturation_factor=1.25)
     plot_hierarchical_perfs(perfs_csv="test.csv",
                             metric_to_plot="F1-score",

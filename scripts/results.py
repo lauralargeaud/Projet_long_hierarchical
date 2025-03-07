@@ -6,34 +6,61 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-import csv
 from sklearn.preprocessing import normalize
 
 from scripts.read_yaml import compute_model_name
 from scripts.hierarchy_better_mistakes_utils import read_csv
+from scripts.utils import read_csv, get_parents, get_taxon_level
 
-def generate_barplots(values, labels, title, filename, folder="output/img/"):
+def generate_barplots(values, labels, title, filename, output_folder="output/img"):
+    """
+    Generate barplot.
+    """
     plt.figure(figsize=(10, 5))
     plt.bar(labels, values, color='skyblue')
-    plt.xlabel('Catégories')
+    plt.xlabel('Modèles')
     plt.ylabel('Valeurs')
+    plt.ylim([0, 1])
     plt.title(title)
     plt.xticks(rotation=45)
     
-    # Ajouter les valeurs au-dessus des barres
     for i, v in enumerate(values):
         plt.text(i, v + max(values) * -0.10, f"{v:.3f}", ha='center', fontsize=10, fontweight='bold')
     
     plt.tight_layout()
     
-    # Vérifier si le dossier existe, sinon le créer
-    os.makedirs(folder, exist_ok=True)
+    os.makedirs(output_folder, exist_ok=True)
     
-    plt.savefig(os.path.join(folder, filename))
-    plt.close()  # Fermer la figure après sauvegarde pour éviter des problèmes d'affichage
+    plt.savefig(os.path.join(output_folder, filename))
+    plt.close()
 
+def generate_boxplots(values, labels, title, filename, output_folder="output/img"):
+    """
+    Generate boxplot.
+    """
+    print(values)
+    plt.figure(figsize=(10, 5))
+    plt.boxplot(values, labels=labels)
+    plt.xlabel('Modèles')
+    plt.ylabel('Valeurs')
+    # plt.ylim([0, 1])
+    plt.title(title)
+    plt.xticks(rotation=45)
+    
+    # for i, v in enumerate(values):
+        # plt.text(i, v + max(values) * -0.10, f"{v:.3f}", ha='center', fontsize=10, fontweight='bold')
+    
+    plt.tight_layout()
+    
+    os.makedirs(output_folder, exist_ok=True)
+    
+    plt.savefig(os.path.join(output_folder, filename))
+    plt.close()
 
 def display_models_barplots(test_output_folder, output_folder="output/img", hierarchy_filename="data/small-collomboles/hierarchy.csv"):
+    """
+    Generates barplots for differents metrics for differentes models.
+    """
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
@@ -44,7 +71,6 @@ def display_models_barplots(test_output_folder, output_folder="output/img", hier
     values = {metric: {hierarchy_name: [] for hierarchy_name in hierarchy_names} for metric in metrics}
     labels = []
     for folder in os.listdir(test_output_folder):
-        print(folder)
         csv_path = os.path.join(test_output_folder, folder, "metrics_all.csv")
         args_path = os.path.join(test_output_folder, folder, "args.yaml")
         title, _ = compute_model_name(args_path)
@@ -57,12 +83,57 @@ def display_models_barplots(test_output_folder, output_folder="output/img", hier
                 values[metric][name].append(line[metric].values[0])
     for metric, hierarchy in values.items():
         for name, data in hierarchy.items():
-            generate_barplots(data, labels, f"{metric} {name}", f"{unidecode(metric).lower()}_{name}.png")
+            img_output_folder = os.path.join(output_folder, name, metric)
+            generate_barplots(data, labels, f"{metric} {name}", f"{unidecode(metric).lower()}_{name}.png", output_folder=img_output_folder)
 
-def show_results_from_csv_summary(filename, title, model_name, folder="output/img"):
+def display_models_barplots_multiple(test_output_folder, output_folder="output/img", hierarchy_filename="data/small-collomboles/hierarchy.csv"):
+    """
+    Generates barplots for differents metrics for differentes models.
+    """
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+
+    hierarchy_lines = read_csv(hierarchy_filename)
+    hierarchy_names = hierarchy_lines[0]
+    
+    metrics = ["Précision", "Rappel", "F1-score"]
+    labels = set()
+    for folder in os.listdir(test_output_folder):
+        csv_path = os.path.join(test_output_folder, folder, "metrics_all.csv")
+        args_path = os.path.join(test_output_folder, folder, "args.yaml")
+        title, _ = compute_model_name(args_path)
+        labels.add(title)
+    labels = sorted(list(labels))
+    values = {metric: {hierarchy_name: {label: [] for label in labels} for hierarchy_name in hierarchy_names} for metric in metrics}
+    for folder in sorted(os.listdir(test_output_folder)):
+        csv_path = os.path.join(test_output_folder, folder, "metrics_all.csv")
+        args_path = os.path.join(test_output_folder, folder, "args.yaml")
+        title, _ = compute_model_name(args_path)
+        df = pd.read_csv(csv_path)
+        for name in hierarchy_names:
+            line = df[(df['Etage'] == name) & (df['Classe'] == 'Moyenne')]
+            for metric in metrics:
+                print(metric, name, title)
+                values[metric][name][title].append(line[metric].values[0])
+    for metric, hierarchy in values.items():
+        for name, data_dict in hierarchy.items():
+            data_barplot = []
+            data_boxplot = []
+            for label in labels:
+                data_barplot.append(np.mean(data_dict[label]))
+                data_boxplot.append(data_dict[label])
+                print(metric, name, np.mean(data_dict[label]), data_dict[label])
+            print(data_dict)
+            img_output_folder = os.path.join(output_folder, name, metric)
+            generate_barplots(data_barplot, labels, f"{metric} {name}", f"{unidecode(metric).lower()}_{name}_barplot.png", output_folder=img_output_folder)
+            generate_boxplots(data_boxplot, labels, f"{metric} {name}", f"{unidecode(metric).lower()}_{name}_boxplot.png", output_folder=img_output_folder)
+
+def show_results_from_csv_summary(filename, title, model_name, output_folder="output/img"):
     """
     Show results from summary csv produced by TIMM.
     """
+    os.makedirs(output_folder, exist_ok=True)
+
     data = pd.read_csv(filename)
 
     fig, ax1 = plt.subplots(figsize=(10, 6))
@@ -74,7 +145,7 @@ def show_results_from_csv_summary(filename, title, model_name, folder="output/im
     ax1.legend(loc="upper right")
     ax1.set_title(f'{title} Training and Evaluation Loss')
     ax1.grid()
-    fig.savefig(os.path.join(folder, f'loss_summary_{model_name.lower().replace(" ", "_")}'))
+    fig.savefig(os.path.join(output_folder, f'loss_summary_{model_name.lower().replace(" ", "_")}'))
 
     fig, ax2 = plt.subplots(figsize=(10, 6))
     ax2.plot(data['epoch'], data['eval_top1'], label='Eval Top-1 Accuracy', color='green')
@@ -90,7 +161,8 @@ def show_results_from_csv_summary(filename, title, model_name, folder="output/im
     ax2.set_title(f"{title} Accuracy")
     ax2.grid()
 
-    fig.savefig(os.path.join(folder, f'acc_summary_{model_name.lower().replace(" ", "_")}'))
+
+    fig.savefig(os.path.join(output_folder, f'acc_summary_{model_name.lower().replace(" ", "_")}'))
 
 def show_results_from_csv_summarys(filename1, filename2, model_name1, model_name2, folder="output/img"):
     """
@@ -132,7 +204,7 @@ def show_results_from_csv_summarys(filename1, filename2, model_name1, model_name
 
     plt.show()
 
-def display_models_summary(train_output_folder, output_folder="output/img"):
+def display_models_summary(train_output_folder, output_folder="output/img/summary"):
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
@@ -140,7 +212,8 @@ def display_models_summary(train_output_folder, output_folder="output/img"):
         summary_path = os.path.join(train_output_folder, folder, "summary.csv")
         args_path = os.path.join(train_output_folder, folder, "args.yaml")
         title, model_filename = compute_model_name(args_path)
-        show_results_from_csv_summary(summary_path, title, model_filename, output_folder)
+        model_output_folder = os.path.join(output_folder, folder)
+        show_results_from_csv_summary(summary_path, title, model_filename, model_output_folder)
 
 def load_confusion_matrix(filename):
     """
@@ -166,17 +239,6 @@ def save_confusion_matrix(cm, output_filename, classes, folder="output/img"):
     plt.savefig(os.path.join(folder, output_filename))
     
     return cm
-
-def load_classnames(filename):
-    """
-    Load classnames from a file.
-    """
-    classes = []
-    with open(filename, 'r') as f:
-        data = f.readlines()
-        for line in data:
-            classes.append(line.replace('\n', ''))
-    return classes
 
 def calculate_metrics(cm):
     """
@@ -257,36 +319,12 @@ def get_parent_confusion_matrix(cm, classes, parents):
 
     return next_cm, next_classes
 
-
-def read_csv(filename):
-    """
-    Read CSV.
-    """
-    lines = []
-    with open(filename, newline="", encoding="utf-8") as csvfile:
-        reader = csv.reader(csvfile)
-        for row in reader:
-            lines.append(row)
-    return lines
-
-def get_parents(hierarchy_lines):
-    parents = {}
-    for line in hierarchy_lines:
-        for i, node in enumerate(line[1:]):
-            parents[node] = line[i]
-    return parents
-
-def get_taxonLevel(hierarchy_lines):
-    taxon_levels = {}
-    for line in hierarchy_lines[1:]:
-        for i, node in enumerate(line):
-            taxon_levels[node] = hierarchy_lines[0][i]
-    return taxon_levels
-
 # df contient les données de metrics_all.csv
 # on veut construire le csv requis par plot_hierarchical_perf
 def build_F1_perfs_csv(path_metrics_all, path_generated_csv, path_hierarchy):
-
+    """
+    Build F1-score in csv file.
+    """
     df = pd.read_csv(path_metrics_all)
 
     df_filtered = df[df["Etage"] != "branches"]
@@ -310,13 +348,16 @@ def build_F1_perfs_csv(path_metrics_all, path_generated_csv, path_hierarchy):
     parents = get_parents(hierarchy_lines_without_names)
     new_df["Parent"] = new_df["Name"].map(parents)
 
-    taxon_levels = get_taxonLevel(hierarchy_lines)
+    taxon_levels = get_taxon_level(hierarchy_lines)
     taxon_levels = dict(sorted(taxon_levels.items()))
     new_df["Taxon_level"] = new_df["Name"].map(taxon_levels)
 
     new_df.to_csv(path_generated_csv, index=False)
 
 def save_confusion_matrix_and_metrics(output_folder, cm_leaves_path, classes, parents, hierarchy_names):
+    """
+    Save confusion matrix and metrics for each layer in files.
+    """
     cm_leaves = load_confusion_matrix(cm_leaves_path)
     save_confusion_matrix(cm_leaves, f"confusion_matrix_{hierarchy_names[0]}.png", classes, folder=output_folder)
     df = save_metrics(cm_leaves, output_folder, f"metrics_{hierarchy_names[0]}.csv", classes, hierarchy_names[0])
@@ -336,6 +377,9 @@ def save_confusion_matrix_and_metrics(output_folder, cm_leaves_path, classes, pa
         json.dump(tree, outfile)
 
 def create_tree_json(df, parents):
+    """
+    Create a tree with metrics from a dataframe.
+    """
     childrens = {}
     for k, v in parents.items():
         if v not in childrens:
@@ -361,6 +405,9 @@ def create_tree_json(df, parents):
     return root
     
 def create_tree(df, name, root, childrens):
+    """
+    Create a tree with metrics from a dataframe.
+    """
     row = df[df["Classe"] == name]
     node = {
         "name": row["Classe"].values[0], 

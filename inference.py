@@ -31,6 +31,7 @@ from scripts.logic_seg_utils import *
 from scripts.results import *
 from scripts.metrics_hierarchy import *
 from scripts.hierarchical_perfs_plot import *
+from scripts.utils import *
 from scripts.Logicseg_message_passing import *
 
 try:
@@ -136,7 +137,7 @@ parser.add_argument('--logicseg', action='store_true', default=False,
                    help='Apply logicseg processing to output.')
 parser.add_argument('--message-passing', action='store_true', default=False,
                    help='Apply logicseg message passing processing to output.')
-parser.add_argument('--message-passing-iter-count', type=int, default=3,
+parser.add_argument('--message-passing-iter-count', type=int, default=2,
                    help='number of iteration of the message passing.')
 parser.add_argument('--csv-tree', default="./", help="Path to hierarchy csv")
 
@@ -337,15 +338,14 @@ def main():
             H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=False)
 
             if args.message_passing:
-                    message_passing = MessagePassing(H_raw, P_raw, M_raw, args.message_passing_iter_count, device)
-            metrics_hierarchy = MetricsHierarchy(H_raw)
-            metrics_hierarchy.setZero()
+                    message_passing = MessagePassing(H_raw, P_raw, M_raw, La_raw, args.message_passing_iter_count, device)
+            metrics_hierarchy = MetricsHierarchy(H_raw, device)
+            # metrics_hierarchy.setZero()
             # construire la laebl_matrix
             label_matrix, _, index_to_node = get_label_matrix(args.csv_tree)
             class_to_label = get_class_to_label(label_matrix, index_to_node)
             classes_labels = np.array(list(class_to_label.keys()))
             # données utiles pour la matrice de confusion pour chaque hauteur de l'arbre
-            La_raw = get_layer_matrix(args.csv_tree, verbose=False) 
             La = torch.tensor(La_raw).to(device) # (hauteur, nb_noeuds); La[i,j] = 1 si le noeud d'index j est de profondeur i, sinon 0
             h = La.shape[0] # hauteur de l'
             labels_par_hauteur = [[index_to_node[j] for j in range(La.shape[1]) if int(La[hauteur,j].item()) == 1 ] for hauteur in range(h)] # liste de h sous-listes; labels_par_hauteur[i] = les labels de la hauteur

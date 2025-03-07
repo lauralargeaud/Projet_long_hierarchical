@@ -15,18 +15,25 @@ def read_yaml(filepath):
         print("Erreur lors de la lecture du YAML :", e)
 
 def compute_model_name(filepath):
+    """
+    Compute model name from args.yaml file.
+    """
     data = read_yaml(filepath)
     modified_logicseg = data["modified_logicseg"] if "modified_logicseg" in data else False
     logicseg = data["logicseg"]
+    softlabel = data.get("softlabels", False)
     is_logicseg = modified_logicseg or logicseg
     if is_logicseg:
-        method = data["method"]
+        method = data["logicseg_method"]
         if method == "bce":
             return "LogicSeg (BCE)", "logicseg_bce"
         elif method == "multi_bce":
             return "LogicSeg (Multi BCE)", "logicseg_multibce"
         else:
             return "LogicSeg", "logicseg"
+    elif softlabel:
+        softlabels_beta = data["softlabels_beta"]
+        return f"Soft Label (Beta={softlabels_beta})", f"soft_label_{str(softlabels_beta).replace(".", "_")}"
     else:
         hce = data["hce_loss"]
         bce = data["bce_loss"]
@@ -39,6 +46,9 @@ def compute_model_name(filepath):
             return "CCE", "cce"
 
 def get_method(data):
+    """
+    Get the method use in logicseg.
+    """
     if "method" in data:
         return data["method"]
     else:
@@ -52,6 +62,9 @@ def get_method(data):
             return "error"
 
 def extract_data_from_yaml(filepath):
+    """
+    Extract and print data from args.yaml file.
+    """
     data = read_yaml(filepath)
     modified_logicseg = data["modified_logicseg"] if "modified_logicseg" in data else False
     logicseg = data["logicseg"]

@@ -1,0 +1,19 @@
+python train.py \
+        data/small-collomboles/dataset/ \
+        --model resnet50.a1_in1k --pretrained \
+        --num-classes 79 --class-map data/small-collomboles/class_mapping.txt \
+        --epochs 100 -b 32 -vb 64 -j 8 \
+        --log-interval 200 \
+        --opt lamb \
+        --lr 3e-4 \
+        --sched cosine \
+        --weight-decay 0.01 \
+        --warmup-epochs 5 \
+        --smoothing 0.1 \
+        --drop-path 0.05 \
+        --mixup 0.2 \
+        --cutmix 1.0 \
+        --hflip 0.5 \
+        --aa rand-m7-mstd0.5 \
+        --bce-loss \
+        --amp

@@ -4,6 +4,9 @@ import pandas as pd
 import torch
 
 def get_layer_matrix(path_to_csv_tree, verbose=False):
+  """
+  Get layer matrix from csv.
+  """
   csv = pd.read_csv(path_to_csv_tree)
   unique_nodes = pd.unique(csv.values.ravel())
   unique_nodes = unique_nodes[~pd.isnull(unique_nodes)]  # On enlève les NaN au cas ou
@@ -21,6 +24,9 @@ def get_layer_matrix(path_to_csv_tree, verbose=False):
   return La
 
 def get_tree_matrices(path_to_csv_tree, verbose=False):
+  """
+  Get H, P and M matrix from csv.
+  """
   csv = pd.read_csv(path_to_csv_tree)
   unique_nodes = pd.unique(csv.values.ravel())
   unique_nodes = unique_nodes[~pd.isnull(unique_nodes)]  # On enlève les NaN au cas ou
@@ -47,6 +53,9 @@ def get_tree_matrices(path_to_csv_tree, verbose=False):
   return H, peer_matrix, M
 
 def create_class_to_labels(path_to_csv_tree, path_to_temporary_class_to_labels_file, verbose=False):
+  """
+  Create class to labels .pkl file.
+  """
   label_matrix, _, index_to_node = get_label_matrix(path_to_csv_tree, verbose)
 
   class_to_labels = get_class_to_label(label_matrix, index_to_node, verbose)
@@ -56,7 +65,9 @@ def create_class_to_labels(path_to_csv_tree, path_to_temporary_class_to_labels_f
       pickle.dump(class_to_labels, f)  # Écriture binaire
 
 def get_label_matrix(path_to_csv_tree, verbose=False):
-  # print(path_to_csv_tree)
+  """
+  Get label matrix from csv.
+  """
   csv = pd.read_csv(path_to_csv_tree)
   unique_nodes = pd.unique(csv.values.ravel())
   unique_nodes = unique_nodes[~pd.isnull(unique_nodes)]  # On enlève les NaN au cas ou
@@ -75,6 +86,9 @@ def get_label_matrix(path_to_csv_tree, verbose=False):
   return label_matrix, node_to_index, index_to_node
 
 def get_class_to_label(label_matrix, index_to_node, verbose=False):
+  """
+  Get class to label from label matrix.
+  """
   class_to_labels={}
   # On parcours le csv lignes par lignes (donc chemin par chemin dans l'arbre)
   for i in range(label_matrix.shape[0]):
@@ -92,6 +106,9 @@ def get_class_to_label(label_matrix, index_to_node, verbose=False):
 # on veut: tenseur de taille (nb_branches,) contenant les probas de toutes les branches
 # sortie: shape = (nb_pred, nb_branches)
 def get_logicseg_predictions(pred, label_matrix, device):
+  """
+  Get logicseg predictions.
+  """
   label_matrix = torch.tensor(label_matrix, dtype=torch.float32).to(device) #torch tensor
   nb_pred = pred.shape[0]
   nb_feuilles = label_matrix.shape[0]
@@ -105,6 +122,9 @@ def get_logicseg_predictions(pred, label_matrix, device):
 # return: les k labels textuels associés
 # most (nb_pred, top_k)
 def get_branches_label(most_probable_branches_indices_in, most_probable_branches_indices_target, class_to_label):
+  """
+  Get branches label.
+  """
   predicted_classes = np.empty(most_probable_branches_indices_in.shape, dtype=object)
   classes = list(class_to_label.keys())
 
@@ -112,14 +132,3 @@ def get_branches_label(most_probable_branches_indices_in, most_probable_branches
     for i in range(most_probable_branches_indices_in.shape[1]):
       predicted_classes[p,i] = "pred: " + classes[most_probable_branches_indices_in[p,i]] + ", label:  " + classes[most_probable_branches_indices_target[p,i]]
   return predicted_classes
-
-if __name__ == "__main__":
-   path_to_csv_tree = "data/simple/hierarchy_test.csv"
-   get_tree_matrices(path_to_csv_tree, verbose=True)
-
-def get_csv_header(file_path):
-    import csv
-    with open(file_path, newline='', encoding='utf-8') as csvfile:
-        reader = csv.reader(csvfile)
-        header = next(reader)  # Read the first row
-    return header

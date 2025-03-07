@@ -2,8 +2,63 @@ import os
 import glob
 from PIL import Image
 import shutil
+import csv
+
+def load_classnames(filename):
+    """
+    Load classnames from a file.
+    """
+    classes = []
+    with open(filename, 'r') as f:
+        data = f.readlines()
+        for line in data:
+            classes.append(line.replace('\n', ''))
+    return classes
+
+def read_csv(filename):
+    """
+    Read csv.
+    """
+    lines = []
+    with open(filename, newline="", encoding="utf-8") as csvfile:
+        reader = csv.reader(csvfile)
+        for row in reader:
+            lines.append(row)
+    return lines
+
+def get_csv_header(file_path):
+    """
+    Get csv header.
+    """
+    with open(file_path, newline='', encoding='utf-8') as csvfile:
+        reader = csv.reader(csvfile)
+        header = next(reader)  # Read the first row
+    return header
+
+def get_parents(hierarchy_lines):
+    """
+    Get parents for each node.
+    """
+    parents = {}
+    for line in hierarchy_lines:
+        for i, node in enumerate(line[1:]):
+            parents[node] = line[i]
+    return parents
+
+def get_taxon_level(hierarchy_lines):
+    """
+    Get taxonomy level.
+    """
+    taxon_levels = {}
+    for line in hierarchy_lines[1:]:
+        for i, node in enumerate(line):
+            taxon_levels[node] = hierarchy_lines[0][i]
+    return taxon_levels
 
 def keep_only_n_images(root_folder, n=25):
+    """
+    Keep only n images from folders inside a root folder.
+    """
     for subdir in os.listdir(root_folder):
         subdir_path = os.path.join(root_folder, subdir)
         
@@ -19,11 +74,17 @@ def keep_only_n_images(root_folder, n=25):
                 print(f"No images found in {subdir_path}")
 
 def remove_classes(root_folder, classes_to_remove):
+    """
+    Remove classes from a dataset.
+    """
     for class_ in classes_to_remove:
         class_folder = os.path.join(root_folder, class_)
         shutil.rmtree(class_folder)
 
 def resize_images(input_folder, output_folder, size=(224, 224)):
+    """
+    Resize images from an input folder to an output folder.
+    """
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     
@@ -40,6 +101,9 @@ def resize_images(input_folder, output_folder, size=(224, 224)):
             print(f"Erreur lors du traitement de {filename}: {e}")
 
 def copy_folder(src, dst):
+    """
+    Copy a folder into another folder.
+    """
     try:
         if not os.path.exists(src):
             print(f"Le dossier src '{src}' n'existe pas.")
@@ -58,6 +122,9 @@ def copy_folder(src, dst):
         print(f"Une erreur s'est produite : {e}")
 
 def create_dataset_test(classes_to_remove):
+    """
+    Create a test dataset.
+    """
     dataset_dirname = "data/small-collomboles-n-classes/dataset"
     dataset_test_dirname = "data/small-collomboles-n-classes/dataset_test"
 
@@ -83,9 +150,6 @@ def create_dataset_test(classes_to_remove):
     keep_only_n_images(dataset_test_dirname_val, n=2)
 
 if __name__ == "__main__":
-    # resize_images("data/simple/logicseg", "data/simple/logicseg/resize", size=(224, 224))
-    # dirname = "data/small-collomboles-2-class/dataset/val"
-    # keep_only_first_image(dirname)
     classes_to_remove = [
         "Allacma fusca",
         "Anurida maritima",

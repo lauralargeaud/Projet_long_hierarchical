@@ -1,11 +1,11 @@
 model: resnet50
-checkpoint: "output/train/BCE_5/model_best.pth.tar"
+checkpoint: "output/train_bis/SOFTLABELS_10__2/model_best.pth.tar"
 data_dir: "data/small-collomboles/dataset/test"
 class_map: "data/small-collomboles/class_mapping.txt"
 csv_tree: "data/small-collomboles/hierarchy.csv"
 num_classes: 79
 
-results_dir: "output/test/bce_5"
-results_file: "test_bce_5"
+results_dir: "output/test_bis/softlabels_10_2"
+results_file: "test_softlabels_10_2"
 
 conf_matrix: True

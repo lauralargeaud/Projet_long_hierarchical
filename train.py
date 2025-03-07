@@ -47,6 +47,7 @@ from timm.utils import ApexScaler, NativeScaler
 from scripts.logic_seg_utils import *
 from scripts.hierarchy_better_mistakes_utils import get_hce_tree_data
 from scripts.metrics_logicseg import topk_accuracy_logicseg
+from scripts.soft_labels_utils import compute_soft_labels, build_hierarchy_tensors
 
 
 try:
@@ -350,6 +351,8 @@ group.add_argument('--logicseg-method', default="bce",
                    help='Set the loss used to compute the error between ouput and target (ce, bce, asl, multi_bce).')
 group.add_argument('--csv-tree', default=None,
                    help='path to csv describing the tree structure of the labels.')
+group.add_argument('--softlabels', action='store_true', default=False,
+    help='Convert ground-truth labels to soft labels before calculating the loss.')
 
 # The following arguments are for implemented this way to facilitate testing, they might change in the future
 group.add_argument('--crule-loss-weight', type=float, default=0.2,
@@ -372,6 +375,8 @@ group.add_argument('--asl-thresh-shifting', type=float, default=1,
                    help='Set the threshold coef used for the probability shifting in the ASL')
 group.add_argument('--hce-alpha', type=float, default=0.1,
                    help='Set the alpha of the hce loss.')
+group.add_argument('--softlabels-beta', type=float, default=10.,
+    help='Beta parameter for soft_labels transformation')
 
 # Batch norm parameters (only works with gen_efficientnet based models currently)
 group = parser.add_argument_group('Batch norm parameters', 'Only works with gen_efficientnet based models currently.')
@@ -698,6 +703,9 @@ def main():
 
     # If logicSeg is used we create the class map file just before creating the dataset
     if args.logicseg:
+        # Create the class map folder if it does not exist
+        if not os.path.exists(args.class_map):
+            os.makedirs(args.class_map)
         create_class_to_labels(args.csv_tree, args.class_map, verbose=False)
 
     dataset_train = create_dataset(
@@ -961,6 +969,14 @@ def main():
         if args.logicseg:
             label_matrix, _, _ = get_label_matrix(args.csv_tree)
 
+        nodes_to_leaves = None
+        internal_nodes_heights = None
+        if args.softlabels:
+            nodes_to_leaves, internal_nodes_heights = build_hierarchy_tensors(
+                args.csv_tree,
+                hierarchy_levels=["species", "genus", "family", "order", "class"]
+            )
+
         for epoch in range(start_epoch, num_epochs):
             if hasattr(dataset_train, 'set_epoch'):
                 dataset_train.set_epoch(epoch)
@@ -983,7 +999,9 @@ def main():
                 model_ema=model_ema,
                 mixup_fn=mixup_fn,
                 num_updates_total=num_epochs * updates_per_epoch,
-                label_matrix=label_matrix
+                label_matrix=label_matrix,
+                nodes_to_leaves=nodes_to_leaves,
+                internal_nodes_heights=internal_nodes_heights
             )
 
             if args.distributed and args.dist_bn in ('broadcast', 'reduce'):
@@ -1086,7 +1104,9 @@ def train_one_epoch(
         model_ema=None,
         mixup_fn=None,
         num_updates_total=None,
-        label_matrix=None
+        label_matrix=None,
+        nodes_to_leaves=None,
+        internal_nodes_heights=None
 ):
     if args.mixup_off_epoch and epoch >= args.mixup_off_epoch:
         if args.prefetcher and loader.mixup_enabled:
@@ -1136,6 +1156,15 @@ def train_one_epoch(
                 input, target = mixup_fn(input, target)
         if args.channels_last:
             input = input.contiguous(memory_format=torch.channels_last)
+
+        if args.softlabels:
+            target = compute_soft_labels(
+                target,
+                nodes_to_leaves=nodes_to_leaves,
+                internal_nodes_heights=internal_nodes_heights,
+                beta=args.softlabels_beta,
+                device=device
+            )
 
         # multiply by accum steps to get equivalent for full update
         data_time_m.update(accum_steps * (time.time() - data_start_time))

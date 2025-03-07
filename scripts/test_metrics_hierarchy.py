@@ -4,7 +4,9 @@ import torch
 
 class TestHierarchicalClassifier(unittest.TestCase):
     def setUp(self):
-        """Initialisation des données pour les tests."""
+        """
+        Initialisation des données pour les tests.
+        """
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.num_classes = 5
         self.hierarchy_matrix = torch.tensor([[0, 1, 1, 0, 0],   
@@ -32,7 +34,9 @@ class TestHierarchicalClassifier(unittest.TestCase):
         print(self.metrics.get_metrics_string())
 
     def atest_hierarchical_distance_mistake(self):
-        """Test du calcul de la distance hiérarchique des erreurs."""
+        """
+        Test du calcul de la distance hiérarchique des erreurs.
+        """
         output = torch.tensor([[0.1, 0.5, 0.2, 0.1, 0.1],   # Prédiction : classe 1
                                [0.2, 0.1, 0.6, 0.05, 0.05],  # Prédiction : classe 2
                                [0.3, 0.1, 0.1, 0.4, 0.1]]).to(self.device)  # Prédiction : classe 3
@@ -47,7 +51,9 @@ class TestHierarchicalClassifier(unittest.TestCase):
         print("Distance hiérarchique moyenne des erreurs : " + str(self.metrics.metrics[MetricsLabels.hierarchical_distance_mistakes]))
     
     def atest_topk_hierarchical_distance_mistake(self):
-        """Test du calcul du topk distance hiérarchique des erreurs."""
+        """
+        Test du calcul du topk distance hiérarchique des erreurs.
+        """
         output = torch.tensor([[0.1, 0.5, 0.2, 0.1, 0.1],   # Prédiction : classe 1
                                [0.2, 0.1, 0.6, 0.05, 0.05],  # Prédiction : classe 2
                                [0.3, 0.1, 0.1, 0.4, 0.1]]).to(self.device)  # Prédiction : classe 3
@@ -87,7 +93,7 @@ class TestHierarchicalClassifier(unittest.TestCase):
         label_matrix = torch.eye(self.num_classes).to(self.device)  # Matrice identité pour simplifier
 
         self.metrics.d_rule_respect_percentage(output, target, label_matrix)
-        print("pourcentage de respect de la d-rule : " + str(self.metrics.metrics[MetricsLabels.d_rule_respect]))
+        print("Pourcentage de respect de la d-rule : " + str(self.metrics.metrics[MetricsLabels.d_rule_respect]))
 
     def atest_e_rule_respect(self):
         """Test du calcul du pourcentage de respect de la e rule."""
