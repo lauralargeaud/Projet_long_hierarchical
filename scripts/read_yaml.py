@@ -33,7 +33,7 @@ def compute_model_name(filepath):
             return "LogicSeg", "logicseg"
     elif softlabel:
         softlabels_beta = data["softlabels_beta"]
-        return f"Soft Label (Beta={softlabels_beta})", f"soft_label_{str(softlabels_beta).replace(".", "_")}"
+        return f"Soft Label (Beta={softlabels_beta})", f'soft_label_{str(softlabels_beta).replace(".", "_")}'
     else:
         hce = data["hce_loss"]
         bce = data["bce_loss"]
