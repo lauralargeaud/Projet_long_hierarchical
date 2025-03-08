@@ -72,7 +72,7 @@ class MetricsHierarchy:
         
         self.c_rule_respect_percentage(branches_and_nodes, L)
         self.d_rule_respect_percentage(branches_and_nodes, L)
-        self.e_rule_respect_percentage(branches_and_nodes)
+        self.e_rule_respect_percentage(branches_and_nodes, L)
 
 
     
@@ -253,7 +253,7 @@ class MetricsHierarchy:
 
 
 
-    def  e_rule_respect_percentage(self, output: torch.Tensor):
+    def  e_rule_respect_percentage(self, output: torch.Tensor, L):
         """
         Calcule le pourcentage d'échantillons respectant la E-Rule.
 
@@ -264,7 +264,7 @@ class MetricsHierarchy:
         Returns:
             float: Pourcentage des échantillons respectant la E-Rule.
         """
-        output_pred = (output > 0.5).float()  # Matrice binaire (batch_size, num_classes)
+        output_pred = self.seuil_relatif(output, L, 0.2)  # Matrice binaire (batch_size, num_classes)
 
         H = self.H.float()  # Matrice hiérarchique (num_classes, num_classes)
         Hs = H @ output_pred.T
@@ -306,7 +306,7 @@ class MetricsHierarchy:
                 compteur = 0
                 num_ligne += 1
         
-        return batch_size,num_classes,out
+        return out
 
 
 
