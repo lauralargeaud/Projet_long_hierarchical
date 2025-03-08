@@ -265,7 +265,7 @@ class MetricsHierarchy:
             float: Pourcentage des échantillons respectant la E-Rule.
         """
         L = torch.tensor(L, dtype = torch.float32).to(self.device)
-        output_pred = self.seuil_relatif(output, L, 0.2)  # Matrice binaire (batch_size, num_classes)
+        output_pred = self.seuil_relatif(output, L, 0.2).T  # Matrice binaire (batch_size, num_classes)
 
         H = self.H.float()  # Matrice hiérarchique (num_classes, num_classes)
         Hs = H @ output_pred.T
