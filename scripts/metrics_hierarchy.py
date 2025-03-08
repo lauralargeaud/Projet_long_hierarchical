@@ -329,7 +329,7 @@ class MetricsHierarchy:
         """
         L = torch.tensor(L, dtype = torch.float32).to(self.device)
         tree_height, _ = L.shape
-        output_pred = self.seuil_relatif(output, L, tolerance).T  # Matrice binaire (batch_size, num_classes)
+        output_pred = self.seuil_relatif(output, L, tolerance)  # Matrice binaire (batch_size, num_classes)
 
         H = self.H.float()  # Matrice hiérarchique (num_classes, num_classes)
         Hs = H @ output_pred.T
@@ -396,7 +396,7 @@ class MetricsHierarchy:
         output_seuil = torch.reshape(output_seuil, (num_classes, tree_height, batch_size))
         out = torch.sum(output_seuil, dim=1)  
 
-        return out
+        return out.T
 
 
     def topk_accuracy_logicseg(self, probas_branches_input, onehot_targets, topk=1):
