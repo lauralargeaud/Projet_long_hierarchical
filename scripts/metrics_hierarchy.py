@@ -306,7 +306,7 @@ class MetricsHierarchy:
                 compteur = 0
                 num_ligne += 1
         
-        return out
+        return batch_size,num_classes,out
 
 
 
@@ -331,7 +331,7 @@ class MetricsHierarchy:
         print(out)
 
         
-        return batch_size,num_classes,out
+        return out
 
 
     def topk_accuracy_logicseg(self, probas_branches_input, onehot_targets, topk=1):
