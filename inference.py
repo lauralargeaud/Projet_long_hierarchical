@@ -434,7 +434,7 @@ def main():
                 classes = load_classnames(args.class_map)
                 _, node_to_index, _ = get_label_matrix(args.csv_tree)
 
-                augmented_targets = format_target(target, args.num_classes) 
+                augmented_targets = format_target(target, args.num_classes).T 
                 augmented_output = add_nodes_to_output(args.csv_tree, output, classes, node_to_index)
 
                 metrics_hierarchy.compute_all_metrics(output, augmented_targets, augmented_output, La_raw)
