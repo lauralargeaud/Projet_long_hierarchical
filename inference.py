@@ -432,8 +432,11 @@ def main():
                 '''Compute metrics for non-logicseg models'''
                 #utiliser les node_to_index de get_label_matrix avec les hierarchy_lines
                 classes = load_classnames(args.class_map)
-                augmented_output = add_nodes_to_output(args.csv_tree, output, classes, device)
-                metrics_hierarchy.compute_all_metrics(output, target, augmented_output, La_raw)
+                label_matrix_bis, node_to_index, _ = get_label_matrix(args.csv_tree)
+                onehot_targets_bis = get_logicseg_predictions(target, label_matrix_bis, device)
+                 
+                augmented_output = add_nodes_to_output(args.csv_tree, output, classes, node_to_index)
+                metrics_hierarchy.compute_all_metrics(output, onehot_targets_bis, augmented_output, La_raw)
                 print(metrics_hierarchy.get_metrics_string())
 
             if top_k and not args.logicseg:
