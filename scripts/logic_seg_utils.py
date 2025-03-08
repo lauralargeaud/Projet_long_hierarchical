@@ -145,6 +145,7 @@ def add_nodes_to_output(path_to_csv_tree, output, classes, device):
   batch_size, nb_leafs = output.shape
 
   augmented_output = torch.zeros((nb_nodes, batch_size))
+  
 
   # Premier étage de la hierarchy
   for i in range(nb_leafs):
@@ -152,11 +153,13 @@ def add_nodes_to_output(path_to_csv_tree, output, classes, device):
   
   # On remplit les étages suivants
   for i in range(1,tree_height):
-    branches_idx = torch.nonzero(La_raw[i,:] == 1)
+    branches_idx = np.where(La_raw[i,:] == 1)[0]
     print("branches_idx:")
     print(branches_idx)
     for branch_idx in branches_idx:
       pass
+  
+  return augmented_output
 
 
   
