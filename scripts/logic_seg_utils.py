@@ -157,7 +157,7 @@ def add_nodes_to_output(path_to_csv_tree, output, classes, device):
 
     for branch_idx in branches_idx:
       child_idx = np.where(H_raw[branch_idx,:] == 1)[0]
-      augmented_output[branch_idx, :] = augmented_output[child_idx, :].sum(axis=1)
+      augmented_output[branch_idx, :] = augmented_output[:, child_idx].sum(axis=1)
   
   print(augmented_output)
   return augmented_output
