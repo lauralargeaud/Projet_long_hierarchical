@@ -185,6 +185,8 @@ class MetricsHierarchy:
             torch.Tensor: Nombre d'étages où la C-Rule est violée pour chaque échantillon.
         """
         L = torch.tensor(L, dtype=torch.float32).to(self.device)
+        print("output shape: " + str(output.shape))
+        print("L shape: " + str(L.shape))
         batch_size, num_classes, output_pred = self.seuil(output, L)
         tree_height,_ = L.shape
 
