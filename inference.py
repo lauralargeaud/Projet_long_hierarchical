@@ -434,6 +434,7 @@ def main():
                 classes = load_classnames(args.class_map)
                 label_matrix_bis, node_to_index, _ = get_label_matrix(args.csv_tree)
                 onehot_targets_bis = get_logicseg_predictions(target, label_matrix_bis, device)
+                print(target)
                  
                 augmented_output = add_nodes_to_output(args.csv_tree, output, classes, node_to_index)
                 metrics_hierarchy.compute_all_metrics(output, onehot_targets_bis, augmented_output, La_raw)
