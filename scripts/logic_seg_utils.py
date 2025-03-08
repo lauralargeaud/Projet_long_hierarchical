@@ -134,8 +134,28 @@ def get_branches_label(most_probable_branches_indices_in, most_probable_branches
   return predicted_classes
 
 
-def add_nodes_to_output(path_to_csv_tree, output):
-  H_raw, P_raw, M_raw = get_tree_matrices(path_to_csv_tree, verbose=False)
+def add_nodes_to_output(path_to_csv_tree, output, classes, device):
+  '''Adding branches and nodes to the output'''
+  H_raw, _, _ = get_tree_matrices(path_to_csv_tree, verbose=False)
   La_raw = get_layer_matrix(path_to_csv_tree, verbose=False)
+  _, node_to_index, index_to_node = get_label_matrix(path_to_csv_tree, verbose=False)
+
+  tree_height, _ = La_raw.shape
+  nb_nodes,_ = H_raw.shape
+  batch_size, nb_leafs = output.shape
+
+  augmented_output = torch.zeros((nb_nodes, batch_size))
+
+  # Premier étage de la hierarchy
+  for i in range(nb_leafs):
+     augmented_output[:, node_to_index[classes[i]]] = output[:, i]
+
+  print("OUTPUT AUGMENTE")
+  print(augmented_output)
+
+  for i in range(1,tree_height):
+     pass
+
+
 
   
