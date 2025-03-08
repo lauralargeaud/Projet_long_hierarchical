@@ -160,5 +160,15 @@ def add_nodes_to_output(path_to_csv_tree, output, classes, node_to_index):
   
   return augmented_output
 
+def format_target(target, nb_nodes):
+  '''pour mettre un target sous la forme necessaire pour les metriques'''
+  batch_size = len(target)
+  target_formated = torch.zeros((nb_nodes, batch_size))
+
+  for i in range(batch_size):
+     target_formated[target[i], i] = 1
+  
+  return target_formated
+
 
   
