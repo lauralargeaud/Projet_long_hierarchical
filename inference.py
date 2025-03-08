@@ -437,7 +437,7 @@ def main():
                 augmented_targets = format_target(target, args.num_classes).T 
                 augmented_output = add_nodes_to_output(args.csv_tree, output, classes, node_to_index)
 
-                metrics_hierarchy.compute_all_metrics(output, augmented_targets, augmented_output, La_raw)
+                metrics_hierarchy.compute_all_metrics(output, augmented_targets.to(device), augmented_output.to(device), La_raw)
                 print(metrics_hierarchy.get_metrics_string())
 
             if top_k and not args.logicseg:
