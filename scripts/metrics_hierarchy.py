@@ -292,6 +292,7 @@ class MetricsHierarchy:
         L = torch.tensor(L, dtype = torch.float32).to(self.device)
         # Seuil pour binariser les prédictions (0 ou 1)
         output_pred = self.seuil_relatif(output, L, tolerance)
+        total_activated_nodes = torch.sum(torch.sum(output_pred, dim = 1), dim = 0)
 
         # Calcul des activations des super-classes via la matrice H (Hiérarchie)
         H = self.H.float()  # Matrice hiérarchique (num_classes, num_classes)
@@ -309,9 +310,9 @@ class MetricsHierarchy:
         # Calcul du nombre d'étages où la règle est violée 
         # (calcule le nombre de noeuds mais avec le max comme seuil = au nombre d'étages)
         levels_violated = torch.sum(violation_mask.float(), dim=1)  # Somme des violations pondérées par H
-        total_violation = torch.mean(levels_violated / (tree_height -1))
+        total_violation = torch.sum(levels_violated, dim = 0) / total_activated_nodes
 
-        self.metrics[MetricsLabels.relative_d_rule_respect_seuil_relatif].update(1- total_violation)
+        self.metrics[MetricsLabels.relative_d_rule_respect_seuil_relatif].update(1 - total_violation)
         self.metrics[MetricsLabels.d_rule_respect_seuil_relatif].update(total_respect)
 
 
