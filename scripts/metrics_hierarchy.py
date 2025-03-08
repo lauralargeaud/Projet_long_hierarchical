@@ -325,7 +325,7 @@ class MetricsHierarchy:
         valeurs_max, _ = torch.max(output_pred, dim = 0)
         valeurs_seuil = valeurs_max * (1 - tolerance)
 
-        output_seuil = (output_pred > valeurs_seuil).int()
+        output_seuil = (output_pred > valeurs_seuil).float()
         output_seuil = torch.reshape(output_seuil, (num_classes, tree_height, batch_size))
         out = torch.sum(output_seuil, dim=1)  
 
