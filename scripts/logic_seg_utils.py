@@ -152,9 +152,8 @@ def add_nodes_to_output(path_to_csv_tree, output, classes, device):
     augmented_output[node_to_index[classes[i]], :] = output[:, i]
   
   # On remplit les étages suivants
-  for i in range(tree_height-1, -1, -1):
+  for i in range(tree_height-2, -1, -1):
     branches_idx = np.where(La_raw[i,:] == 1)[0]
-    print(branches_idx)
 
     for branch_idx in branches_idx:
       child_idx = np.where(H_raw[branch_idx,:] == 1)[0]
