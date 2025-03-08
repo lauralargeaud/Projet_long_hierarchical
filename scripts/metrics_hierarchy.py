@@ -185,9 +185,8 @@ class MetricsHierarchy:
             torch.Tensor: Nombre d'étages où la C-Rule est violée pour chaque échantillon.
         """
         L = torch.tensor(L, dtype=torch.float32).to(self.device)
-        print("output shape: " + str(output.shape))
-        print("L shape: " + str(L.shape))
-        batch_size, num_classes, output_pred = self.seuil(output, L)
+
+        batch_size, num_classes, output_pred = self.seuil_max(output, L)
         tree_height,_ = L.shape
 
         # Calcul des activations des super-classes via la matrice H (Hiérarchie)
@@ -232,7 +231,7 @@ class MetricsHierarchy:
 
         L = torch.tensor(L, dtype = torch.float32).to(self.device)
         # Seuil pour binariser les prédictions (0 ou 1)
-        batch_size, num_classes, output_pred = self.seuil(output, L)
+        batch_size, num_classes, output_pred = self.seuil_max(output, L)
 
         # Calcul des activations des super-classes via la matrice H (Hiérarchie)
         H = self.H.float()  # Matrice hiérarchique (num_classes, num_classes)
@@ -283,8 +282,8 @@ class MetricsHierarchy:
 
 
 
-    def seuil(self, output, L):
-        '''Repere les noeuds activés par le modele'''
+    def seuil_max(self, output, L):
+        '''Repere les noeuds activés par le modele en considerant le maximum par hauteur de l'arbre'''
 
         batch_size, num_classes = output.shape
         tree_height, _ = L.shape
@@ -309,6 +308,30 @@ class MetricsHierarchy:
         
         return batch_size,num_classes,out
 
+
+
+    def seuil_relatif(self, output, L, tolerance):
+        ''' Regarde le maximum par etage et considere comme allumé tout les noeud à tolerance % de ce maximum'''
+
+        batch_size, num_classes = output.shape
+        tree_height, _ = L.shape
+
+        output_pred = torch.repeat_interleave(output.T, repeats=tree_height, dim=1)
+        augmented_L = L.repeat(batch_size,1).T
+
+        output_pred = output_pred*augmented_L
+
+        valeurs_max, _ = torch.max(output_pred, dim = 0)
+        valeurs_seuil = valeurs_max * (1 - tolerance)
+
+        output_seuil = (output_pred > valeurs_seuil).int()
+        out = torch.zeros(batch_size, num_classes).to(self.device)
+        out = torch.sum(torch.stack([output_seuil[:, i::tree_height] for i in range(batch_size)]), dim=0)
+
+        print(out)
+
+        
+        return batch_size,num_classes,out
 
 
     def topk_accuracy_logicseg(self, probas_branches_input, onehot_targets, topk=1):
