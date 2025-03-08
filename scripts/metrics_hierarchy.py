@@ -11,11 +11,11 @@ class MetricsLabels:
     hierarchical_distance_mistakes = "Top 1 hierarchical distance mistakes"
     topk_hierarchical_distance_mistakes = "Top 5 hierarchical distance mistakes"
 
-    c_rule_respect_seuil_relatif = "Respect of the d rule with seuil relatif"
+    c_rule_respect_seuil_relatif = "Respect of the c rule with seuil relatif"
     d_rule_respect_seuil_relatif = "Respect of the d rule with seuil relatif"
     e_rule_respect_seuil_relatif = "Respect of the e rule with seuil relatif"
 
-    relative_c_rule_respect_seuil_relatif = "Relative respect of the d rule with seuil relatif"
+    relative_c_rule_respect_seuil_relatif = "Relative respect of the c rule with seuil relatif"
     relative_d_rule_respect_seuil_relatif = "Relative respect of the d rule with seuil relatif"
     relative_e_rule_respect_seuil_relatif = "Relative respect of the e rule with seuil relatif"
 
