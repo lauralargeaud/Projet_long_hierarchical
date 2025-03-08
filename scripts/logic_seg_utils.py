@@ -153,7 +153,10 @@ def add_nodes_to_output(path_to_csv_tree, output, classes, device):
   # On remplit les étages suivants
   for i in range(1,tree_height):
     branches_idx = torch.nonzero(La_raw[i,:] == 1)
+    print("branches_idx:")
     print(branches_idx)
+    for branch_idx in branches_idx:
+      pass
 
 
   

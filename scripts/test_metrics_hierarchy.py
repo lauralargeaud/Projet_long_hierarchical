@@ -18,7 +18,7 @@ class TestHierarchicalClassifier(unittest.TestCase):
 
     def test_all(self):
         """Exécute le calcul de toutes les métriques via compute_all_metrics."""
-        output = torch.tensor([[0.1, 0.5, 0.2, 0.1, 0.1],
+        branches_and_nodes = torch.tensor([[0.1, 0.5, 0.2, 0.1, 0.1],
                                [0.2, 0.1, 0.6, 0.05, 0.05],
                                [0.3, 0.1, 0.1, 0.4, 0.1]]).to(self.device)
         target = torch.tensor([
@@ -26,9 +26,15 @@ class TestHierarchicalClassifier(unittest.TestCase):
             [0, 0, 1, 0, 0],
             [0, 0, 0, 1, 0]
         ]).to(self.device)
+        output = torch.tensor([[0.1, 0.1],
+                               [0.05, 0.05],
+                               [0.4, 0.1]]).to(self.device)
+        L= torch.tensor([[1,0,0,0,0],
+                        [0,1,1,0,0],
+                        [0,0,0,1,1]]).to(self.device)
 
         # Calcul de toutes les métriques
-        self.metrics.compute_all_metrics(output, target)
+        self.metrics.compute_all_metrics(output, target,branches_and_nodes, L)
 
         # Affichage des résultats des métriques
         print(self.metrics.get_metrics_string())

@@ -1,5 +1,5 @@
 import torch
-from scripts.logic_seg_utils import get_logicseg_predictions
+from logic_seg_utils import get_logicseg_predictions
 
 class MetricsLabels:
     """
@@ -13,6 +13,7 @@ class MetricsLabels:
     c_rule_respect = "Respect of the c rule"
     d_rule_respect = "Respect of the d rule"
     e_rule_respect = "Respect of the e rule"
+    relative_c_rule_respect = "Relative respect of the c rule"
 
 
 class AverageMeter:
@@ -48,6 +49,7 @@ class MetricsHierarchy:
             MetricsLabels.c_rule_respect: AverageMeter(),
             MetricsLabels.d_rule_respect: AverageMeter(),
             MetricsLabels.e_rule_respect: AverageMeter(),
+            MetricsLabels.relative_c_rule_respect: AverageMeter(),
         }
 
         self.device = device
@@ -63,7 +65,7 @@ class MetricsHierarchy:
         self.topk_accuracy_logicseg(output, target, 1)
         self.topk_accuracy_logicseg(output, target, 5)
         self.hierarchical_distance_mistake(output, target)
-        self.topk_hierarchical_distance_mistake(output, target, 5)
+        #self.topk_hierarchical_distance_mistake(output, target, 5)
         self.c_rule_respect_percentage(branches_and_nodes, L)
         self.d_rule_respect_percentage(branches_and_nodes, L)
         self.e_rule_respect_percentage(branches_and_nodes)
@@ -168,37 +170,43 @@ class MetricsHierarchy:
 
     def c_rule_respect_percentage(self, output: torch.Tensor, L):
         """
-        Calcule le pourcentage d'échantillons respectant la C-Rule.
+        Calcule le pourcentage d'échantillons respectant la C-Rule et compte le nombre d'étages où elle est violée.
 
         Args:
             output (torch.Tensor): Matrice des prédictions du modèle (batch_size, num_classes).
-            label_matrix (torch.Tensor): Matrice one-hot des labels réels (batch_size, num_classes).
+            L (list or torch.Tensor): Seuils pour chaque classe.
 
         Returns:
             float: Pourcentage des échantillons respectant la C-Rule.
+            torch.Tensor: Nombre d'étages où la C-Rule est violée pour chaque échantillon.
         """
-
-        L = torch.tensor(L, dtype = torch.float32).to(self.device)
+        L = torch.tensor(L, dtype=torch.float32).to(self.device)
         batch_size, num_classes, output_pred = self.seuil(output, L)
+        tree_height,_ = L.shape
 
         # Calcul des activations des super-classes via la matrice H (Hiérarchie)
         H = self.H.float()  # Matrice hiérarchique (num_classes, num_classes)
-        Hs = (torch.repeat_interleave(output_pred.T, repeats=num_classes, dim=1) == 1) & (H.repeat(1,batch_size) == 1)
-        Hs = torch.sum(Hs.float(),dim=0)
+        Hs = (torch.repeat_interleave(output_pred.T, repeats=num_classes, dim=1) == 1) & (H.repeat(1, batch_size) == 1)
+        Hs = torch.sum(Hs.float(), dim=0)
 
-        enfants  = torch.sum(H,dim=0)
-        enfants_batch = enfants.repeat(batch_size,1)  # (batch_size, num_classes)
+        enfants = torch.sum(H, dim=0)
+        enfants_batch = enfants.repeat(batch_size, 1)  # (batch_size, num_classes)
 
         # Vérifier que si une classe est activée, sa super-classe l'est aussi
-        # Si une classe est activée mais pas sa super-classe, cela viole la règle
-        violation_mask = (output_pred > 0) & (Hs.reshape(batch_size, num_classes) == 0) & (enfants_batch != 0)  # (num_classes, batch_size)
-         
-        # Compter les échantillons respectant la règle (aucune violation)
-        batch_respect = (torch.sum(violation_mask, dim=1) == 0).float()  # (batch_size,)
+        violation_mask = (output_pred > 0) & (Hs.reshape(batch_size, num_classes) == 0) & (enfants_batch != 0)
 
-        # Calcul du pourcentage d'échantillons respectant la C-Rule
+        # Compter les échantillons respectant la règle (aucune violation)
+        batch_respect = (torch.sum(violation_mask, dim=1) == 0).float()
         total_respect = torch.mean(batch_respect)
+        
+        # Calcul du nombre d'étages où la règle est violée 
+        # (calcule le nombre de noeuds mais avec le max comme seuil = au nombre d'étages)
+        levels_violated = torch.sum(violation_mask.float(), dim=1)  # Somme des violations pondérées par H
+        total_violation = torch.mean(levels_violated / (tree_height -1))
+
+        # Mise à jour des métriques
         self.metrics[MetricsLabels.c_rule_respect].update(total_respect)
+        self.metrics[MetricsLabels.relative_c_rule_respect].update(1- total_violation)
 
 
 
@@ -314,62 +322,12 @@ class MetricsHierarchy:
         if (topk == 5):
             self.metrics[MetricsLabels.accuracy_top5].update(acc)
 
-    # def accuracy_topk_1_5(self, output, target, label_matrix, device):
-    #     """
-    #     Calcule la précision top-1 et top-5 pour la segmentation logique.
-
-    #     Args:
-    #         output (torch.Tensor): Prédictions du modèle (logits).
-    #         target (torch.Tensor): Labels réels.
-    #         label_matrix (torch.Tensor): Matrice des labels.
-
-    #     """
-    #     probas_branches_input = get_logicseg_predictions(output, label_matrix, device)
-    #     onehot_targets = get_logicseg_predictions(target, label_matrix, device)
-
-    #     # Top-1 Accuracy
-    #     acc1 = self.topk_accuracy_logicseg(probas_branches_input, onehot_targets, topk=1)
-
-    #     # Top-5 Accuracy
-    #     acc5 = self.topk_accuracy_logicseg(probas_branches_input, onehot_targets, topk=5)
-
-    #     # Stocker les résultats
-    #     self.metrics[MetricsLabels.accuracy_top1].update(acc1.item())
-    #     self.metrics[MetricsLabels.accuracy_top5].update(acc5.item())
-
 
     def reset_metrics(self):
         """
         Réinitialise les métriques stockées.
         """
-        self.metrics = {key: -1 for key in self.metrics}
+        self.metrics = {key: AverageMeter() for key in self.metrics}
 
-    def setZero(self):
-        """Défini la valeur de toutes les métriques à 0"""
-        self.metrics = {key: 0 for key in self.metrics}
 
-    '''Fonction non mise a jour'''
-    def divide(self, n):
-        """Diviser toutes les métriques par n."""
-        for key, value in self.metrics.items():
-            self.metrics[key] = value / n
 
-      
-    def compute_tree_matrix(self):
-        '''Retourne une matrice contenant les noeuds triés par hauteur dans l'arbre'''
-
-    """Fonction non mise a jour"""
-    def compute_metrics(self, output, target, label_matrix, device):
-        """
-        Compute all the define metrics using the given data.
-        """
-        label_matrix = torch.tensor(label_matrix, dtype=torch.float32).to(self.device)
-        self.hierarchical_distance_mistake(output, target)
-        self.topk_hierarchical_distance_mistake(output, target, k=1)
-        self.topk_hierarchical_distance_mistake(output, target)
-        self.c_rule_respect_percentage(output, label_matrix)
-        self.d_rule_respect_percentage(output, label_matrix)
-        self.e_rule_respect_percentage(output)
-        # self.accuracy_topk_1_5(output, target, label_matrix, device)
-        self.topk_accuracy_logicseg(output, target, topk=1)
-        self.topk_accuracy_logicseg(output, target, topk=5)
