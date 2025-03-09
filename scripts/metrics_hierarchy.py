@@ -85,7 +85,7 @@ class MetricsHierarchy:
         
         self.cd_rule_respect_percentage_seuil_max(branches_and_nodes, L)
         
-        tolerance = 0.3 # pour le seuil relatif
+        tolerance = 0.15 # pour le seuil relatif
 
         self.c_rule_respect_percentage(branches_and_nodes, L, tolerance)
         self.d_rule_respect_percentage(branches_and_nodes, L, tolerance)
