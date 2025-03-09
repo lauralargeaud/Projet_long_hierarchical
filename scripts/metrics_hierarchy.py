@@ -85,7 +85,7 @@ class MetricsHierarchy:
         
         self.cd_rule_respect_percentage_seuil_max(branches_and_nodes, L)
         
-        tolerance = 0.2 # pour le seuil relatif
+        tolerance = 0.3 # pour le seuil relatif
 
         self.c_rule_respect_percentage(branches_and_nodes, L, tolerance)
         self.d_rule_respect_percentage(branches_and_nodes, L, tolerance)
@@ -250,6 +250,7 @@ class MetricsHierarchy:
 
         # Seuil pour binariser les prédictions (0 ou 1)
         output_pred = self.seuil_relatif(output, L, tolerance)
+        total_activated_nodes = torch.sum(torch.sum(output_pred, dim = 1), dim = 0)
 
         # Calcul des activations des super-classes via la matrice H (Hiérarchie)
         H = self.H.float()  # Matrice hiérarchique (num_classes, num_classes)
@@ -269,7 +270,7 @@ class MetricsHierarchy:
         # Calcul du nombre d'étages où la règle est violée 
         # (calcule le nombre de noeuds mais avec le max comme seuil = au nombre d'étages)
         levels_violated = torch.sum(violation_mask.float(), dim=1)  # Somme des violations pondérées par H
-        total_violation = torch.mean(levels_violated / (tree_height -1))
+        total_violation = torch.sum(levels_violated, dim = 0) / total_activated_nodes
 
         # Mise à jour des métriques
         self.metrics[MetricsLabels.c_rule_respect_seuil_relatif].update(total_respect)
