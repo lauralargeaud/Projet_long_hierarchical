@@ -331,7 +331,6 @@ def main():
     use_probs = args.output_type == 'prob'
     metrics_hierarchy = None
     nb_batches = 0
-<<<<<<< HEAD
 
     acc1_m = AverageMeter()
     acc5_m = AverageMeter()
@@ -342,8 +341,6 @@ def main():
             # top5 = 0
             H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=False)
             La_raw = get_layer_matrix(args.csv_tree, verbose=False) 
-=======
->>>>>>> a5d2872cb55f1f406dee35ac2efb1926e5387db5
 
 
     with torch.no_grad():
@@ -480,9 +477,9 @@ def main():
                 _logger.info('Predict: [{0}/{1}] Time {batch_time.val:.3f} ({batch_time.avg:.3f})'.format(
                     batch_idx, len(loader), batch_time=batch_time))
 
-    if not args.logicseg:
-        df = pd.DataFrame({"Top 1 accuracy": [f"{acc1_m.avg:.4f}"], "Top 5 accuracy": [f"{acc5_m.avg:.4f}"]})
-        df.to_csv(os.path.join(args.results_dir, "metrics_results.csv"), index_label="row")
+    # if not args.logicseg:
+        # df = pd.DataFrame({"Top 1 accuracy": [f"{acc1_m.avg:.4f}"], "Top 5 accuracy": [f"{acc5_m.avg:.4f}"]})
+        # df.to_csv(os.path.join(args.results_dir, "metrics_results.csv"), index_label="row")
 
     all_indices = np.concatenate(all_indices, axis=0) if all_indices else None
     all_labels = np.concatenate(all_labels, axis=0) if all_labels else None
@@ -570,9 +567,9 @@ def main():
         save_results(df, results_filename, fmt)
 
     if args.conf_matrix:
+        metrics_hierarchy.save_metrics_csv(os.path.join(args.results_dir, "metrics_results.csv"))
         if args.logicseg:
             print(f'--result')
-            metrics_hierarchy.save_metrics_csv(os.path.join(args.results_dir, "metrics_results.csv"))
             with open(os.path.join(args.results_dir, "metrics_results.txt"), "w") as fichier:
                 metrics_str = metrics_hierarchy.get_metrics_string()
                 fichier.write(metrics_str)
