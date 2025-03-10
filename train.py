@@ -361,8 +361,8 @@ group.add_argument('--drule-loss-weight', type=float, default=0.2,
                    help='Set the weight of the Dloss.')
 group.add_argument('--erule-loss-weight', type=float, default=0.2,
                    help='Set the weight of the Eloss.')
-group.add_argument('--bce-loss-weight', type=float, default=1,
-                   help='Set the weight of the Bce.')
+# group.add_argument('--bce-loss-weight', type=float, default=1,
+#                    help='Set the weight of the Bce.')
 group.add_argument('--alpha-layer', type=float, default=0.1,
                    help='Set the weight of the layer.')
 group.add_argument('--target-loss-weight', type=float, default=1,

@@ -212,6 +212,13 @@ def main():
 
     device = torch.device(args.device)
 
+    # If logicSeg is used we create the class map file just before creating the dataset
+    if args.logicseg:
+        # Create the class map folder if it does not exist
+        if not os.path.exists(args.class_map):
+            os.makedirs(args.class_map)
+            create_class_to_labels(args.csv_tree, args.class_map, verbose=False)
+
     model_dtype = None
     if args.model_dtype:
         assert args.model_dtype in ('float32', 'float16', 'bfloat16')
