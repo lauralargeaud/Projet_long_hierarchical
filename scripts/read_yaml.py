@@ -24,13 +24,23 @@ def compute_model_name(filepath):
     softlabel = data.get("softlabels", False)
     is_logicseg = modified_logicseg or logicseg
     if is_logicseg:
+        print(data)
         method = data["logicseg_method"]
-        if method == "bce":
-            return "LogicSeg (BCE)", "logicseg_bce"
-        elif method == "multi_bce":
-            return "LogicSeg (Multi BCE)", "logicseg_multibce"
+        message_passing = data.get("message_passing", False)
+        if message_passing:
+            if method == "bce":
+                return "LogicSeg MP (BCE)", "logicseg_bce_mp"
+            elif method == "multi_bce":
+                return "LogicSeg MP (Multi BCE)", "logicseg_multibce_mp"
+            else:
+                return "LogicSeg MP", "logicseg"
         else:
-            return "LogicSeg", "logicseg"
+            if method == "bce":
+                return "LogicSeg (BCE)", "logicseg_bce"
+            elif method == "multi_bce":
+                return "LogicSeg (Multi BCE)", "logicseg_multibce"
+            else:
+                return "LogicSeg", "logicseg"
     elif softlabel:
         softlabels_beta = data["softlabels_beta"]
         return f"Soft Label (Beta={softlabels_beta})", f'soft_label_{str(softlabels_beta).replace(".", "_")}'

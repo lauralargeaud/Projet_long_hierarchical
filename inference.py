@@ -24,7 +24,7 @@ from sklearn.metrics import confusion_matrix
 from timm.data import create_dataset, create_loader, resolve_data_config, ImageNetInfo, infer_imagenet_subset
 from timm.layers import apply_test_time_pool
 from timm.models import create_model
-from timm.utils import AverageMeter, setup_default_logging, set_jit_fuser, ParseKwargs
+from timm.utils import AverageMeter, setup_default_logging, set_jit_fuser, ParseKwargs, accuracy
 
 from scripts.metrics_logicseg import topk_accuracy_logicseg
 from scripts.logic_seg_utils import *
@@ -331,6 +331,10 @@ def main():
     use_probs = args.output_type == 'prob'
     metrics_hierarchy = None
     nb_batches = 0
+
+    acc1_m = AverageMeter()
+    acc5_m = AverageMeter()
+
     with torch.no_grad():
         if args.logicseg:
             # top1 = 0
@@ -365,6 +369,13 @@ def main():
                 _, ids_preds = torch.max(output, 1)
                 cm_all_ids_preds.append(ids_preds.cpu().numpy())
                 cm_all_targets.append(target.cpu().numpy())
+
+            if not args.logicseg:
+                acc1, acc5 = accuracy(output, target, topk=(1, 5))
+                acc1 = acc1 / 100
+                acc5 = acc5 / 100
+                acc1_m.update(acc1.item(), output.size(0))
+                acc5_m.update(acc5.item(), output.size(0))
 
             if args.logicseg:
                 if args.message_passing:
@@ -447,6 +458,9 @@ def main():
                 _logger.info('Predict: [{0}/{1}] Time {batch_time.val:.3f} ({batch_time.avg:.3f})'.format(
                     batch_idx, len(loader), batch_time=batch_time))
 
+    if not args.logicseg:
+        df = pd.DataFrame({"Top 1 accuracy": [f"{acc1_m.avg:.4f}"], "Top 5 accuracy": [f"{acc5_m.avg:.4f}"]})
+        df.to_csv(os.path.join(args.results_dir, "metrics_results.csv"), index_label="row")
 
     all_indices = np.concatenate(all_indices, axis=0) if all_indices else None
     all_labels = np.concatenate(all_labels, axis=0) if all_labels else None
@@ -536,6 +550,7 @@ def main():
     if args.conf_matrix:
         if args.logicseg:
             print(f'--result')
+            metrics_hierarchy.save_metrics_csv(os.path.join(args.results_dir, "metrics_results.csv"))
             with open(os.path.join(args.results_dir, "metrics_results.txt"), "w") as fichier:
                 metrics_str = metrics_hierarchy.get_metrics_string()
                 fichier.write(metrics_str)
