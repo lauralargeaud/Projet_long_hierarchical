@@ -331,6 +331,7 @@ def main():
     use_probs = args.output_type == 'prob'
     metrics_hierarchy = None
     nb_batches = 0
+<<<<<<< HEAD
 
     acc1_m = AverageMeter()
     acc5_m = AverageMeter()
@@ -341,22 +342,37 @@ def main():
             # top5 = 0
             H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=False)
             La_raw = get_layer_matrix(args.csv_tree, verbose=False) 
+=======
+>>>>>>> a5d2872cb55f1f406dee35ac2efb1926e5387db5
 
-            if args.message_passing:
-                    message_passing = MessagePassing(H_raw, P_raw, M_raw, La_raw, args.message_passing_iter_count, device)
+
+    with torch.no_grad():
+
+        if args.csv_tree != "./":
+            '''Ces variables servent aux calcul des metriques pour tout les modèles'''
+            H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=False)
+            La_raw = get_layer_matrix(args.csv_tree, verbose=False)
             metrics_hierarchy = MetricsHierarchy(H_raw, device)
 
-            # construire la label_matrix
-            label_matrix, _, index_to_node = get_label_matrix(args.csv_tree)
-            class_to_label = get_class_to_label(label_matrix, index_to_node)
-            classes_labels = np.array(list(class_to_label.keys()))
+            if args.logicseg:
 
-            # données utiles pour la matrice de confusion pour chaque hauteur de l'arbre
-            La = torch.tensor(La_raw).to(device) # (hauteur, nb_noeuds); La[i,j] = 1 si le noeud d'index j est de profondeur i, sinon 0
-            h = La.shape[0] # hauteur de l'
-            labels_par_hauteur = [[index_to_node[j] for j in range(La.shape[1]) if int(La[hauteur,j].item()) == 1 ] for hauteur in range(h)] # liste de h sous-listes; labels_par_hauteur[i] = les labels de la hauteur
-            cm_par_hauteur_ids_preds = np.empty((h,0), dtype=np.float32)
-            cm_par_hauteur_ids_targets = np.empty((h,0), dtype=np.float32)
+                if args.message_passing:
+                        message_passing = MessagePassing(H_raw, P_raw, M_raw, La_raw, args.message_passing_iter_count, device)
+                
+
+                # construire la label_matrix
+                label_matrix, _, index_to_node = get_label_matrix(args.csv_tree)
+                class_to_label = get_class_to_label(label_matrix, index_to_node)
+                classes_labels = np.array(list(class_to_label.keys()))
+
+                # données utiles pour la matrice de confusion pour chaque hauteur de l'arbre
+                La = torch.tensor(La_raw).to(device) # (hauteur, nb_noeuds); La[i,j] = 1 si le noeud d'index j est de profondeur i, sinon 0
+                h = La.shape[0] # hauteur de l'
+                labels_par_hauteur = [[index_to_node[j] for j in range(La.shape[1]) if int(La[hauteur,j].item()) == 1 ] for hauteur in range(h)] # liste de h sous-listes; labels_par_hauteur[i] = les labels de la hauteur
+                cm_par_hauteur_ids_preds = np.empty((h,0), dtype=np.float32)
+                cm_par_hauteur_ids_targets = np.empty((h,0), dtype=np.float32)
+
+
         for batch_idx, (input, target) in enumerate(loader):
             nb_batches += 1
             with amp_autocast():
@@ -388,15 +404,7 @@ def main():
                 onehot_targets = get_logicseg_predictions(target, label_matrix, device) # (nb_pred, nb_feuilles) one hot encoding des feuilles cibles
                 # calculer les métriques sur les prédictions réalisées dans le batch courant
                 metrics_hierarchy.compute_all_metrics(logicseg_predictions, onehot_targets, output, La)
-                # 
                 
-                # mettre à jour les métriques globales
-                # calculer l'accuracy top1
-                # acc1 =  topk_accuracy_logicseg(logicseg_predictions, onehot_targets)
-                # top1 += acc1
-                # # calculer l'accuracy top5
-                # acc5 =  topk_accuracy_logicseg(logicseg_predictions, onehot_targets, 5)
-                # top5 += acc5
                 
                 if args.conf_matrix:
                     # données utiles pour la matrice de confusion sur les feuilles
@@ -438,6 +446,20 @@ def main():
                 # class_to_label = get_class_to_label(label_matrix, index_to_node)
                 # np_labels_branches = get_label_branches(np_indices_branches_in, np_indices_branches_target, class_to_label)
                 # all_labels.append(np_labels_branches)
+
+            
+            elif args.csv_tree != "./":
+                '''Compute metrics for non-logicseg models'''
+                #utiliser les node_to_index de get_label_matrix avec les hierarchy_lines
+                classes = load_classnames(args.class_map)
+                _, node_to_index, _ = get_label_matrix(args.csv_tree)
+
+                new_targets = format_target(target, args.num_classes).T 
+                augmented_output = add_nodes_to_output(args.csv_tree, output, classes, node_to_index).T
+                augmented_targets = add_nodes_to_output(args.csv_tree, new_targets, classes, node_to_index).T
+
+                metrics_hierarchy.compute_all_metrics(output, new_targets.to(device), augmented_output.to(device), La_raw, augmented_targets)
+                print(metrics_hierarchy.get_metrics_string())
 
             if top_k and not args.logicseg:
                 output, indices = output.topk(top_k)
@@ -607,6 +629,8 @@ def main():
                                         font_size=32)
 
         else:
+
+            '''TODO: Possiblement redondant'''
             classes = load_classnames(args.class_map)
 
             hierarchy_lines = read_csv(args.csv_tree)
