@@ -38,7 +38,6 @@ def generate_boxplots(values, labels, title, filename, output_folder="output/img
     """
     Generate boxplot.
     """
-    print(values)
     plt.figure(figsize=(10, 5))
     plt.boxplot(values, labels=labels)
     plt.xlabel('Modèles')
@@ -105,6 +104,10 @@ def display_models_barplots_multiple(test_output_folder, output_folder="output/i
         labels.add(title)
     labels = sorted(list(labels))
     values = {metric: {hierarchy_name: {label: [] for label in labels} for hierarchy_name in hierarchy_names} for metric in metrics}
+    print(labels)
+    return
+    acc_metrics = ["Top-1 Accuracy", "Top-5 Accuracy"]
+    acc_values = {metric: {label: [] for label in labels} for metric in acc_metrics}
     for folder in sorted(os.listdir(test_output_folder)):
         csv_path = os.path.join(test_output_folder, folder, "metrics_all.csv")
         args_path = os.path.join(test_output_folder, folder, "args.yaml")
@@ -113,8 +116,13 @@ def display_models_barplots_multiple(test_output_folder, output_folder="output/i
         for name in hierarchy_names:
             line = df[(df['Etage'] == name) & (df['Classe'] == 'Moyenne')]
             for metric in metrics:
-                print(metric, name, title)
                 values[metric][name][title].append(line[metric].values[0])
+        
+        acc_path = os.path.join(test_output_folder, folder, "metrics_results.csv")
+        df = pd.read_csv(acc_path)
+        acc_values["Top-1 Accuracy"][title].append(df.iloc[0]["Top 1 accuracy"])
+        acc_values["Top-5 Accuracy"][title].append(df.iloc[0]["Top 5 accuracy"])
+    
     for metric, hierarchy in values.items():
         for name, data_dict in hierarchy.items():
             data_barplot = []
@@ -122,11 +130,19 @@ def display_models_barplots_multiple(test_output_folder, output_folder="output/i
             for label in labels:
                 data_barplot.append(np.mean(data_dict[label]))
                 data_boxplot.append(data_dict[label])
-                print(metric, name, np.mean(data_dict[label]), data_dict[label])
-            print(data_dict)
             img_output_folder = os.path.join(output_folder, name, metric)
             generate_barplots(data_barplot, labels, f"{metric} {name}", f"{unidecode(metric).lower()}_{name}_barplot.png", output_folder=img_output_folder)
             generate_boxplots(data_boxplot, labels, f"{metric} {name}", f"{unidecode(metric).lower()}_{name}_boxplot.png", output_folder=img_output_folder)
+
+    for name, data_dict in acc_values.items():
+        data_barplot = []
+        data_boxplot = []
+        for label in labels:
+            data_barplot.append(np.mean(data_dict[label]))
+            data_boxplot.append(data_dict[label])
+        img_output_folder = os.path.join(output_folder)
+        generate_barplots(data_barplot, labels, f"{name}", f"{unidecode(name).lower()}_barplot.png", output_folder=img_output_folder)
+        generate_boxplots(data_dict.values(), labels, f"{name}", f"{unidecode(name).lower()}_boxplot.png", output_folder=img_output_folder)
 
 def show_results_from_csv_summary(filename, title, model_name, output_folder="output/img"):
     """

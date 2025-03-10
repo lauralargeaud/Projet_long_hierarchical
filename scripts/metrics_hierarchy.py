@@ -1,5 +1,6 @@
 import torch
 from scripts.logic_seg_utils import get_logicseg_predictions
+import pandas as pd
 
 class MetricsLabels:
     """
@@ -52,6 +53,11 @@ class MetricsHierarchy:
 
         self.device = device
         self.H = torch.tensor(H, dtype=torch.float32).to(self.device) #torch tensor    
+
+    def save_metrics_csv(self, filepath):
+        df = pd.DataFrame({label: [f"{meter.avg:.4f}"] for label, meter in self.metrics.items()})
+        df.to_csv(filepath, index_label="row")
+            
 
     def get_metrics_string(self):
         # Generate a single string with all metrics
