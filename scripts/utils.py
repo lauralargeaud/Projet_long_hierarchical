@@ -4,33 +4,42 @@ from PIL import Image
 import shutil
 import csv
 
-def load_classnames(filename):
+def load_classnames(filepath):
     """
     Load classnames from a file.
+
+    Args:
+        filepath (string): filepath
     """
     classes = []
-    with open(filename, 'r') as f:
+    with open(filepath, 'r') as f:
         data = f.readlines()
         for line in data:
             classes.append(line.replace('\n', ''))
     return classes
 
-def read_csv(filename):
+def read_csv(filepath):
     """
     Read csv.
+
+    Args:
+        filepath (string): filepath
     """
     lines = []
-    with open(filename, newline="", encoding="utf-8") as csvfile:
+    with open(filepath, newline="", encoding="utf-8") as csvfile:
         reader = csv.reader(csvfile)
         for row in reader:
             lines.append(row)
     return lines
 
-def get_csv_header(file_path):
+def get_csv_header(filepath):
     """
     Get csv header.
+
+    Args:
+        filepath (string): filepath
     """
-    with open(file_path, newline='', encoding='utf-8') as csvfile:
+    with open(filepath, newline='', encoding='utf-8') as csvfile:
         reader = csv.reader(csvfile)
         header = next(reader)  # Read the first row
     return header
@@ -38,6 +47,9 @@ def get_csv_header(file_path):
 def get_parents(hierarchy_lines):
     """
     Get parents for each node.
+
+    Args:
+        hierarchy_lines (string[]): lines of the hierarchy csv
     """
     parents = {}
     for line in hierarchy_lines:
@@ -48,6 +60,9 @@ def get_parents(hierarchy_lines):
 def get_taxon_level(hierarchy_lines):
     """
     Get taxonomy level.
+
+    Args:
+        hierarchy_lines (string[]): lines of the hierarchy csv
     """
     taxon_levels = {}
     for line in hierarchy_lines[1:]:
@@ -58,6 +73,10 @@ def get_taxon_level(hierarchy_lines):
 def keep_only_n_images(root_folder, n=25):
     """
     Keep only n images from folders inside a root folder.
+
+    Args:
+        root_folder (string): dirpath to the root folder of the classes
+        n (int): number of images to keep for each classes
     """
     for subdir in os.listdir(root_folder):
         subdir_path = os.path.join(root_folder, subdir)
@@ -76,33 +95,22 @@ def keep_only_n_images(root_folder, n=25):
 def remove_classes(root_folder, classes_to_remove):
     """
     Remove classes from a dataset.
+
+    Args:
+        root_folder (string): dirpath to the root folder of the classes
+        classes_to_remove (string[]): classes to remove
     """
     for class_ in classes_to_remove:
         class_folder = os.path.join(root_folder, class_)
         shutil.rmtree(class_folder)
 
-def resize_images(input_folder, output_folder, size=(224, 224)):
-    """
-    Resize images from an input folder to an output folder.
-    """
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
-    
-    for filename in os.listdir(input_folder):
-        input_path = os.path.join(input_folder, filename)
-        output_path = os.path.join(output_folder, filename)
-        
-        try:
-            with Image.open(input_path) as img:
-                new_img = img.resize(size)  # Conserve le ratio tout en s'adaptant à la taille max
-                new_img.save(output_path)
-                print(f"Image redimensionnée et enregistrée : {output_path}")
-        except Exception as e:
-            print(f"Erreur lors du traitement de {filename}: {e}")
-
 def copy_folder(src, dst):
     """
     Copy a folder into another folder.
+
+    Args:
+        src (string): source folder
+        dst (string): destination folder
     """
     try:
         if not os.path.exists(src):
@@ -124,6 +132,9 @@ def copy_folder(src, dst):
 def create_dataset_test(classes_to_remove):
     """
     Create a test dataset.
+
+    Args:
+        classes_to_remove (string[]): classes to remove
     """
     dataset_dirname = "data/small-collomboles-n-classes/dataset"
     dataset_test_dirname = "data/small-collomboles-n-classes/dataset_test"

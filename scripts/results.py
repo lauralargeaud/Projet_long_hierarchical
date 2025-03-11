@@ -358,11 +358,16 @@ def get_parent_confusion_matrix(cm, classes, parents):
 
 # df contient les données de metrics_all.csv
 # on veut construire le csv requis par plot_hierarchical_perf
-def build_F1_perfs_csv(path_metrics_all, path_generated_csv, path_hierarchy):
+def build_F1_perfs_csv(metrics_filepath, output_filepath, hierarchy_filepath):
     """
     Build F1-score in csv file.
+
+    Args:
+        metrics_filepath (string): path to metrics csv
+        output_filepath (string): output filepath
+        hierarchy_filepath (string): path to hierarchy csv
     """
-    df = pd.read_csv(path_metrics_all)
+    df = pd.read_csv(metrics_filepath)
 
     df_filtered = df[df["Etage"] != "branches"]
     df_filtered = df_filtered[df_filtered["Classe"] != "Moyenne"]
@@ -379,7 +384,7 @@ def build_F1_perfs_csv(path_metrics_all, path_generated_csv, path_hierarchy):
     # Trier par ordre alphabétique des 'Name'
     new_df = new_df.sort_values(by=["Name"])
 
-    hierarchy_filename = path_hierarchy
+    hierarchy_filename = hierarchy_filepath
     hierarchy_lines = read_csv(hierarchy_filename)
     hierarchy_lines_without_names = hierarchy_lines[1:]
     parents = get_parents(hierarchy_lines_without_names)
@@ -389,7 +394,7 @@ def build_F1_perfs_csv(path_metrics_all, path_generated_csv, path_hierarchy):
     taxon_levels = dict(sorted(taxon_levels.items()))
     new_df["Taxon_level"] = new_df["Name"].map(taxon_levels)
 
-    new_df.to_csv(path_generated_csv, index=False)
+    new_df.to_csv(output_filepath, index=False)
 
 def save_confusion_matrix_and_metrics(output_folder, cm_leaves_path, classes, parents, hierarchy_names):
     """
@@ -416,6 +421,13 @@ def save_confusion_matrix_and_metrics(output_folder, cm_leaves_path, classes, pa
 def create_tree_json(df, parents):
     """
     Create a tree with metrics from a dataframe.
+
+    Args:
+        df (pd.DataFrame): csv metrics
+        parents (dict{}): dict to get parents from children
+
+    Returns:
+        dict{}: root of the tree
     """
     childrens = {}
     for k, v in parents.items():
@@ -441,9 +453,15 @@ def create_tree_json(df, parents):
         create_tree(df, child, root, childrens)
     return root
     
-def create_tree(df, name, root, childrens):
+def create_tree(df, name, parent, childrens):
     """
     Create a tree with metrics from a dataframe.
+
+    Args:
+        df (pd.DataFrame): csv metrics
+        name (string): name of the current node
+        parent (dict{}): parent of the current node
+        childrens (dict{}): dict to get childrens from parent
     """
     row = df[df["Classe"] == name]
     node = {
@@ -458,7 +476,7 @@ def create_tree(df, name, root, childrens):
         "f1-score": row["F1-score"].values[0], 
         "children": []
     }
-    root["children"].append(node)
+    parent["children"].append(node)
     if name in childrens:
         for child in childrens[name]:
             create_tree(df, child, node, childrens)
