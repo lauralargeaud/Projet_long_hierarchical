@@ -132,3 +132,43 @@ def get_branches_label(most_probable_branches_indices_in, most_probable_branches
     for i in range(most_probable_branches_indices_in.shape[1]):
       predicted_classes[p,i] = "pred: " + classes[most_probable_branches_indices_in[p,i]] + ", label:  " + classes[most_probable_branches_indices_target[p,i]]
   return predicted_classes
+
+
+def add_nodes_to_output(path_to_csv_tree, output, classes, node_to_index):
+  '''Adding branches and nodes to the output'''
+  H_raw, _, _ = get_tree_matrices(path_to_csv_tree, verbose=False)
+  La_raw = get_layer_matrix(path_to_csv_tree, verbose=False)
+  
+
+  tree_height, _ = La_raw.shape
+  nb_nodes,_ = H_raw.shape
+  batch_size, nb_leafs = output.shape
+
+  augmented_output = torch.zeros((nb_nodes, batch_size))
+  
+  # Premier étage de la hierarchy
+  for i in range(nb_leafs):
+    augmented_output[node_to_index[classes[i]], :] = output[:, i]
+  
+  # On remplit les étages suivants
+  for i in range(tree_height-2, -1, -1):
+    branches_idx = np.where(La_raw[i,:] == 1)[0]
+
+    for branch_idx in branches_idx:
+      child_idx = np.where(H_raw[branch_idx,:] == 1)[0]
+      augmented_output[branch_idx, :] = augmented_output[child_idx, :].sum(axis=0)
+  
+  return augmented_output
+
+def format_target(target, nb_nodes):
+  '''pour mettre un target sous la forme necessaire pour les metriques'''
+  batch_size = len(target)
+  target_formated = torch.zeros((nb_nodes, batch_size))
+
+  for i in range(batch_size):
+     target_formated[target[i], i] = 1
+  
+  return target_formated
+
+
+  

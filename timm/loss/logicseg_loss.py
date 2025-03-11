@@ -36,8 +36,8 @@ class LogicSegLoss(nn.Module):
         y_pred, y_true = y_pred.float(), y_true.float()
 
         # apply the sigmoid function in order to compute the nb_nodes probabilities for each image
-        # y_pred_sigmoid = torch.sigmoid(y_pred)
-        y_pred_sigmoid = y_pred
+        y_pred_sigmoid = torch.sigmoid(y_pred)
+        
         batch_c_losses = self.c_rule(y_pred_sigmoid, y_true)
         if verbose:
             print("c_losses", batch_c_losses.item())
