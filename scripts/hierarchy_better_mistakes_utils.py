@@ -7,38 +7,18 @@ from scripts.utils import read_csv
 
 np.set_printoptions(threshold=sys.maxsize)
 
-def build_tree(data):
-    """
-    Build tree.
-    """
-    tree = defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list))))
-    names = set()
-    for entry in data[1:]:
-        class_, order, family, genus, species = entry
-        names.add(class_)
-        names.add(order)
-        names.add(family)
-        names.add(genus)
-        names.add(species)
-        tree[class_][order][family][genus].append(species)
-
-    return tree
-
-def print_tree(tree, indent=0):
-    """
-    Print tree.
-    """
-    for key, value in tree.items():
-        print(" " * indent + str(key))
-        if isinstance(value, dict):
-            print_tree(value, indent + 4)
-        else:
-            for item in value:
-                print(" " * (indent + 4) + str(item))
-
 def get_id_from_nodes(hierarchy_lines):
     """
     Get Nodes and Leafs ID.
+
+    Args:
+        hierarchy_lines (string[]): lines of the hierarchy csv
+
+    Returns:
+        string[]: nodes
+        string[]: leafs
+        dict{}: nodes to id
+        dict{}: leafs to id
     """
     h = len(hierarchy_lines[0])
     nodes = []
@@ -55,7 +35,15 @@ def get_id_from_nodes(hierarchy_lines):
 
 def compute_L(hierarchy_lines, nodes_to_id, leafs_to_id):
     """
-    Compute L matrix.
+    Compute L matrix without leaves.
+
+    Args:
+        hierarchy_lines (string[]): lines of the hierarchy csv
+        nodes_to_id (dict{}): nodes to id
+        leafs_to_id (dict{}): leafs to id
+
+    Returns:
+        np.array: L matrix
     """
     h = len(hierarchy_lines[0])
     L = np.zeros((len(nodes_to_id), len(leafs_to_id)))
@@ -69,6 +57,14 @@ def compute_L(hierarchy_lines, nodes_to_id, leafs_to_id):
 def compute_full_L(hierarchy_lines, nodes_to_id, leafs_to_id):
     """
     Compute L matrix with leaves.
+
+    Args:
+        hierarchy_lines (string[]): lines of the hierarchy csv
+        nodes_to_id (dict{}): nodes to id
+        leafs_to_id (dict{}): leafs to id
+
+    Returns:
+        np.array: L matrix
     """
     h = len(hierarchy_lines[0])
     L = np.zeros((len(nodes_to_id)+len(leafs_to_id), len(leafs_to_id)))
@@ -83,6 +79,13 @@ def compute_full_L(hierarchy_lines, nodes_to_id, leafs_to_id):
 def get_path_from_leafs(hierarchy_lines, nodes_to_id):
     """
     Get path from each leafs to root.
+
+    Args:
+        hierarchy_lines (string[]): lines of the hierarchy csv
+        nodes_to_id (dict{}): nodes to id
+
+    Returns:
+        string[][]: path from leafs to root
     """
     paths = []
     for line in hierarchy_lines:
@@ -95,6 +98,13 @@ def get_path_from_leafs(hierarchy_lines, nodes_to_id):
 def get_hce_tree_data(tree_filename):
     """
     Get L and h from the tree.
+
+    Args:
+        tree_filename (string): csv tree filename
+    
+    Returns:
+        np.array: L matrix
+        int: height of the tree
     """
     tree_lines = read_csv(tree_filename)
     tree_lines_without_names = tree_lines[1:]
