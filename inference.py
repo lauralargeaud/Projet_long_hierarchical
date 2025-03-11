@@ -550,6 +550,7 @@ def main():
         if args.logicseg:
             print(f'--result')
             # Create the metrics file and store the data 
+            metrics_hierarchy.save_metrics_csv(os.path.join(args.results_dir, "metrics_results.csv"))
             with open(os.path.join(args.results_dir, "metrics_results.txt"), "w") as fichier:
                 metrics_str = metrics_hierarchy.get_metrics_string()
                 fichier.write(metrics_str)

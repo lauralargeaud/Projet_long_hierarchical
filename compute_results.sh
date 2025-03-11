@@ -27,4 +27,4 @@ for fichier in "$dossier"/*; do
     fi
 done
 
-python3 results.py
+# python3 results.py

@@ -1,0 +1,15 @@
+model: resnet50
+checkpoint: "output/train_bis/LOGICSEG_ASL_2_2_0_15__1/model_best.pth.tar"
+data_dir: "data/small-collomboles/dataset/test"
+num_classes: 136
+
+results_dir: "output/test_bis/logicseg_2_2_0_15_1"
+results_file: "test_logicseg_asl_2_2_0_15_1"
+
+conf_matrix: True
+
+csv_tree: "data/small-collomboles/hierarchy.csv"
+logicseg: True
+class_map: "classmap/classmap.pkl"
+
+message_passing: True
