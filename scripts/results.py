@@ -20,7 +20,7 @@ def generate_barplots(values, labels, title, filename, output_folder="output/img
     plt.bar(labels, values, color='skyblue')
     plt.xlabel('Modèles')
     plt.ylabel('Valeurs')
-    plt.ylim([0, 1])
+    # plt.ylim([0, 1])
     plt.title(title)
     plt.xticks(rotation=45)
     
@@ -104,9 +104,7 @@ def display_models_barplots_multiple(test_output_folder, output_folder="output/i
         labels.add(title)
     labels = sorted(list(labels))
     values = {metric: {hierarchy_name: {label: [] for label in labels} for hierarchy_name in hierarchy_names} for metric in metrics}
-    print(labels)
-    return
-    acc_metrics = ["Top-1 Accuracy", "Top-5 Accuracy"]
+    acc_metrics = ["Top-1 Accuracy", "Top-5 Accuracy", "Top-1 hierarchical distance", "Top-5 hierarchical distance"]
     acc_values = {metric: {label: [] for label in labels} for metric in acc_metrics}
     for folder in sorted(os.listdir(test_output_folder)):
         csv_path = os.path.join(test_output_folder, folder, "metrics_all.csv")
@@ -122,6 +120,8 @@ def display_models_barplots_multiple(test_output_folder, output_folder="output/i
         df = pd.read_csv(acc_path)
         acc_values["Top-1 Accuracy"][title].append(df.iloc[0]["Top 1 accuracy"])
         acc_values["Top-5 Accuracy"][title].append(df.iloc[0]["Top 5 accuracy"])
+        acc_values["Top-1 hierarchical distance"][title].append(df.iloc[0]["Top 1 hierarchical distance"])
+        acc_values["Top-5 hierarchical distance"][title].append(df.iloc[0]["Top 5 hierarchical distance"])
     
     for metric, hierarchy in values.items():
         for name, data_dict in hierarchy.items():
