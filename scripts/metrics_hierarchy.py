@@ -201,7 +201,7 @@ class MetricsHierarchy:
         if k == 5:
             self.metrics[MetricsLabels.topk_hierarchical_distance_predictions].update(total_distance / target.size(0))
         elif k == 1:
-            self.metrics[MetricsLabels.hierarchical_distance_mistakes_predictions].update(total_distance / target.size(0))
+            self.metrics[MetricsLabels.hierarchical_distance_predictions].update(total_distance / target.size(0))
 
 
     def cd_rule_respect_percentage_seuil_max(self, output: torch.Tensor, L):
