@@ -9,8 +9,9 @@ class MetricsLabels:
 
     accuracy_top1 = "Top 1 accuracy"
     accuracy_top5 = "Top 5 accuracy"
-    hierarchical_distance_mistakes = "Top 1 hierarchical distance mistakes"
-    topk_hierarchical_distance_mistakes = "Top 5 hierarchical distance mistakes"
+    hierarchical_distance_predictions = "Top 1 hierarchical distance prediction"
+    topk_hierarchical_distance_predictions = "Top 5 hierarchical distance prediction"
+    hierarchical_distance_mistakes = "hierarchical distance mistakes"
 
     c_rule_respect_seuil_relatif = "Respect of the c rule with seuil relatif"
     d_rule_respect_seuil_relatif = "Respect of the d rule with seuil relatif"
@@ -54,8 +55,9 @@ class MetricsHierarchy:
         self.metrics = {
             MetricsLabels.accuracy_top1: AverageMeter(),
             MetricsLabels.accuracy_top5: AverageMeter(),
+            MetricsLabels.hierarchical_distance_predictions: AverageMeter(),
+            MetricsLabels.topk_hierarchical_distance_predictions: AverageMeter(),
             MetricsLabels.hierarchical_distance_mistakes: AverageMeter(),
-            MetricsLabels.topk_hierarchical_distance_mistakes: AverageMeter(),
             MetricsLabels.c_rule_respect_seuil_relatif: AverageMeter(),
             MetricsLabels.d_rule_respect_seuil_relatif: AverageMeter(),
             MetricsLabels.e_rule_respect_seuil_relatif: AverageMeter(),
@@ -83,8 +85,10 @@ class MetricsHierarchy:
     def compute_all_metrics(self, output, target, branches_and_nodes, L, augmented_target = None):
         self.topk_accuracy_logicseg(output, target, 1)
         self.topk_accuracy_logicseg(output, target, 5)
+
         self.hierarchical_distance_mistake(output, target)
-        self.topk_hierarchical_distance_mistake(output, target, 5)
+        self.topk_hierarchical_distance_predictions(output, target, 5)
+        self.topk_hierarchical_distance_predictions(output, target, 1)
 
         if augmented_target != None:
             target = augmented_target
@@ -146,18 +150,20 @@ class MetricsHierarchy:
 
         # Initialiser la distance totale
         total_distance = 0.0
+        total_mistakes = 0
 
-        for i in range(target.size(0)):  # Boucle sur tous les exemples
+        for i in range(target.size(0)):  # Boucle sur tous le batch
             pred_class = indices_branches_in[i].item()
             true_class = indices_branches_target[i].item()
 
             if pred_class != true_class:
                 distance = self.lca_height(pred_class, true_class)
                 total_distance += distance
+                total_mistakes += 1
 
-        self.metrics[MetricsLabels.hierarchical_distance_mistakes].update(total_distance / target.size(0))
+        self.metrics[MetricsLabels.hierarchical_distance_mistakes].update(total_distance / total_mistakes)
 
-    def topk_hierarchical_distance_mistake(self, output, target, k=5):
+    def topk_hierarchical_distance_predictions(self, output, target, k=5):
         """
         Calcule la distance hiérarchique moyenne des erreurs pour les k meilleures prédictions.
 
@@ -192,7 +198,10 @@ class MetricsHierarchy:
             total_distance += sum(distances) / k
 
         # Stocker le résultat
-        self.metrics[MetricsLabels.topk_hierarchical_distance_mistakes].update(total_distance / target.size(0))
+        if k == 5:
+            self.metrics[MetricsLabels.topk_hierarchical_distance_predictions].update(total_distance / target.size(0))
+        elif k == 1:
+            self.metrics[MetricsLabels.hierarchical_distance_mistakes_predictions].update(total_distance / target.size(0))
 
 
     def cd_rule_respect_percentage_seuil_max(self, output: torch.Tensor, L):
