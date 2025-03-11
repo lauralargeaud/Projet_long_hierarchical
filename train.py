@@ -344,7 +344,7 @@ group.add_argument('--drop-block', type=float, default=None, metavar='PCT',
 
 # Custom loss
 group.add_argument('--logicseg', action='store_true', default=False,
-                   help='Enable LogicSeg loss.')
+                   help='Enable LogicSeg.')
 group.add_argument('--hce-loss', action='store_true', default=False,
                    help="Enable Hierarchical Cross Entropy loss.")
 group.add_argument('--logicseg-method', default="bce",
@@ -354,17 +354,14 @@ group.add_argument('--csv-tree', default=None,
 group.add_argument('--softlabels', action='store_true', default=False,
     help='Convert ground-truth labels to soft labels before calculating the loss.')
 
-# The following arguments are for implemented this way to facilitate testing, they might change in the future
 group.add_argument('--crule-loss-weight', type=float, default=0.2,
                    help='Set the weight of the Closs.')
 group.add_argument('--drule-loss-weight', type=float, default=0.2,
                    help='Set the weight of the Dloss.')
 group.add_argument('--erule-loss-weight', type=float, default=0.2,
                    help='Set the weight of the Eloss.')
-# group.add_argument('--bce-loss-weight', type=float, default=1,
-#                    help='Set the weight of the Bce.')
 group.add_argument('--alpha-layer', type=float, default=0.1,
-                   help='Set the weight of the layer.')
+                   help='List that sets the weight of each hierarchical level.')
 group.add_argument('--target-loss-weight', type=float, default=1,
                    help='Set the weight of the loss used to compute the error between output and target.')
 group.add_argument('--asl-gamma-pos', type=float, default=1,
@@ -706,6 +703,8 @@ def main():
         # Create the class map folder if it does not exist
         if not os.path.exists(args.class_map):
             os.makedirs(args.class_map)
+        # generate the dictionary storing classes names as keys and assoiacted labels as values
+        # a label is a tensor of nb_nodes elements, with ones in the root to leaf path to the leaf to predict and 0 elsewhere
         create_class_to_labels(args.csv_tree, args.class_map, verbose=False)
 
     dataset_train = create_dataset(
@@ -851,11 +850,14 @@ def main():
 
     validate_loss_fn = nn.CrossEntropyLoss().to(device=device)
     # setup loss function
-    if args.logicseg: #FIXME: no mixup/label_smoothing management
+    if args.logicseg:
+        # get the matrices useful for the losses
         H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=False)
         matrice_H = H_raw
-        La_raw = get_layer_matrix(args.csv_tree, verbose=False)
+        # get the matrix storing for each level, the vector with 1 at the indeexes of the nodes of the level, 0 otherwise
+        La_raw = get_layer_matrix(args.csv_tree, verbose=False) # shape (height, nb_nodes)
         matrice_L = La_raw
+        # initialize the losses of LogicSeg
         train_loss_fn = LogicSegLoss(args.logicseg_method, H_raw, P_raw, M_raw, La_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.target_loss_weight, args.alpha_layer, args.asl_gamma_pos, args.asl_gamma_neg, args.asl_thresh_shifting)
         validate_loss_fn = LogicSegLoss(args.logicseg_method, H_raw, P_raw, M_raw, La_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.target_loss_weight, args.alpha_layer, args.asl_gamma_pos, args.asl_gamma_neg, args.asl_thresh_shifting)
     elif args.hce_loss:
@@ -967,6 +969,7 @@ def main():
     try:
         label_matrix = None
         if args.logicseg:
+            # get the matrix storing for each leaf, the vector corresponding to its leaf to root path in the tree
             label_matrix, _, _ = get_label_matrix(args.csv_tree)
 
         nodes_to_leaves = None
@@ -1123,6 +1126,7 @@ def train_one_epoch(
     losses_m = dict()
     losses_m["loss"] = utils.AverageMeter()
     if args.logicseg:
+        # initialize the objects storing the average of each loss
         losses_m["C_loss"] = utils.AverageMeter()
         losses_m["D_loss"] = utils.AverageMeter()
         losses_m["E_loss"] = utils.AverageMeter()
@@ -1179,15 +1183,17 @@ def train_one_epoch(
                 if args.logicseg:
                     if last_batch:
                         print("Valeur des losses au dernier batch de l'epoch: ")
+                    # compute the loss between current prediction and the associated target
                     loss = loss_fn(output, target, last_batch, losses_dict)
                     if last_batch:
                         print(" ")
-                    # appliquer la sigmoid
+                    # apply the sigmoid
                     output = torch.sigmoid(output)
-                    # calculer la probabilité associée à chaque branche
+                    # calculate the probability associated with each branch
                     logicseg_predictions = get_logicseg_predictions(torch.sigmoid(output), label_matrix, device)
-                    # construire le label onehot associé à chaque branche
+                    # build the onehot label associated with each branch
                     onehot_targets = get_logicseg_predictions(target, label_matrix, device)
+                    # compute top-1 and top-5 accuracy
                     acc1 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=1)
                     acc5 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=5)
                 else:
@@ -1371,6 +1377,7 @@ def validate(
 
             if args.logicseg:
                 if last_batch:
+                    # print a message showing the current prediction and associated target
                     print(" ")
                     print("Un exemple de prédiction / target pour une image de la validation:")
                     # Déplacement sur CPU et conversion en DataFrame
@@ -1386,15 +1393,14 @@ def validate(
                     df = pd.DataFrame(target[0,:].cpu().numpy()).T
                     print(df.to_string(index=False))
                     print(" ")
-                # calculer la probabilité associée à chaque branche
+                # calculate the probability associated with each branch
                 logicseg_predictions = get_logicseg_predictions(torch.sigmoid(output), label_matrix, device)
-                # construire le label onehot associé à chaque branche
+                # build the onehot label associated with each branch
                 onehot_targets = get_logicseg_predictions(target, label_matrix, device)
+                # compute the top-1 and top-5 accuracy
                 acc1 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=1)
                 acc5 = topk_accuracy_logicseg(logicseg_predictions, onehot_targets, topk=5)
-
-                """TO TEST"""
-
+                # compute all the metrics using the metrics class (including top-1 and top-5 accuracy)
                 hierarchical_metrics = MetricsHierarchy(matrice_H, device)
                 hierarchical_metrics.compute_all_metrics(logicseg_predictions, onehot_targets, output, matrice_L)
                         
@@ -1425,8 +1431,8 @@ def validate(
             if utils.is_primary(args) and (last_batch or batch_idx % args.log_interval == 0):
                 log_name = 'Test' + log_suffix
 
-                '''TO TEST'''
                 if args.logicseg:
+                    # print all the metrics computed using the metrics class (including top-1 and top-5 accuracy)
                     _logger.info(
                         f'{log_name}: [{batch_idx:>4d}/{last_idx}]  '
                         f'Time: {batch_time_m.val:.3f} ({batch_time_m.avg:.3f})  '

@@ -134,7 +134,7 @@ parser.add_argument('--conf-matrix', action='store_true', default=False,
 
 # Custom parameter for LogicSeg
 parser.add_argument('--logicseg', action='store_true', default=False,
-                   help='Apply logicseg processing to output.')
+                   help='Enable logicseg.')
 parser.add_argument('--message-passing', action='store_true', default=False,
                    help='Apply logicseg message passing processing to output.')
 parser.add_argument('--message-passing-iter-count', type=int, default=2,
@@ -217,7 +217,8 @@ def main():
         # Create the class map folder if it does not exist
         if not os.path.exists(args.class_map):
             os.makedirs(args.class_map)
-            create_class_to_labels(args.csv_tree, args.class_map, verbose=False)
+        # generate the dictionary storing classes names as keys and assoiacted labels as values
+        create_class_to_labels(args.csv_tree, args.class_map, verbose=False)
 
     model_dtype = None
     if args.model_dtype:
@@ -282,10 +283,6 @@ def main():
     if args.num_gpu > 1:
         model = torch.nn.DataParallel(model, device_ids=list(range(args.num_gpu)))
 
-    # If logicSeg is used we create the class map file just before creating the dataset
-    if args.logicseg:
-        create_class_to_labels(args.csv_tree, args.class_map, verbose=False)
-
     root_dir = args.data_dir# args.data or args.data_dir
     dataset = create_dataset(
         root=root_dir,
@@ -339,13 +336,9 @@ def main():
     metrics_hierarchy = None
     nb_batches = 0
 
-    acc1_m = AverageMeter()
-    acc5_m = AverageMeter()
-
     with torch.no_grad():
         if args.logicseg:
-            # top1 = 0
-            # top5 = 0
+            # Create the hierarchical matrices needed for message passing and the metrics
             H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=False)
             La_raw = get_layer_matrix(args.csv_tree, verbose=False) 
 
@@ -361,18 +354,22 @@ def main():
             if args.logicseg:
 
                 if args.message_passing:
+                        # If message passing is enabled, create a new instance of the message passing class, initialized with the necessary matrices
                         message_passing = MessagePassing(H_raw, P_raw, M_raw, La_raw, args.message_passing_iter_count, device)
                 
 
-                # construire la label_matrix
+                # compute the label matrix
                 label_matrix, _, index_to_node = get_label_matrix(args.csv_tree)
+                # compute the labels associated with each class
                 class_to_label = get_class_to_label(label_matrix, index_to_node)
                 classes_labels = np.array(list(class_to_label.keys()))
 
-                # données utiles pour la matrice de confusion pour chaque hauteur de l'arbre
-                La = torch.tensor(La_raw).to(device) # (hauteur, nb_noeuds); La[i,j] = 1 si le noeud d'index j est de profondeur i, sinon 0
-                h = La.shape[0] # hauteur de l'
+                # useful data for the confusion matrix for each hierarchical level
+                La = torch.tensor(La_raw).to(device) # (height, nb_nodes); La[i,j] = 1 if index node j is of depth i, otherwise 0
+                h = La.shape[0] # height of the tree
                 labels_par_hauteur = [[index_to_node[j] for j in range(La.shape[1]) if int(La[hauteur,j].item()) == 1 ] for hauteur in range(h)] # liste de h sous-listes; labels_par_hauteur[i] = les labels de la hauteur
+                # "cm" = confusion_matrix
+                # initialize the arrays storing the predicted indexes and the associated targets for each hierarchical level
                 cm_par_hauteur_ids_preds = np.empty((h,0), dtype=np.float32)
                 cm_par_hauteur_ids_targets = np.empty((h,0), dtype=np.float32)
 
@@ -390,30 +387,23 @@ def main():
                 cm_all_ids_preds.append(ids_preds.cpu().numpy())
                 cm_all_targets.append(target.cpu().numpy())
 
-            if not args.logicseg:
-                acc1, acc5 = accuracy(output, target, topk=(1, 5))
-                acc1 = acc1 / 100
-                acc5 = acc5 / 100
-                acc1_m.update(acc1.item(), output.size(0))
-                acc5_m.update(acc5.item(), output.size(0))
-
             if args.logicseg:
                 if args.message_passing:
+                    # If message passing is enabled, modify the model's output with the already initialized instance of the message passing class
                     output = message_passing.process(output)
-                # appliquer la sigmoid
+                # apply the sigmoid
                 output = torch.sigmoid(output)
                 # calculer la probabilité associée à chaque branche
                 logicseg_predictions = get_logicseg_predictions(output, label_matrix, device) # (nb_pred, nb_feuilles) probabilités des feuilles prédites par le modèle
-                # construire le label onehot associé à chaque branche
+                # construire le label associé à chaque branche
                 onehot_targets = get_logicseg_predictions(target, label_matrix, device) # (nb_pred, nb_feuilles) one hot encoding des feuilles cibles
                 # calculer les métriques sur les prédictions réalisées dans le batch courant
                 metrics_hierarchy.compute_all_metrics(logicseg_predictions, onehot_targets, output, La)
                 
-                
                 if args.conf_matrix:
                     # données utiles pour la matrice de confusion sur les feuilles
-                    proba_output, id_branch_output = logicseg_predictions.topk(1, dim=1) # proba max, id proba max: classe prédite par le modèles
-                    proba_target, id_branch_target = onehot_targets.topk(1, dim=1) # idem mais classe cible
+                    _, id_branch_output = logicseg_predictions.topk(1, dim=1) # proba max, id proba max: classe prédite par le modèles
+                    _, id_branch_target = onehot_targets.topk(1, dim=1) # idem mais classe cible
 
                     predicted_labels = [classes_labels[id_branch_output[i]] for i in range(id_branch_output.shape[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
                     target_labels = [classes_labels[id_branch_target[i]] for i in range(id_branch_target.shape[0])] # (nbre_pred, 1) stockant 1 chaine de caractères par ligne
@@ -424,33 +414,19 @@ def main():
                     cm_all_targets.append(id_branch_target.cpu().numpy())
 
                     nb_pred = output.shape[0]
-                    # extraction des probabilités de chaque noeud pour chaque hauteur de l'arbre
+
+                    # extraction des probabilités de chaque noeud pour chaque hauteur de l'arbre:
+
                     output_rep = output.unsqueeze(0).repeat(h, 1, 1) # (h, nb_pred, nb_noeuds)
                     onehot_rep = target.unsqueeze(0).repeat(h, 1, 1) # (h, nb_pred, nb_noeuds)
                     La_rep = La.unsqueeze(1).repeat(1, nb_pred, 1) # (h, nb_pred, nb_noeuds)
                     probas_par_hauteur = output_rep * La_rep # (h, nb_pred, nb_noeuds): probas_par_hauteur[i,j,:] = les probas des noeuds de hauteur i pour la prédiction d'indice j
                     onehot_par_hauteur = onehot_rep * La_rep # (h, nb_pred, nb_noeuds)
-                    proba_output, id_branch_output = probas_par_hauteur.topk(1, dim=2) # (h, nb_pred) id de la classe prédite à chaque hauteur de l'arbre
-                    proba_target, id_branch_target = onehot_par_hauteur.topk(1, dim=2) # (h, nb_pred) id de la classe cible à chaque hauteur de l'arbre
+                    _, id_branch_output = probas_par_hauteur.topk(1, dim=2) # (h, nb_pred) id de la classe prédite à chaque hauteur de l'arbre
+                    _, id_branch_target = onehot_par_hauteur.topk(1, dim=2) # (h, nb_pred) id de la classe cible à chaque hauteur de l'arbre
                     
                     cm_par_hauteur_ids_preds = np.concatenate((cm_par_hauteur_ids_preds, id_branch_output.squeeze(2).cpu().numpy()), 1) # (h, nb_images_traitées)
                     cm_par_hauteur_ids_targets = np.concatenate((cm_par_hauteur_ids_targets, id_branch_target.squeeze(2).cpu().numpy()), 1) # (h, nb_images_traitées)
-
-                #for i in range(len(output)):
-                #    print("output", output[i,:])
-                #    print("target", target[i,:])
-                # probas_branches_input = get_predicted_branches(output, label_matrix) # taille (nb_pred, nb_feuilles)
-                # probas_branches_target = get_predicted_branches(target, label_matrix)
-                # output_in, indices_branches_in = probas_branches_input.topk(top_k, dim=1) # (nb_pred, top_k), (nb_pred, top_k)
-                # output_target, indices_branches_target = probas_branches_target.topk(top_k, dim=1) # (nb_pred, top_k), (nb_pred, top_k)
-                # np_indices_branches_in = indices_branches_in.cpu().numpy()
-                # np_indices_branches_target = indices_branches_target.cpu().numpy()
-                # if args.include_index:
-                #     all_indices.append(np_indices_branches_in)
-                # class_to_label = get_class_to_label(label_matrix, index_to_node)
-                # np_labels_branches = get_label_branches(np_indices_branches_in, np_indices_branches_target, class_to_label)
-                # all_labels.append(np_labels_branches)
-
             
             elif args.csv_tree != "./":
                 '''Compute metrics for non-logicseg models'''
@@ -483,10 +459,6 @@ def main():
             if batch_idx % args.log_freq == 0:
                 _logger.info('Predict: [{0}/{1}] Time {batch_time.val:.3f} ({batch_time.avg:.3f})'.format(
                     batch_idx, len(loader), batch_time=batch_time))
-
-    # if not args.logicseg:
-        # df = pd.DataFrame({"Top 1 accuracy": [f"{acc1_m.avg:.4f}"], "Top 5 accuracy": [f"{acc5_m.avg:.4f}"]})
-        # df.to_csv(os.path.join(args.results_dir, "metrics_results.csv"), index_label="row")
 
     all_indices = np.concatenate(all_indices, axis=0) if all_indices else None
     all_labels = np.concatenate(all_labels, axis=0) if all_labels else None
@@ -577,11 +549,13 @@ def main():
         metrics_hierarchy.save_metrics_csv(os.path.join(args.results_dir, "metrics_results.csv"))
         if args.logicseg:
             print(f'--result')
+            # Create the metrics file and store the data 
             with open(os.path.join(args.results_dir, "metrics_results.txt"), "w") as fichier:
                 metrics_str = metrics_hierarchy.get_metrics_string()
                 fichier.write(metrics_str)
                 print(metrics_str)
-
+    
+            # Process and save confusion matrix of the leafs (in .out and .jpg files) /!\ names are important here
             cm = load_confusion_matrix(os.path.join(args.results_dir, "cm_branch.out"))
             cm_normalized = load_confusion_matrix(os.path.join(args.results_dir, "cm_norm_branch.out"))
             output_filename = "cm_branches.jpg"
@@ -601,7 +575,7 @@ def main():
             save_confusion_matrix_and_metrics(os.path.join(args.results_dir, "results_from_leaves"), os.path.join(args.results_dir, "cm_branch.out"), classes, parents, hierarchy_names)
 
             header_list = get_csv_header(args.csv_tree)
-            # construire la matrice de confusion pour chaque hauteur de l'arbre
+            # Process and save confusion matrices of every tree levels (in .out and .jpg files) /!\ names are important here
             for hauteur in range(h):
                 cm = load_confusion_matrix(os.path.join(args.results_dir, "cm_"+header_list[hauteur]+".out"))
                 cm_normalized = load_confusion_matrix(os.path.join(args.results_dir, "cm_norm_"+header_list[hauteur]+".out"))

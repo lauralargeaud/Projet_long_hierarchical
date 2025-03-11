@@ -20,8 +20,7 @@ class LogicSegLoss(nn.Module):
 
         self.e_rule = ERuleLoss(P_raw, M_raw)
         self.alpha_e = alpha_e
-
-        # self.bce = BinaryCrossEntropy()
+        
         self.method = method
         self.alpha_target_loss = alpha_target_loss
 

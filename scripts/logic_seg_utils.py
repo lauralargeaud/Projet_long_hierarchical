@@ -5,7 +5,11 @@ import torch
 
 def get_layer_matrix(path_to_csv_tree, verbose=False):
   """
-  Get layer matrix from csv.
+  Get layer matrix La from csv.
+
+  La (np.array): layer matrix of shape (height_tree, nb_nodes)
+    La[i,j] = 1 if node j is at the i-th hierarchical level of the tree, with 0 being the root
+
   """
   csv = pd.read_csv(path_to_csv_tree)
   unique_nodes = pd.unique(csv.values.ravel())
@@ -26,6 +30,16 @@ def get_layer_matrix(path_to_csv_tree, verbose=False):
 def get_tree_matrices(path_to_csv_tree, verbose=False):
   """
   Get H, P and M matrix from csv.
+
+  H (np.array): childs matrix of shape (nb_nodes, nb_nodes)
+    H[i,j] = 1 if node j is a child of node i, and 0 otherwise
+
+  P (np.array): peers matrix of shape (nb_nodes, nb_nodes)
+    P[i,j] stores 1 if j is a peer of i, 0 otherwise
+
+  M (np.array): number of peers matrix of shape (nb_nodes,)
+    M[i] = number of peers of node i
+
   """
   csv = pd.read_csv(path_to_csv_tree)
   unique_nodes = pd.unique(csv.values.ravel())
@@ -52,9 +66,12 @@ def get_tree_matrices(path_to_csv_tree, verbose=False):
   
   return H, peer_matrix, M
 
+
 def create_class_to_labels(path_to_csv_tree, path_to_temporary_class_to_labels_file, verbose=False):
   """
   Create class to labels .pkl file.
+  # The ".pkl" file stores the dictionary storing classes names as keys and assoiacted labels as values.
+  # A label is a tensor of nb_nodes elements, with ones in the root to leaf path to the leaf to predict and 0 elsewhere
   """
   label_matrix, _, index_to_node = get_label_matrix(path_to_csv_tree, verbose)
 
@@ -64,9 +81,14 @@ def create_class_to_labels(path_to_csv_tree, path_to_temporary_class_to_labels_f
   with open(path_to_temporary_class_to_labels_file, "wb") as f:
       pickle.dump(class_to_labels, f)  # Écriture binaire
 
+
 def get_label_matrix(path_to_csv_tree, verbose=False):
   """
   Get label matrix from csv.
+
+  The label matrix of size (nb_leaves, nb_nodes) stores for each leaf the vector 
+  corresponding to its leaf to root path in the tree.
+
   """
   csv = pd.read_csv(path_to_csv_tree)
   unique_nodes = pd.unique(csv.values.ravel())
@@ -88,6 +110,7 @@ def get_label_matrix(path_to_csv_tree, verbose=False):
 def get_class_to_label(label_matrix, index_to_node, verbose=False):
   """
   Get class to label from label matrix.
+
   """
   class_to_labels={}
   # On parcours le csv lignes par lignes (donc chemin par chemin dans l'arbre)
@@ -102,12 +125,15 @@ def get_class_to_label(label_matrix, index_to_node, verbose=False):
     print("class_to_labels 1", class_to_labels)
   return class_to_labels
 
-# pred: sigmoid(y_pred)
-# on veut: tenseur de taille (nb_branches,) contenant les probas de toutes les branches
-# sortie: shape = (nb_pred, nb_branches)
 def get_logicseg_predictions(pred, label_matrix, device):
   """
   Get logicseg predictions.
+
+  pred = sigmoid(y_pred) => la sigmoid a déjà été appliquée
+  Pour chaque prédiction du modèle sur laquelle on a appliqué la sigmoid, on veut: 
+    tenseur de taille (nb_branches,) contenant les probas de toutes les branches
+  sortie: shape = (nb_pred, nb_branches)
+
   """
   label_matrix = torch.tensor(label_matrix, dtype=torch.float32).to(device) #torch tensor
   nb_pred = pred.shape[0]
@@ -118,12 +144,15 @@ def get_logicseg_predictions(pred, label_matrix, device):
     probas_branches[i,:] = torch.sum(pred_rep*label_matrix, dim=1)
   return probas_branches
 
-# most_probables_branches: indices des k branches les plus probables dans l'ordre décroissant de probabilité
-# return: les k labels textuels associés
-# most (nb_pred, top_k)
+
 def get_branches_label(most_probable_branches_indices_in, most_probable_branches_indices_target, class_to_label):
   """
   Get branches label.
+
+  most_probables_branches: indices des k branches les plus probables dans l'ordre décroissant de probabilité
+  return: les k labels textuels associés
+  most (nb_pred, top_k)
+
   """
   predicted_classes = np.empty(most_probable_branches_indices_in.shape, dtype=object)
   classes = list(class_to_label.keys())
@@ -135,7 +164,13 @@ def get_branches_label(most_probable_branches_indices_in, most_probable_branches
 
 
 def add_nodes_to_output(path_to_csv_tree, output, classes, node_to_index):
-  '''Adding branches and nodes to the output'''
+  '''
+  
+    Adding branches and nodes to the output.
+    In: output in which each prediction is of shape (nb_leaves,)
+    Out: augmented output in which each prediction is in the "LogicSeg format" of size (nb_nodes,)
+  
+  '''
   H_raw, _, _ = get_tree_matrices(path_to_csv_tree, verbose=False)
   La_raw = get_layer_matrix(path_to_csv_tree, verbose=False)
   
@@ -161,7 +196,7 @@ def add_nodes_to_output(path_to_csv_tree, output, classes, node_to_index):
   return augmented_output
 
 def format_target(target, nb_nodes):
-  '''pour mettre un target sous la forme necessaire pour les metriques'''
+  '''pour mettre un target sous la forme necessaire pour les metriques ("format LogicSeg")'''
   batch_size = len(target)
   target_formated = torch.zeros((nb_nodes, batch_size))
 
