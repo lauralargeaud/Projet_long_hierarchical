@@ -27,20 +27,21 @@ def compute_model_name(filepath):
         print(data)
         method = data["logicseg_method"]
         message_passing = data.get("message_passing", False)
+        crule_loss_weight = data["crule_loss_weight"]
         if message_passing:
             if method == "bce":
-                return "LogicSeg MP (BCE)", "logicseg_bce_mp"
+                return f"LogicSeg MP (BCE, Rule weight={crule_loss_weight})", f"logicseg_bce_mp{str(crule_loss_weight).replace(".", "_")}"
             elif method == "multi_bce":
-                return "LogicSeg MP (Multi BCE)", "logicseg_multibce_mp"
+                return f"LogicSeg MP (Multi BCE, Rule weight={crule_loss_weight})", f"logicseg_multibce_mp{str(crule_loss_weight).replace(".", "_")}"
             else:
-                return "LogicSeg MP", "logicseg"
+                return f"LogicSeg MP (Rule weight={crule_loss_weight})", f"logicseg{str(crule_loss_weight).replace(".", "_")}"
         else:
             if method == "bce":
-                return "LogicSeg (BCE)", "logicseg_bce"
+                return f"LogicSeg (BCE, Rule weight={crule_loss_weight})", f"logicseg_bce{str(crule_loss_weight).replace(".", "_")}"
             elif method == "multi_bce":
-                return "LogicSeg (Multi BCE)", "logicseg_multibce"
+                return f"LogicSeg (Multi BCE, Rule weight={crule_loss_weight})", f"logicseg_multibce{str(crule_loss_weight).replace(".", "_")}"
             else:
-                return "LogicSeg", "logicseg"
+                return f"LogicSeg (Rule weight={crule_loss_weight})", f"logicseg{str(crule_loss_weight).replace(".", "_")}"
     elif softlabel:
         softlabels_beta = data["softlabels_beta"]
         return f"Soft Label (Beta={softlabels_beta})", f'soft_label_{str(softlabels_beta).replace(".", "_")}'

@@ -120,8 +120,8 @@ def display_models_barplots_multiple(test_output_folder, output_folder="output/i
         df = pd.read_csv(acc_path)
         acc_values["Top-1 Accuracy"][title].append(df.iloc[0]["Top 1 accuracy"])
         acc_values["Top-5 Accuracy"][title].append(df.iloc[0]["Top 5 accuracy"])
-        acc_values["Top-1 hierarchical distance"][title].append(df.iloc[0]["Top 1 hierarchical distance"])
-        acc_values["Top-5 hierarchical distance"][title].append(df.iloc[0]["Top 5 hierarchical distance"])
+        acc_values["Top-1 hierarchical distance"][title].append(df.iloc[0]["Top 1 hierarchical distance mistakes"])
+        acc_values["Top-5 hierarchical distance"][title].append(df.iloc[0]["Top 5 hierarchical distance mistakes"])
     
     for metric, hierarchy in values.items():
         for name, data_dict in hierarchy.items():
