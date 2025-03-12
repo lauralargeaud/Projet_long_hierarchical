@@ -1,4 +1,4 @@
-# README générale du projet long
+# README général du projet long
 
 ## Fichiers de timm modifiés:
 * [train.py](train.py)
