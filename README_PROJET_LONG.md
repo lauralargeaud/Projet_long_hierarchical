@@ -18,6 +18,9 @@
     * [Utilitaire Soft Labels](scripts/soft_labels_utils.py)
 * Métriques:
     * [Classe des métriques](scripts/metrics_hierarchy.py)
+* Plots:
+    * [Fonctions de plots de résultats](scripts/results.py)
+    * [Appel des fonctions de plots](results.py)
 
 ## Arguments implémentés
 
