@@ -139,7 +139,7 @@ parser.add_argument('--message-passing', action='store_true', default=False,
                    help='Apply logicseg message passing processing to output.')
 parser.add_argument('--message-passing-iter-count', type=int, default=2,
                    help='number of iteration of the message passing.')
-parser.add_argument('--csv-tree', default="./", help="Path to hierarchy csv")
+parser.add_argument('--csv-tree', default="", help="Path to hierarchy csv")
 
 scripting_group = parser.add_mutually_exclusive_group()
 scripting_group.add_argument('--torchscript', default=False, action='store_true',
@@ -337,15 +337,8 @@ def main():
     nb_batches = 0
 
     with torch.no_grad():
-        if args.logicseg:
-            # Create the hierarchical matrices needed for message passing and the metrics
-            H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=False)
-            La_raw = get_layer_matrix(args.csv_tree, verbose=False) 
 
-
-    with torch.no_grad():
-
-        if args.csv_tree != "./":
+        if args.csv_tree:
             '''Ces variables servent aux calcul des metriques pour tout les modèles'''
             H_raw, P_raw, M_raw = get_tree_matrices(args.csv_tree, verbose=False)
             La_raw = get_layer_matrix(args.csv_tree, verbose=False)
@@ -428,7 +421,7 @@ def main():
                     cm_par_hauteur_ids_preds = np.concatenate((cm_par_hauteur_ids_preds, id_branch_output.squeeze(2).cpu().numpy()), 1) # (h, nb_images_traitées)
                     cm_par_hauteur_ids_targets = np.concatenate((cm_par_hauteur_ids_targets, id_branch_target.squeeze(2).cpu().numpy()), 1) # (h, nb_images_traitées)
             
-            elif args.csv_tree != "./":
+            elif args.csv_tree:
                 '''Compute metrics for non-logicseg models'''
                 #utiliser les node_to_index de get_label_matrix avec les hierarchy_lines
                 classes = load_classnames(args.class_map)
@@ -544,8 +537,7 @@ def main():
 
     for fmt in args.results_format:
         save_results(df, results_filename, fmt)
-
-    if args.conf_matrix:
+    if args.conf_matrix and args.csv_tree:
         metrics_hierarchy.save_metrics_csv(os.path.join(args.results_dir, "metrics_results.csv"))
         if args.logicseg:
             print(f'--result')

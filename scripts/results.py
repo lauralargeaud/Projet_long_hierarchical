@@ -38,7 +38,7 @@ def generate_barplots(values, labels, title, filename, output_folder="output/img
     
     os.makedirs(output_folder, exist_ok=True)
     
-    plt.savefig(os.path.join(output_folder, filename))
+    plt.savefig(os.path.join(output_folder, filename.replace(" ", "_")))
     plt.close()
 
 def generate_boxplots(values, labels, title, filename, output_folder="output/img"):
@@ -63,7 +63,7 @@ def generate_boxplots(values, labels, title, filename, output_folder="output/img
     
     os.makedirs(output_folder, exist_ok=True)
     
-    plt.savefig(os.path.join(output_folder, filename))
+    plt.savefig(os.path.join(output_folder, filename.replace(" ", "_")))
     plt.close()
 
 def display_models_barplots_multiple(test_output_folder, output_folder="output/img", hierarchy_filename="data/small-collomboles/hierarchy.csv"):
@@ -91,7 +91,7 @@ def display_models_barplots_multiple(test_output_folder, output_folder="output/i
     labels = sorted(list(labels))
 
     values = {metric: {hierarchy_name: {label: [] for label in labels} for hierarchy_name in hierarchy_names} for metric in metrics}
-    acc_metrics = ["Top-1 Accuracy", "Top-5 Accuracy", "Top-1 hierarchical distance", "Top-5 hierarchical distance", "Hierarchical distance mistakes"]
+    acc_metrics = ["Top-1 Accuracy", "Top-5 Accuracy", "Top-1 hierarchical distance", "Top-5 hierarchical distance", "Hierarchical distance mistakes", "Respect of the c rule with seuil relatif", "Respect of the d rule with seuil relatif", "Respect of the e rule with seuil relatif", "Relative respect of the c rule with seuil relatif", "Relative respect of the d rule with seuil relatif", "Relative respect of the e rule with seuil relatif", "Respect of the c & d rule with seuil max", "Relative respect of the c & d rule with seuil max"]
     acc_values = {metric: {label: [] for label in labels} for metric in acc_metrics}
     # Get all data from csv files
     for folder in sorted(os.listdir(test_output_folder)):
@@ -113,6 +113,14 @@ def display_models_barplots_multiple(test_output_folder, output_folder="output/i
         acc_values["Top-1 hierarchical distance"][title].append(df.iloc[0]["Top 1 hierarchical distance prediction"])
         acc_values["Top-5 hierarchical distance"][title].append(df.iloc[0]["Top 5 hierarchical distance prediction"])
         acc_values["Hierarchical distance mistakes"][title].append(df.iloc[0]["hierarchical distance mistakes"])
+        acc_values["Respect of the c rule with seuil relatif"][title].append(df.iloc[0]["Respect of the c rule with seuil relatif"])
+        acc_values["Respect of the d rule with seuil relatif"][title].append(df.iloc[0]["Respect of the d rule with seuil relatif"])
+        acc_values["Respect of the e rule with seuil relatif"][title].append(df.iloc[0]["Respect of the e rule with seuil relatif"])
+        acc_values["Relative respect of the c rule with seuil relatif"][title].append(df.iloc[0]["Relative respect of the c rule with seuil relatif"])	
+        acc_values["Relative respect of the d rule with seuil relatif"][title].append(df.iloc[0]["Relative respect of the d rule with seuil relatif"])	
+        acc_values["Relative respect of the e rule with seuil relatif"][title].append(df.iloc[0]["Relative respect of the e rule with seuil relatif"])	
+        acc_values["Respect of the c & d rule with seuil max"][title].append(df.iloc[0]["Respect of the c & d rule with seuil max"])
+        acc_values["Relative respect of the c & d rule with seuil max"][title].append(df.iloc[0]["Relative respect of the c & d rule with seuil max"])
     
     # Save plots
     for metric, hierarchy in values.items():
