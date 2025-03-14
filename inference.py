@@ -483,8 +483,6 @@ def main():
                 cm_normalized = confusion_matrix(cm_par_hauteur_ids_targets[hauteur,:], cm_par_hauteur_ids_preds[hauteur, :], normalize='true')
                 np.savetxt(os.path.join(args.results_dir, "cm_"+header_list[hauteur]+".out"), cm)
                 np.savetxt(os.path.join(args.results_dir, "cm_norm_"+header_list[hauteur]+".out"), cm_normalized)
-
-
         else:
             cm_all_ids_preds = np.concatenate(cm_all_ids_preds, axis=0)
             cm_all_targets = np.concatenate(cm_all_targets, axis=0)
@@ -492,6 +490,9 @@ def main():
             cm_normalized = confusion_matrix(cm_all_targets, cm_all_ids_preds, normalize='true')
             np.savetxt(os.path.join(args.results_dir, "confusion_matrix.out"), cm)
             np.savetxt(os.path.join(args.results_dir, "confusion_matrix_norm.out"), cm_normalized)
+            if not args.csv_tree and args.class_map:
+                classes = load_classnames(args.class_map)
+                save_metrics(cm, args.results_dir, f"metrics.csv", classes, "output")
 
 
     output_col = args.output_col or ('prob' if use_probs else 'logit')

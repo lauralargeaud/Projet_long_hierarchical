@@ -7,6 +7,6 @@ num_classes: 79
 results_dir: "output/test_bis/bce_1_without_hier"
 results_file: "bce_1_without_hier"
 
-conf_matrix: True
+# conf_matrix: True
 
 device: "cpu"
