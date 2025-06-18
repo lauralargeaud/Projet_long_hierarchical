@@ -135,7 +135,7 @@ def get_logicseg_predictions(pred, label_matrix, device):
   sortie: shape = (nb_pred, nb_branches)
 
   """
-  label_matrix = torch.tensor(label_matrix, dtype=torch.float32).to(device) #torch tensor
+  label_matrix = torch.tensor(label_matrix, dtype=torch.float32).to("cpu") #torch tensor
   nb_pred = pred.shape[0]
   nb_feuilles = label_matrix.shape[0]
   probas_branches = torch.empty(size=(nb_pred, nb_feuilles), dtype=torch.float32)

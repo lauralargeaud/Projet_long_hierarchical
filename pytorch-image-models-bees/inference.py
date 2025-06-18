@@ -554,9 +554,9 @@ def main():
             cm_normalized = load_confusion_matrix(os.path.join(args.results_dir, "cm_norm_branch.out"))
             output_filename = "cm_branches.jpg"
             output_filename_norm = "cm_norm_branches.jpg"
-            save_confusion_matrix(cm, output_filename, classes_labels, folder=args.results_dir)
-            save_confusion_matrix(cm_normalized, output_filename_norm, classes_labels, folder=args.results_dir)
-            df = save_metrics(cm, folder=args.results_dir, filename="metrics_branches.csv", classes=classes_labels, hierarchy_name="branches")
+            save_confusion_matrix(cm, output_filename, classes_labels, output_folder=args.results_dir)
+            save_confusion_matrix(cm_normalized, output_filename_norm, classes_labels, output_folder=args.results_dir)
+            df = save_metrics(cm, output_folder=args.results_dir, output_filename="metrics_branches.csv", classes=classes_labels, hierarchy_name="branches")
 
             classes = classes_labels
             hierarchy_lines = read_csv(args.csv_tree)
@@ -578,9 +578,9 @@ def main():
                     cm_normalized = np.expand_dims(cm_normalized, (0,1)) # shape (1,1)
                 output_filename = "cm_im_"+header_list[hauteur]+".jpg"
                 output_filename_norm = "cm_im_norm_"+header_list[hauteur]+".jpg"
-                save_confusion_matrix(cm_normalized, output_filename, labels_par_hauteur[hauteur], folder=args.results_dir)
-                save_confusion_matrix(cm_normalized, output_filename_norm, labels_par_hauteur[hauteur], folder=args.results_dir)
-                next_df = save_metrics(cm, folder=args.results_dir, filename=f"metrics_{header_list[hauteur]}.csv", classes=labels_par_hauteur[hauteur], hierarchy_name=header_list[hauteur])
+                save_confusion_matrix(cm_normalized, output_filename, labels_par_hauteur[hauteur], output_folder=args.results_dir)
+                save_confusion_matrix(cm_normalized, output_filename_norm, labels_par_hauteur[hauteur], output_folder=args.results_dir)
+                next_df = save_metrics(cm, output_folder=args.results_dir, output_filename=f"metrics_{header_list[hauteur]}.csv", classes=labels_par_hauteur[hauteur], hierarchy_name=header_list[hauteur])
                 df = pd.concat([df, next_df])
             
             df.to_csv(os.path.join(args.results_dir, "metrics_all.csv"), index=False)

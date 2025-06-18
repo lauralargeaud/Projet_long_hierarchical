@@ -241,7 +241,8 @@ def save_confusion_matrix(cm, output_filename, classes, output_folder="output/im
     plt.yticks(rotation=0, fontsize=8)
     plt.tight_layout()
     plt.savefig(os.path.join(output_folder, output_filename))
-    
+    plt.close()
+
     return cm
 
 def calculate_metrics(cm):
@@ -409,15 +410,15 @@ def save_confusion_matrix_and_metrics(output_folder, cm_leaves_path, classes, pa
     Save confusion matrix and metrics for each layer in files.
     """
     cm_leaves = load_confusion_matrix(cm_leaves_path)
-    save_confusion_matrix(cm_leaves, f"confusion_matrix_{hierarchy_names[0]}.png", classes, folder=output_folder)
+    save_confusion_matrix(cm_leaves, f"confusion_matrix_{hierarchy_names[0]}.png", classes, output_folder=output_folder)
     df = save_metrics(cm_leaves, output_folder, f"metrics_{hierarchy_names[0]}.csv", classes, hierarchy_names[0])
     next_cm = cm_leaves
     next_classes = classes
     for i in range(1, len(hierarchy_names)):
         next_cm, next_classes = get_parent_confusion_matrix(next_cm, next_classes, parents)
         next_cm_norm = normalize(next_cm, axis=1, norm='l1')
-        save_confusion_matrix(next_cm, f"confusion_matrix_{hierarchy_names[i]}.png", next_classes, folder=output_folder)
-        save_confusion_matrix(next_cm_norm, f"confusion_matrix_norm_{hierarchy_names[i]}.png", next_classes, folder=output_folder)
+        save_confusion_matrix(next_cm, f"confusion_matrix_{hierarchy_names[i]}.png", next_classes, output_folder=output_folder)
+        save_confusion_matrix(next_cm_norm, f"confusion_matrix_norm_{hierarchy_names[i]}.png", next_classes, output_folder=output_folder)
         next_df = save_metrics(next_cm, output_folder, f"metrics_{hierarchy_names[i]}.csv", next_classes, hierarchy_names[i])
         df = pd.concat([df, next_df])
     
