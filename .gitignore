@@ -112,11 +112,11 @@ Untitled.ipynb
 Testing notebook.ipynb
 
 # Root dir exclusions
-/*.csv
+# /*.csv
 /*.yaml
 /*.json
-/*.jpg
-/*.png
+# /*.jpg
+# /*.png
 /*.zip
 /*.tar.*
 
