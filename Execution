@@ -32,3 +32,19 @@ python3 pytorch-image-models-bees/train.py
 --cutmix 1.0   
 --hflip 0.5   
 --aa rand-m7-mstd0.5
+
+Execution inference : 
+
+python3 pytorch-image-models-bees/inference.py
+  --data-dir small-collomboles/dataset/test
+  --results-dir Resultats/Test1/results
+  --csv-tree small-collomboles/hierarchy.csv
+  --checkpoint Resultats/Test1/train/???????????????/model_best.pth.tar
+  --num-classes 136
+  --class-map /content/Projet_long_hierarchical/small-collomboles/class_mapping.pkl
+  --input-size 3 224 224 
+  --conf-matrix 
+  --label-type especes 
+  --logicseg True 
+  --message-passing 
+  --message-passing-iter-count 2 
