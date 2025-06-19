@@ -1,5 +1,9 @@
 Execution train:
 
+Créer un fichier pickle vide :
+python3 -c "import pickle; pickle.dump([], open('class_mapping.pkl', 'wb'))"
+
+Lancer :
 python3 pytorch-image-models-bees/train.py
 --data-dir small-collomboles/dataset   
 --class-map small-collomboles/class_mapping.pkl   
