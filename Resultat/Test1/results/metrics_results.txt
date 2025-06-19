@@ -1,0 +1,13 @@
+Top 1 accuracy: 0.5754
+Top 5 accuracy: 0.7897
+Top 1 hierarchical distance prediction: 1.3393
+Top 5 hierarchical distance prediction: 2.4672
+hierarchical distance mistakes: 3.1627
+Respect of the c rule with seuil relatif: 1.0000
+Respect of the d rule with seuil relatif: 1.0000
+Respect of the e rule with seuil relatif: 0.0000
+Relative respect of the c rule with seuil relatif: 1.0000
+Relative respect of the d rule with seuil relatif: 1.0000
+Relative respect of the e rule with seuil relatif: 0.7721
+Respect of the c & d rule with seuil max: 0.3502
+Relative respect of the c & d rule with seuil max: 0.7080
