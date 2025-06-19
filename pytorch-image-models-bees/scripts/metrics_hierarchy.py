@@ -330,12 +330,6 @@ class MetricsHierarchy:
 
         self.metrics[MetricsLabels.relative_d_rule_respect_seuil_relatif].update(1 - total_violation)
         self.metrics[MetricsLabels.d_rule_respect_seuil_relatif].update(total_respect)
-        # Debugging information
-        print("output_pred.sum():", output_pred.sum().item())
-        print("Hs.sum():", Hs.sum().item())
-        print("violation_mask.sum():", violation_mask.sum().item())
-        print("batch_respect:", batch_respect)
-        print("total_respect:", total_respect.item())
 
 
     def  e_rule_respect_percentage(self, output: torch.Tensor, L, tolerance):
