@@ -120,6 +120,9 @@ Testing notebook.ipynb
 /*.zip
 /*.tar.*
 
+# Autoriser les checkpoints PyTorch
+!*.pth.tar
+
 # data
 data/
 classmap/
