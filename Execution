@@ -1,0 +1,50 @@
+Execution train:
+
+Créer un fichier pickle vide :
+python3 -c "import pickle; pickle.dump([], open('class_mapping.pkl', 'wb'))"
+
+Lancer :
+python3 pytorch-image-models-bees/train.py
+--data-dir small-collomboles/dataset   
+--class-map small-collomboles/class_mapping.pkl   
+--output Resultats/Test1/train   
+--csv-tree small-collomboles/hierarchy.csv   
+--num-classes 136   
+--model resnet50.a1_in1k   
+--pretrained   
+--epochs 100   -b 32   -vb 64   -j 8   
+--log-interval 200   
+--lr 3e-4   
+--batch-size 32   
+--opt "lamb"   
+--sched "cosine"   
+--weight-decay 0.01   
+--warmup-epochs 5   
+--bce-loss   
+--logicseg   
+--crule-loss-weight 0.4   
+--drule-loss-weight 0.4   
+--erule-loss-weight 0.4   
+--logicseg-method "bce"   
+--drop-path 0.05   
+--smoothing 0.1   
+--mixup 0.2   
+--cutmix 1.0   
+--hflip 0.5   
+--aa rand-m7-mstd0.5
+
+Execution inference : 
+
+python3 pytorch-image-models-bees/inference.py
+  --data-dir small-collomboles/dataset/test
+  --results-dir Resultats/Test1/results
+  --csv-tree small-collomboles/hierarchy.csv
+  --checkpoint Resultats/Test1/train/???????????????/model_best.pth.tar
+  --num-classes 136
+  --class-map /content/Projet_long_hierarchical/small-collomboles/class_mapping.pkl
+  --input-size 3 224 224 
+  --conf-matrix 
+  --label-type especes 
+  --logicseg True 
+  --message-passing 
+  --message-passing-iter-count 2 
