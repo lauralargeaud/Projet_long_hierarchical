@@ -88,7 +88,7 @@ python3 pytorch-image-models-bees/inference.py
   --data-dir small-collomboles/dataset/test
   --results-dir Resultats/Test2/results
   --csv-tree small-collomboles/hierarchy.csv
-  --checkpoint Resultats/Test2/train/???????????????/model_best.pth.tar
+  --checkpoint Resultats/Test2/train/20250623-144824-resnet50_a1_in1k-224/model_best.pth.tar
   --num-classes 136
   --class-map /content/Projet_long_hierarchical/small-collomboles/class_mapping.pkl
   --input-size 3 224 224 
