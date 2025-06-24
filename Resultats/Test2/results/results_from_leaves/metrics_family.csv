@@ -1,0 +1,17 @@
+Classe,Etage,Pred,True,TP,FP,FN,Précision,Rappel,F1-score
+Sminthuridae,family,0.0,29.0,0.0,0.0,29.0,0.0,0.0,0.0
+Hypogastruridae,family,0.0,19.0,0.0,0.0,19.0,0.0,0.0,0.0
+Bourletiellidae,family,0.0,49.0,0.0,0.0,49.0,0.0,0.0,0.0
+Sminthurididae,family,0.0,24.0,0.0,0.0,24.0,0.0,0.0,0.0
+Onychiuridae,family,0.0,8.0,0.0,0.0,8.0,0.0,0.0,0.0
+Dicyrtomidae,family,0.0,53.0,0.0,0.0,53.0,0.0,0.0,0.0
+Tomoceridae,family,0.0,39.0,0.0,0.0,39.0,0.0,0.0,0.0
+Isotomidae,family,0.0,85.0,0.0,0.0,85.0,0.0,0.0,0.0
+Katiannidae,family,0.0,40.0,0.0,0.0,40.0,0.0,0.0,0.0
+Cyphoderidae,family,4.0,7.0,0.0,4.0,7.0,0.0,0.0,0.0
+Entomobryidae,family,0.0,245.0,0.0,0.0,245.0,0.0,0.0,0.0
+Poduridae,family,0.0,10.0,0.0,0.0,10.0,0.0,0.0,0.0
+Neanuridae,family,0.0,56.0,0.0,0.0,56.0,0.0,0.0,0.0
+Neelidae,family,680.0,15.0,15.0,665.0,0.0,0.022058823529411766,1.0,0.04316546762589929
+Brachystomellidae,family,0.0,5.0,0.0,0.0,5.0,0.0,0.0,0.0
+Moyenne,family,45.6,45.6,1.0,44.6,44.6,0.0014705882352941178,0.06666666666666667,0.002877697841726619
