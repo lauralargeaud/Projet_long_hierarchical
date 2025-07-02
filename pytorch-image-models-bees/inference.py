@@ -457,6 +457,7 @@ def main():
     all_labels = np.concatenate(all_labels, axis=0) if all_labels else None
     all_outputs = np.concatenate(all_outputs, axis=0).astype(np.float32)
     filenames = loader.dataset.filenames(basename=not args.fullname)
+    nb_labels = len(classes_labels)
 
     if args.create_dir:
         if not os.path.exists(args.results_dir):
@@ -473,21 +474,27 @@ def main():
             cm_all_targets = np.concatenate(cm_all_targets, axis=0)
             # print("cm_all_targets: ", cm_all_targets)
             # print("cm_all_ids_preds: ", cm_all_ids_preds)
-            cm = confusion_matrix(cm_all_targets, cm_all_ids_preds)
-            cm_normalized = confusion_matrix(cm_all_targets, cm_all_ids_preds, normalize='true')
+            cm = confusion_matrix(cm_all_targets, cm_all_ids_preds, labels=list(range(nb_labels)))
+            cm_normalized = confusion_matrix(cm_all_targets, cm_all_ids_preds, labels=list(range(nb_labels)), normalize='true')
             np.savetxt(os.path.join(args.results_dir, "cm_branch.out"), cm)
             np.savetxt(os.path.join(args.results_dir, "cm_norm_branch.out"), cm_normalized)
             # construire la matrice de confusion pour chaque hauteur de l'arbre
+            print(f"Hauteur de l'arbre : {h}")
             for hauteur in range(h):
-                cm = confusion_matrix(cm_par_hauteur_ids_targets[hauteur,:], cm_par_hauteur_ids_preds[hauteur, :])
-                cm_normalized = confusion_matrix(cm_par_hauteur_ids_targets[hauteur,:], cm_par_hauteur_ids_preds[hauteur, :], normalize='true')
+                # print(f"Hauteur {hauteur} : {len(labels_par_hauteur[hauteur])} labels")
+                index_labels = [list(index_to_node.keys())[list(index_to_node.values()).index(label)] for label in labels_par_hauteur[hauteur]]
+                # print(f"labels : {index_labels}")
+                # print("cm_all_targets: ", cm_par_hauteur_ids_targets[hauteur,:])
+                #print("cm_all_ids_preds: ", cm_par_hauteur_ids_preds[hauteur, :])
+                cm = confusion_matrix(cm_par_hauteur_ids_targets[hauteur,:], cm_par_hauteur_ids_preds[hauteur, :], labels=index_labels)
+                cm_normalized = confusion_matrix(cm_par_hauteur_ids_targets[hauteur,:], cm_par_hauteur_ids_preds[hauteur, :],labels = index_labels, normalize='true')
                 np.savetxt(os.path.join(args.results_dir, "cm_"+header_list[hauteur]+".out"), cm)
                 np.savetxt(os.path.join(args.results_dir, "cm_norm_"+header_list[hauteur]+".out"), cm_normalized)
         else:
             cm_all_ids_preds = np.concatenate(cm_all_ids_preds, axis=0)
             cm_all_targets = np.concatenate(cm_all_targets, axis=0)
-            cm = confusion_matrix(cm_all_targets, cm_all_ids_preds)
-            cm_normalized = confusion_matrix(cm_all_targets, cm_all_ids_preds, normalize='true')
+            cm = confusion_matrix(cm_all_targets, cm_all_ids_preds, labels=list(range(nb_labels)))
+            cm_normalized = confusion_matrix(cm_all_targets, cm_all_ids_preds, labels=list(range(nb_labels)), normalize='true')
             np.savetxt(os.path.join(args.results_dir, "confusion_matrix.out"), cm)
             np.savetxt(os.path.join(args.results_dir, "confusion_matrix_norm.out"), cm_normalized)
             if not args.csv_tree and args.class_map:
