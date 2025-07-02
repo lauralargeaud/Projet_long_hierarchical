@@ -1,0 +1,137 @@
+Taxon_level,Name,Parent,Count,F1-score
+genus,Allacma,Sminthuridae,10.0,0.6666666666666666
+species,Allacma fusca,Allacma,10.0,0.1764705882352941
+genus,Anurida,Neanuridae,10.0,0.6666666666666666
+species,Anurida maritima,Anurida,10.0,0.4
+genus,Bilobella,Neanuridae,18.0,0.6666666666666667
+species,Bilobella aurantiaca,Bilobella,8.0,0.4
+species,Bilobella braunerae,Bilobella,10.0,0.6666666666666666
+genus,Bourletiella,Bourletiellidae,20.0,0.5714285714285715
+species,Bourletiella arvalis,Bourletiella,10.0,0.5714285714285715
+species,Bourletiella hortensis,Bourletiella,10.0,0.6666666666666666
+family,Bourletiellidae,Symphypleona,49.0,0.8045977011494253
+genus,Brachystomella,Brachystomellidae,5.0,0.625
+species,Brachystomella parvula,Brachystomella,5.0,0.9090909090909092
+family,Brachystomellidae,Poduromorpha,5.0,0.6666666666666665
+genus,Caprainea,Sminthuridae,9.0,1.0
+species,Caprainea marginata,Caprainea,9.0,0.9
+genus,Ceratophysella,Hypogastruridae,15.0,0.9285714285714286
+species,Ceratophysella denticulata,Ceratophysella,5.0,0.7499999999999999
+species,Ceratophysella longispina,Ceratophysella,10.0,1.0
+family,Cyphoderidae,Entomobryomorpha,7.0,0.6153846153846153
+genus,Cyphoderus,Cyphoderidae,7.0,0.0745341614906832
+species,Cyphoderus albinus,Cyphoderus,7.0,0.3703703703703703
+genus,Deuterosminthurus,Bourletiellidae,20.0,0.8571428571428571
+species,Deuterosminthurus bicinctus,Deuterosminthurus,10.0,0.8235294117647058
+species,Deuterosminthurus pallipes,Deuterosminthurus,10.0,0.6666666666666666
+genus,Dicyrtoma,Dicyrtomidae,10.0,0.9
+species,Dicyrtoma fusca,Dicyrtoma,10.0,0.4545454545454545
+family,Dicyrtomidae,Symphypleona,53.0,0.8979591836734695
+genus,Dicyrtomina,Dicyrtomidae,43.0,0.8974358974358974
+species,Dicyrtomina flavosignata,Dicyrtomina,7.0,0.0
+species,Dicyrtomina minuta,Dicyrtomina,10.0,0.0
+species,Dicyrtomina ornata,Dicyrtomina,10.0,0.1666666666666666
+species,Dicyrtomina saundersi,Dicyrtomina,10.0,0.6
+species,Dicyrtomina signata,Dicyrtomina,6.0,0.3076923076923076
+class,Entognatha,,684.0,1.0
+genus,Entomobrya,Entomobryidae,95.0,0.760233918128655
+species,Entomobrya albocincta,Entomobrya,10.0,0.3333333333333333
+species,Entomobrya atrocincta,Entomobrya,10.0,0.3749999999999999
+species,Entomobrya corticalis,Entomobrya,10.0,0.5714285714285713
+species,Entomobrya marginata,Entomobrya,10.0,0.625
+species,Entomobrya multifasciata,Entomobrya,10.0,0.1818181818181818
+species,Entomobrya muscorum,Entomobrya,10.0,0.4
+species,Entomobrya nicoleti,Entomobrya,10.0,0.1666666666666666
+species,Entomobrya nigrocincta,Entomobrya,10.0,0.3076923076923076
+species,Entomobrya nivalis,Entomobrya,10.0,0.0
+species,Entomobrya superba,Entomobrya,5.0,0.3333333333333333
+family,Entomobryidae,Entomobryomorpha,245.0,0.847457627118644
+order,Entomobryomorpha,Entognatha,376.0,0.97911227154047
+genus,Fasciosminthurus,Bourletiellidae,9.0,0.8750000000000001
+species,Fasciosminthurus quinquefasciatus,Fasciosminthurus,9.0,0.3902439024390244
+genus,Folsomia,Isotomidae,15.0,0.5454545454545455
+species,Folsomia candida,Folsomia,6.0,0.2857142857142857
+species,Folsomia quadrioculata,Folsomia,9.0,0.1818181818181818
+genus,Heteromurus,Entomobryidae,20.0,0.5333333333333333
+species,Heteromurus major,Heteromurus,10.0,0.0
+species,Heteromurus nitidus,Heteromurus,10.0,0.631578947368421
+genus,Hypogastrura,Hypogastruridae,4.0,0.4
+species,Hypogastrura viatica,Hypogastrura,4.0,0.4444444444444445
+family,Hypogastruridae,Poduromorpha,19.0,0.7333333333333334
+genus,Isotoma,Isotomidae,17.0,0.6666666666666667
+species,Isotoma riparia,Isotoma,7.0,0.4444444444444445
+species,Isotoma viridis,Isotoma,10.0,0.6666666666666666
+family,Isotomidae,Entomobryomorpha,85.0,0.7651006711409396
+genus,Isotomiella,Isotomidae,4.0,0.4
+species,Isotomiella minor,Isotomiella,4.0,0.125
+genus,Isotomurus,Isotomidae,29.0,0.7234042553191489
+species,Isotomurus gallicus,Isotomurus,4.0,0.5714285714285715
+species,Isotomurus maculatus,Isotomurus,10.0,0.0
+species,Isotomurus palustris,Isotomurus,10.0,0.0
+species,Isotomurus unifasciatus,Isotomurus,5.0,0.0
+genus,Kalaphorura,Onychiuridae,8.0,0.6956521739130436
+species,Kalaphorura burmeisteri,Kalaphorura,8.0,0.7999999999999999
+family,Katiannidae,Symphypleona,40.0,0.7714285714285714
+genus,Lepidocyrtus,Entomobryidae,47.0,0.619718309859155
+species,Lepidocyrtus curvicollis,Lepidocyrtus,7.0,0.6
+species,Lepidocyrtus cyaneus,Lepidocyrtus,10.0,0.4285714285714285
+species,Lepidocyrtus fimetarius,Lepidocyrtus,10.0,0.8571428571428572
+species,Lepidocyrtus lignorum,Lepidocyrtus,10.0,0.6666666666666666
+species,Lepidocyrtus paradoxus,Lepidocyrtus,10.0,0.7499999999999999
+genus,Megalothorax,Neelidae,5.0,0.3333333333333333
+species,Megalothorax minimus,Megalothorax,5.0,0.2
+genus,Monobella,Neanuridae,10.0,0.8421052631578948
+species,Monobella grassei,Monobella,10.0,0.5294117647058825
+genus,Neanura,Neanuridae,10.0,0.4615384615384615
+species,Neanura muscorum,Neanura,10.0,0.5384615384615384
+family,Neanuridae,Poduromorpha,56.0,0.7111111111111111
+family,Neelidae,Neelipleona,15.0,0.1923076923076923
+order,Neelipleona,Entognatha,15.0,0.888888888888889
+genus,Neelus,Neelidae,10.0,0.8000000000000002
+species,Neelus murinus,Neelus,10.0,0.6956521739130435
+family,Onychiuridae,Poduromorpha,8.0,0.8571428571428571
+genus,Orchesella,Entomobryidae,35.0,0.6666666666666665
+species,Orchesella bifasciata,Orchesella,8.0,0.5454545454545454
+species,Orchesella cincta,Orchesella,10.0,0.4
+species,Orchesella flavescens,Orchesella,5.0,0.888888888888889
+species,Orchesella quinquefasciata,Orchesella,5.0,0.0
+species,Orchesella villosa,Orchesella,7.0,0.6666666666666666
+genus,Parisotoma,Isotomidae,10.0,0.631578947368421
+species,Parisotoma notabilis,Parisotoma,10.0,0.3214285714285714
+genus,Podura,Poduridae,10.0,0.4516129032258064
+species,Podura aquatica,Podura,10.0,0.608695652173913
+family,Poduridae,Poduromorpha,10.0,0.7777777777777777
+order,Poduromorpha,Entognatha,98.0,0.9430051813471502
+genus,Pogonognathellus,Tomoceridae,19.0,0.6666666666666667
+species,Pogonognathellus flavescens,Pogonognathellus,9.0,0.0
+species,Pogonognathellus longicornis,Pogonognathellus,10.0,0.1538461538461538
+genus,Seira,Entomobryidae,18.0,0.7333333333333334
+species,Seira ferrarii,Seira,8.0,0.6666666666666666
+species,Seira musarum,Seira,10.0,0.5714285714285715
+family,Sminthuridae,Symphypleona,29.0,0.7599999999999999
+genus,Sminthurides,Sminthurididae,24.0,0.7586206896551724
+species,Sminthurides aquaticus,Sminthurides,10.0,0.4
+species,Sminthurides malmgreni,Sminthurides,10.0,0.8000000000000002
+species,Sminthurides penicillifer,Sminthurides,4.0,0.0
+family,Sminthurididae,Symphypleona,24.0,0.8636363636363635
+genus,Sminthurinus,Katiannidae,40.0,0.6938775510204082
+species,Sminthurinus aureus,Sminthurinus,10.0,0.5714285714285715
+species,Sminthurinus elegans,Sminthurinus,10.0,0.5
+species,Sminthurinus lawrencei,Sminthurinus,8.0,0.0
+species,Sminthurinus niger,Sminthurinus,7.0,0.5454545454545454
+species,Sminthurinus trinotatus,Sminthurinus,5.0,0.3333333333333333
+genus,Sminthurus,Sminthuridae,10.0,0.7777777777777777
+species,Sminthurus viridis,Sminthurus,10.0,0.5000000000000001
+order,Symphypleona,Entognatha,195.0,0.9581151832460733
+family,Tomoceridae,Entomobryomorpha,39.0,0.7352941176470588
+genus,Tomocerus,Tomoceridae,20.0,0.3076923076923076
+species,Tomocerus minor,Tomocerus,10.0,0.0
+species,Tomocerus vulgaris,Tomocerus,10.0,0.3333333333333333
+genus,Vertagopus,Isotomidae,10.0,0.7499999999999999
+species,Vertagopus asiaticus,Vertagopus,10.0,0.4166666666666667
+genus,Vitronura,Neanuridae,8.0,0.6153846153846154
+species,Vitronura giselae,Vitronura,8.0,0.8
+genus,Willowsia,Entomobryidae,30.0,0.2727272727272727
+species,Willowsia buski,Willowsia,10.0,0.0
+species,Willowsia nigromaculata,Willowsia,10.0,0.1666666666666666
+species,Willowsia platani,Willowsia,10.0,0.0

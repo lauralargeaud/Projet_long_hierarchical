@@ -1,0 +1,3 @@
+Classe,Etage,Pred,True,TP,FP,FN,Précision,Rappel,F1-score
+Entognatha,class,684.0,684.0,684.0,0.0,0.0,1.0,1.0,1.0
+Moyenne,class,684.0,684.0,684.0,0.0,0.0,1.0,1.0,1.0
