@@ -11,6 +11,17 @@ from timm.loss.logicseg.multi_bce_loss import MultiBCE
 class LogicSegLoss(nn.Module):
     def __init__(self, method, H_raw, P_raw, M_raw, La_raw, alpha_c, alpha_d, alpha_e, alpha_target_loss, alpha_layer, gamma_pos = 1, gamma_neg = 1, thresh_shifting = 0): # H_raw is a np array
         super(LogicSegLoss, self).__init__()
+
+        # Définir les pondérations hiérarchiques
+        nb_tot_img = 5019
+        nb_class =1
+        nb_order = 4
+        nb_family = 15
+        nb_genus = 37
+        nb_species = 79
+        weights = [nb_tot_img/nb_class, nb_tot_img/nb_order, nb_tot_img/nb_family, nb_tot_img/nb_genus, nb_tot_img/nb_species]  # Pondérations pour chaque niveau hiérarchique
+        weights = weights * (136 // len(weights))  # Étendre les pondérations pour toutes les classes
+
         
         self.c_rule = CRuleLoss(H_raw)
         self.alpha_c = alpha_c
