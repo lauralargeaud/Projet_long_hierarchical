@@ -21,6 +21,7 @@ class BinaryCrossEntropy(nn.Module):
             reduction: str = 'mean',
             sum_classes: bool = False,
             pos_weight: Optional[Union[torch.Tensor, float]] = None,
+            hierarchical_weights: Optional[torch.Tensor] = None,  # Ajout des poids hiérarchiques
     ):
         super(BinaryCrossEntropy, self).__init__()
         assert 0. <= smoothing < 1.0
@@ -33,6 +34,7 @@ class BinaryCrossEntropy(nn.Module):
         self.sum_classes = sum_classes
         self.register_buffer('weight', weight)
         self.register_buffer('pos_weight', pos_weight)
+        self.register_buffer('hierarchical_weights', hierarchical_weights)  # Enregistre les poids hiérarchiques
 
     def forward(self, x: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         batch_size = x.shape[0]
@@ -58,8 +60,20 @@ class BinaryCrossEntropy(nn.Module):
             x, target,
             self.weight,
             pos_weight=self.pos_weight,
-            reduction=self.reduction,
+            # reduction=self.reduction,
+            reduction='none'  # Pas de réduction pour appliquer les poids hiérarchiques
         )
+        # Applique les poids hiérarchiques
+        print("Loss avant pondération :", loss)
+        print("Poids hiérarchiques :", self.hierarchical_weights)
+        if self.hierarchical_weights is not None:
+            loss = loss * self.hierarchical_weights
+        print("Loss après pondération :", loss)
+        if self.reduction == 'mean':
+            loss = loss.mean()
+        elif self.reduction == 'sum':
+            loss = loss.sum()
+
         if self.sum_classes:
             loss = loss.sum(-1).mean()
         return loss
