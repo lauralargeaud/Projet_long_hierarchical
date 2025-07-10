@@ -869,10 +869,12 @@ def main():
     elif mixup_active:
         # smoothing is handled with mixup target transform which outputs sparse, soft targets
         if args.bce_loss:
+            hierarchical_weights = torch.tensor([0.1, 0.3, 0.5, 1.0])  # Exemple de poids pour les niveaux hiérarchiques
             train_loss_fn = BinaryCrossEntropy(
                 target_threshold=args.bce_target_thresh,
                 sum_classes=args.bce_sum,
                 pos_weight=args.bce_pos_weight,
+                hierarchical_weights=hierarchical_weights,  # Ajout des poids hiérarchiques
             )
         else:
             train_loss_fn = SoftTargetCrossEntropy()
