@@ -46,6 +46,19 @@ def get_tree_matrices(path_to_csv_tree, verbose=False):
   unique_nodes = unique_nodes[~pd.isnull(unique_nodes)]  # On enlève les NaN au cas ou
   node_to_index = {node: idx for idx, node in enumerate(unique_nodes)}
 
+  # Indices des niveaux hiérarchiques
+  class_indices = [node_to_index[node] for node in csv['class'].unique()]
+  order_indices = [node_to_index[node] for node in csv['order'].unique()]
+  family_indices = [node_to_index[node] for node in csv['family'].unique()]
+  genus_indices = [node_to_index[node] for node in csv['genus'].unique()]
+  species_indices = [node_to_index[node] for node in csv['species'].unique()]
+
+  #print("Indices des class :", class_indices)
+  #print("Indices des orders :", order_indices)
+  #print("Indices des family :", family_indices)
+  #print("Indices des genus :", genus_indices)
+  #print("Indices des species :", species_indices)
+
   n = len(unique_nodes)
   H = np.zeros((n, n), dtype=int)
 
@@ -64,7 +77,7 @@ def get_tree_matrices(path_to_csv_tree, verbose=False):
 
   M = np.sum(peer_matrix, axis=0) # peer_matrix est symétrique donc l'axe n'est pas important
   
-  return H, peer_matrix, M
+  return H, peer_matrix, M, class_indices, order_indices, family_indices, genus_indices, species_indices
 
 
 def create_class_to_labels(path_to_csv_tree, path_to_temporary_class_to_labels_file, verbose=False):

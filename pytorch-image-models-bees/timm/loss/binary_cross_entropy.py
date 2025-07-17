@@ -22,6 +22,11 @@ class BinaryCrossEntropy(nn.Module):
             sum_classes: bool = False,
             pos_weight: Optional[Union[torch.Tensor, float]] = None,
             hierarchical_weights: Optional[torch.Tensor] = None,  # Ajout des poids hiérarchiques
+            class_indices=None,
+            order_indices=None,
+            family_indices=None,
+            genus_indices=None,
+            species_indices=None,
     ):
         super(BinaryCrossEntropy, self).__init__()
         assert 0. <= smoothing < 1.0
@@ -35,6 +40,11 @@ class BinaryCrossEntropy(nn.Module):
         self.register_buffer('weight', weight)
         self.register_buffer('pos_weight', pos_weight)
         self.register_buffer('hierarchical_weights', hierarchical_weights)  # Enregistre les poids hiérarchiques
+        self.class_indices = class_indices
+        self.order_indices = order_indices
+        self.family_indices = family_indices
+        self.genus_indices = genus_indices
+        self.species_indices = species_indices
 
     def forward(self, x: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         batch_size = x.shape[0]
@@ -63,12 +73,18 @@ class BinaryCrossEntropy(nn.Module):
             # reduction=self.reduction,
             reduction='none'  # Pas de réduction pour appliquer les poids hiérarchiques
         )
-        # Applique les poids hiérarchiques
-        print("Loss avant pondération :", loss)
-        print("Poids hiérarchiques :", self.hierarchical_weights)
+        
+        # Étendre les poids hiérarchiques pour correspondre à la taille de `loss`
         if self.hierarchical_weights is not None:
-            loss = loss * self.hierarchical_weights
-        print("Loss après pondération :", loss)
+            hierarchical_weights_extended = torch.zeros(x.shape[-1], device=x.device)
+            hierarchical_weights_extended[self.class_indices] = self.hierarchical_weights[0]
+            hierarchical_weights_extended[self.order_indices] = self.hierarchical_weights[1]
+            hierarchical_weights_extended[self.family_indices] = self.hierarchical_weights[2]
+            hierarchical_weights_extended[self.genus_indices] = self.hierarchical_weights[3]
+            hierarchical_weights_extended[self.species_indices] = self.hierarchical_weights[4]
+            #print("Hierarchical weights extended:", hierarchical_weights_extended)
+            loss = loss * hierarchical_weights_extended
+
         if self.reduction == 'mean':
             loss = loss.mean()
         elif self.reduction == 'sum':

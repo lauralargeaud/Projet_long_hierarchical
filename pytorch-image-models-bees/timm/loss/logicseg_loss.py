@@ -7,21 +7,11 @@ from timm.loss.logicseg.d_rule_loss import DRuleLoss
 from timm.loss.logicseg.e_rule_loss import ERuleLoss
 from timm.loss.logicseg.asym_loss import ASL
 from timm.loss.logicseg.multi_bce_loss import MultiBCE
+from timm.loss.binary_cross_entropy import BinaryCrossEntropy
 
 class LogicSegLoss(nn.Module):
-    def __init__(self, method, H_raw, P_raw, M_raw, La_raw, alpha_c, alpha_d, alpha_e, alpha_target_loss, alpha_layer, gamma_pos = 1, gamma_neg = 1, thresh_shifting = 0): # H_raw is a np array
+    def __init__(self, method, H_raw, P_raw, M_raw, La_raw, alpha_c, alpha_d, alpha_e, alpha_target_loss, alpha_layer, gamma_pos=1, gamma_neg=1, thresh_shifting=0, hierarchical_weights=None, class_indices=None, order_indices=None, family_indices=None, genus_indices=None, species_indices=None):
         super(LogicSegLoss, self).__init__()
-
-        # Définir les pondérations hiérarchiques
-        nb_tot_img = 5019
-        nb_class =1
-        nb_order = 4
-        nb_family = 15
-        nb_genus = 37
-        nb_species = 79
-        weights = [nb_tot_img/nb_class, nb_tot_img/nb_order, nb_tot_img/nb_family, nb_tot_img/nb_genus, nb_tot_img/nb_species]  # Pondérations pour chaque niveau hiérarchique
-        weights = weights * (136 // len(weights))  # Étendre les pondérations pour toutes les classes
-
         
         self.c_rule = CRuleLoss(H_raw)
         self.alpha_c = alpha_c
@@ -34,6 +24,14 @@ class LogicSegLoss(nn.Module):
         
         self.method = method
         self.alpha_target_loss = alpha_target_loss
+
+        # Enregistrer les pondérations hiérarchiques et les indices
+        self.hierarchical_weights = hierarchical_weights
+        self.class_indices = class_indices
+        self.order_indices = order_indices
+        self.family_indices = family_indices
+        self.genus_indices = genus_indices
+        self.species_indices = species_indices
 
         if method == "asl":
             self.asl = ASL(gamma_pos, gamma_neg, thresh_shifting)
@@ -66,11 +64,28 @@ class LogicSegLoss(nn.Module):
                 target_loss = F.cross_entropy(y_pred, y_true)
             case "bce":
                 target_loss = F.binary_cross_entropy(y_pred_sigmoid, y_true)
+                print("appel à BCEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
             case "asl":
                 target_loss = self.asl(y_pred_sigmoid, y_true)
             case "multi_bce":
                 target_loss = self.multi_bce(y_pred_sigmoid, y_true)
-                
+            case "bce_weight":
+                # Instancier BinaryCrossEntropy avec les pondérations hiérarchiques et les indices
+                bce_weighted_loss = BinaryCrossEntropy(
+                    smoothing=0.1,
+                    target_threshold=None,
+                    sum_classes=False,
+                    pos_weight=None,
+                    hierarchical_weights=self.hierarchical_weights,
+                    class_indices=self.class_indices,
+                    order_indices=self.order_indices,
+                    family_indices=self.family_indices,
+                    genus_indices=self.genus_indices,
+                    species_indices=self.species_indices,
+                )
+                # Calculer la perte
+                target_loss = bce_weighted_loss(y_pred, y_true)
+
         if losses_dict != None:
             losses_dict["C_loss"] = batch_c_losses
             losses_dict["D_loss"] = batch_d_losses
