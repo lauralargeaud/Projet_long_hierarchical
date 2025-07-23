@@ -10,7 +10,7 @@ from timm.loss.logicseg.multi_bce_loss import MultiBCE
 from timm.loss.binary_cross_entropy import BinaryCrossEntropy
 
 class LogicSegLoss(nn.Module):
-    def __init__(self, method, H_raw, P_raw, M_raw, La_raw, alpha_c, alpha_d, alpha_e, alpha_target_loss, alpha_layer, gamma_pos=1, gamma_neg=1, thresh_shifting=0, hierarchical_weights=None, class_indices=None, order_indices=None, family_indices=None, genus_indices=None, species_indices=None):
+    def __init__(self, method, H_raw, P_raw, M_raw, La_raw, alpha_c, alpha_d, alpha_e, alpha_target_loss, alpha_layer, gamma_pos=1, gamma_neg=1, thresh_shifting=0, class_indices=None, order_indices=None, family_indices=None, genus_indices=None, species_indices=None, images_count_by_family=None, images_count_by_order=None, images_count_by_genus=None, images_count_by_class=None, images_count_by_species=None):
         super(LogicSegLoss, self).__init__()
         
         self.c_rule = CRuleLoss(H_raw)
@@ -25,13 +25,19 @@ class LogicSegLoss(nn.Module):
         self.method = method
         self.alpha_target_loss = alpha_target_loss
 
-        # Enregistrer les pondérations hiérarchiques et les indices
-        self.hierarchical_weights = hierarchical_weights
+        # Enregistrer les indices
         self.class_indices = class_indices
         self.order_indices = order_indices
         self.family_indices = family_indices
         self.genus_indices = genus_indices
         self.species_indices = species_indices
+
+        # Enregistrer les comptages d'images
+        self.images_count_by_family = images_count_by_family  
+        self.images_count_by_order = images_count_by_order 
+        self.images_count_by_genus = images_count_by_genus
+        self.images_count_by_class = images_count_by_class
+        self.images_count_by_species = images_count_by_species
 
         if method == "asl":
             self.asl = ASL(gamma_pos, gamma_neg, thresh_shifting)
@@ -64,7 +70,6 @@ class LogicSegLoss(nn.Module):
                 target_loss = F.cross_entropy(y_pred, y_true)
             case "bce":
                 target_loss = F.binary_cross_entropy(y_pred_sigmoid, y_true)
-                print("appel à BCEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
             case "asl":
                 target_loss = self.asl(y_pred_sigmoid, y_true)
             case "multi_bce":
@@ -76,12 +81,16 @@ class LogicSegLoss(nn.Module):
                     target_threshold=None,
                     sum_classes=False,
                     pos_weight=None,
-                    hierarchical_weights=self.hierarchical_weights,
                     class_indices=self.class_indices,
                     order_indices=self.order_indices,
                     family_indices=self.family_indices,
                     genus_indices=self.genus_indices,
                     species_indices=self.species_indices,
+                    images_count_by_class=self.images_count_by_class,
+                    images_count_by_order=self.images_count_by_order,
+                    images_count_by_family=self.images_count_by_family,
+                    images_count_by_genus=self.images_count_by_genus,
+                    images_count_by_species=self.images_count_by_species,
                 )
                 # Calculer la perte
                 target_loss = bce_weighted_loss(y_pred, y_true)

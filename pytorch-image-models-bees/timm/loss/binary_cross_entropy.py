@@ -21,12 +21,16 @@ class BinaryCrossEntropy(nn.Module):
             reduction: str = 'mean',
             sum_classes: bool = False,
             pos_weight: Optional[Union[torch.Tensor, float]] = None,
-            hierarchical_weights: Optional[torch.Tensor] = None,  # Ajout des poids hiérarchiques
             class_indices=None,
             order_indices=None,
             family_indices=None,
             genus_indices=None,
             species_indices=None,
+            images_count_by_class=None,
+            images_count_by_order=None,
+            images_count_by_family=None,
+            images_count_by_genus=None,
+            images_count_by_species=None,
     ):
         super(BinaryCrossEntropy, self).__init__()
         assert 0. <= smoothing < 1.0
@@ -39,12 +43,16 @@ class BinaryCrossEntropy(nn.Module):
         self.sum_classes = sum_classes
         self.register_buffer('weight', weight)
         self.register_buffer('pos_weight', pos_weight)
-        self.register_buffer('hierarchical_weights', hierarchical_weights)  # Enregistre les poids hiérarchiques
         self.class_indices = class_indices
         self.order_indices = order_indices
         self.family_indices = family_indices
         self.genus_indices = genus_indices
         self.species_indices = species_indices
+        self.images_count_by_class = images_count_by_class
+        self.images_count_by_order = images_count_by_order
+        self.images_count_by_family = images_count_by_family
+        self.images_count_by_genus = images_count_by_genus
+        self.images_count_by_species = images_count_by_species
 
     def forward(self, x: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         batch_size = x.shape[0]
@@ -73,16 +81,38 @@ class BinaryCrossEntropy(nn.Module):
             # reduction=self.reduction,
             reduction='none'  # Pas de réduction pour appliquer les poids hiérarchiques
         )
-        
+
         # Étendre les poids hiérarchiques pour correspondre à la taille de `loss`
-        if self.hierarchical_weights is not None:
+        if self.class_indices is not None and self.order_indices is not None and self.family_indices is not None and self.genus_indices is not None and self.species_indices is not None:
+            # Étendre les poids hiérarchiques pour correspondre à la taille de `loss`
             hierarchical_weights_extended = torch.zeros(x.shape[-1], device=x.device)
-            hierarchical_weights_extended[self.class_indices] = self.hierarchical_weights[0]
-            hierarchical_weights_extended[self.order_indices] = self.hierarchical_weights[1]
-            hierarchical_weights_extended[self.family_indices] = self.hierarchical_weights[2]
-            hierarchical_weights_extended[self.genus_indices] = self.hierarchical_weights[3]
-            hierarchical_weights_extended[self.species_indices] = self.hierarchical_weights[4]
-            #print("Hierarchical weights extended:", hierarchical_weights_extended)
+            #print(f"Hierarchical weights extended initialisation: {hierarchical_weights_extended}")
+
+            # Calcul du total des échantillons
+            total_samples = self.images_count_by_class.sum()
+            nb_class_tot = len(self.class_indices) + len(self.order_indices) + len(self.family_indices) + len(self.genus_indices) + len(self.species_indices)
+            #print(f"Total samples: {total_samples}")
+            #print(f"Nombre de classes totales: {nb_class_tot}")
+
+            # Appliquer les poids pour chaque niveau hiérarchique
+            levels = [
+                ("class", self.class_indices, self.images_count_by_class),
+                ("order", self.order_indices, self.images_count_by_order),
+                ("family", self.family_indices, self.images_count_by_family),
+                ("genus", self.genus_indices, self.images_count_by_genus),
+                ("species", self.species_indices, self.images_count_by_species),
+            ]
+
+            for level_name, indices, images_count in levels:
+                if indices is not None and images_count is not None:
+                    hierarchical_weights_extended[indices] = torch.tensor(
+                        [total_samples / (len(images_count) * images_count[level]) for level in images_count.keys()],
+                        device=x.device,
+                        dtype=hierarchical_weights_extended.dtype
+                    )
+            #print(f"Hierarchical weights extended after applying weights: {hierarchical_weights_extended}")
+
+            # Multiplier la perte par les poids hiérarchiques
             loss = loss * hierarchical_weights_extended
 
         if self.reduction == 'mean':

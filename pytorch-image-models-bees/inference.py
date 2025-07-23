@@ -340,7 +340,7 @@ def main():
 
         if args.csv_tree:
             '''Ces variables servent aux calcul des metriques pour tout les modèles'''
-            H_raw, P_raw, M_raw, _, _, _, _, _ = get_tree_matrices(args.csv_tree, verbose=False)
+            H_raw, P_raw, M_raw, _, _, _, _, _ , _, _, _, _, _  = get_tree_matrices(args.csv_tree, args.data_dir, verbose=False)
             La_raw = get_layer_matrix(args.csv_tree, verbose=False)
             metrics_hierarchy = MetricsHierarchy(H_raw, device)
 

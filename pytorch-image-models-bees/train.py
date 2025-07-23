@@ -851,33 +851,37 @@ def main():
     validate_loss_fn = nn.CrossEntropyLoss().to(device=device)
     # setup loss function
     if args.logicseg:
-        print("Rentre danns logicSegggggggggggggggggggggggggggggggggg")
         # get the matrices useful for the losses
-        H_raw, P_raw, M_raw, class_indices, order_indices, family_indices, genus_indices, species_indices = get_tree_matrices(args.csv_tree, verbose=False)
+        H_raw, P_raw, M_raw, class_indices, order_indices, family_indices, genus_indices, species_indices, images_count_by_class, images_count_by_order, images_count_by_family, images_count_by_genus, images_count_by_species = get_tree_matrices(args.csv_tree, args.data_dir, verbose=False)
         matrice_H = H_raw
         # get the matrix storing for each level, the vector with 1 at the indeexes of the nodes of the level, 0 otherwise
         La_raw = get_layer_matrix(args.csv_tree, verbose=False) # shape (height, nb_nodes)
         matrice_L = La_raw
 
-        # Définir les pondérations hiérarchiques
-        hierarchical_weights = torch.tensor([0.1, 0.3, 0.5, 0.7, 1.0], dtype=torch.float32)
-
         # initialize the losses of LogicSeg
         train_loss_fn = LogicSegLoss(args.logicseg_method, H_raw, P_raw, M_raw, La_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.target_loss_weight, args.alpha_layer, args.asl_gamma_pos, args.asl_gamma_neg, args.asl_thresh_shifting,
-        hierarchical_weights=hierarchical_weights,
             class_indices=class_indices,
             order_indices=order_indices,
             family_indices=family_indices,
             genus_indices=genus_indices,
             species_indices=species_indices,
+            images_count_by_class=images_count_by_class,
+            images_count_by_order=images_count_by_order,
+            images_count_by_family=images_count_by_family,
+            images_count_by_genus=images_count_by_genus,
+            images_count_by_species=images_count_by_species,
             )
         validate_loss_fn = LogicSegLoss(args.logicseg_method, H_raw, P_raw, M_raw, La_raw, args.crule_loss_weight, args.drule_loss_weight, args.erule_loss_weight, args.target_loss_weight, args.alpha_layer, args.asl_gamma_pos, args.asl_gamma_neg, args.asl_thresh_shifting,
-            hierarchical_weights=hierarchical_weights,
             class_indices=class_indices,
             order_indices=order_indices,
             family_indices=family_indices,
             genus_indices=genus_indices,
             species_indices=species_indices,
+            images_count_by_class=images_count_by_class,
+            images_count_by_order=images_count_by_order,
+            images_count_by_family=images_count_by_family,
+            images_count_by_genus=images_count_by_genus,
+            images_count_by_species=images_count_by_species,
             )
     elif args.hce_loss:
         L, h = get_hce_tree_data(args.csv_tree)
@@ -888,12 +892,10 @@ def main():
     elif mixup_active:
         # smoothing is handled with mixup target transform which outputs sparse, soft targets
         if args.bce_loss:
-            print("Rentre danns bce loss !!!!!!!!!!!!!!!!!!!!!!!!!!!")
             train_loss_fn = BinaryCrossEntropy(
                 target_threshold=args.bce_target_thresh,
                 sum_classes=args.bce_sum,
                 pos_weight=args.bce_pos_weight,
-                hierarchical_weights=torch.tensor([0.1, 0.3, 0.5, 0.7, 1.0]),  # Exemple de poids pour les niveaux hiérarchiques
                 class_indices=class_indices,
                 order_indices=order_indices,
                 family_indices=family_indices,
@@ -903,15 +905,12 @@ def main():
         else:
             train_loss_fn = SoftTargetCrossEntropy()
     elif args.smoothing:
-        print("Rentre danns smothingggggggggggggggggggggggggggggggggggg")
         if args.bce_loss:
-            print("Rentre danns bce loss !!!!!!!!!!!!!!!!!!!!!!!!!!!")
             train_loss_fn = BinaryCrossEntropy(
                 smoothing=args.smoothing,
                 target_threshold=args.bce_target_thresh,
                 sum_classes=args.bce_sum,
                 pos_weight=args.bce_pos_weight,
-                hierarchical_weights=hierarchical_weights,  # Ajout des poids hiérarchiques
             )
         else:
             train_loss_fn = LabelSmoothingCrossEntropy(smoothing=args.smoothing)

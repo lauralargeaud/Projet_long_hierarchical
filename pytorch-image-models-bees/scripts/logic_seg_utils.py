@@ -2,6 +2,7 @@ import numpy as np
 import pickle
 import pandas as pd
 import torch
+import os
 
 def get_layer_matrix(path_to_csv_tree, verbose=False):
   """
@@ -27,7 +28,7 @@ def get_layer_matrix(path_to_csv_tree, verbose=False):
 
   return La
 
-def get_tree_matrices(path_to_csv_tree, verbose=False):
+def get_tree_matrices(path_to_csv_tree, data_dir, verbose=False):
   """
   Get H, P and M matrix from csv.
 
@@ -46,19 +47,6 @@ def get_tree_matrices(path_to_csv_tree, verbose=False):
   unique_nodes = unique_nodes[~pd.isnull(unique_nodes)]  # On enlève les NaN au cas ou
   node_to_index = {node: idx for idx, node in enumerate(unique_nodes)}
 
-  # Indices des niveaux hiérarchiques
-  class_indices = [node_to_index[node] for node in csv['class'].unique()]
-  order_indices = [node_to_index[node] for node in csv['order'].unique()]
-  family_indices = [node_to_index[node] for node in csv['family'].unique()]
-  genus_indices = [node_to_index[node] for node in csv['genus'].unique()]
-  species_indices = [node_to_index[node] for node in csv['species'].unique()]
-
-  #print("Indices des class :", class_indices)
-  #print("Indices des orders :", order_indices)
-  #print("Indices des family :", family_indices)
-  #print("Indices des genus :", genus_indices)
-  #print("Indices des species :", species_indices)
-
   n = len(unique_nodes)
   H = np.zeros((n, n), dtype=int)
 
@@ -67,6 +55,55 @@ def get_tree_matrices(path_to_csv_tree, verbose=False):
       for parent, child in zip(row[:-1], row[1:]):
           if pd.notna(parent) and pd.notna(child):
               H[node_to_index[parent], node_to_index[child]] = 1
+
+  ##Partie pour équilibrer les poids des classes !!
+  # Indices des niveaux hiérarchiques
+  class_indices = [node_to_index[node] for node in csv['class'].unique()]
+  order_indices = [node_to_index[node] for node in csv['order'].unique()]
+  family_indices = [node_to_index[node] for node in csv['family'].unique()]
+  genus_indices = [node_to_index[node] for node in csv['genus'].unique()]
+  species_indices = [node_to_index[node] for node in csv['species'].unique()]
+
+  # Compter le nombre d'images par espèce
+  species_image_count = {}
+  train_dir = os.path.join(data_dir, "train")
+  for species in csv['species'].unique():
+      species_dir = os.path.join(train_dir, species)
+      if os.path.exists(species_dir):
+          species_image_count[species] = len(os.listdir(species_dir))
+      else:
+          species_image_count[species] = 0
+
+
+  # Associer les images aux niveaux hiérarchiques
+  csv['images'] = csv['species'].map(species_image_count)
+  images_count_by_class = csv.groupby('class')['images'].sum()
+  images_count_by_order = csv.groupby('order')['images'].sum()
+  images_count_by_family = csv.groupby('family')['images'].sum()
+  images_count_by_genus = csv.groupby('genus')['images'].sum()
+  images_count_by_species = csv.groupby('species')['images'].sum()
+
+  if verbose:
+    print("\nNombre d'images par classe :")
+    for class_, count in images_count_by_class.items():
+        print(f"Classe '{class_}': {count} images")
+
+    print("\nNombre d'images par ordre :")
+    for order, count in images_count_by_order.items():
+        print(f"Ordre '{order}': {count} images")
+
+    print("\nNombre d'images par famille :")
+    for family, count in images_count_by_family.items():
+        print(f"Famille '{family}': {count} images")
+            
+    print("\nNombre d'images par genre :")
+    for genus, count in images_count_by_genus.items():
+        print(f"Genre '{genus}': {count} images")
+
+    print("\nNombre d'images par espèce :")
+    for species, count in images_count_by_species.items():
+        print(f"Espèce '{species}': {count} images")
+
   
   if verbose:
     print("Nodes:", unique_nodes)
@@ -77,8 +114,7 @@ def get_tree_matrices(path_to_csv_tree, verbose=False):
 
   M = np.sum(peer_matrix, axis=0) # peer_matrix est symétrique donc l'axe n'est pas important
   
-  return H, peer_matrix, M, class_indices, order_indices, family_indices, genus_indices, species_indices
-
+  return H, peer_matrix, M, class_indices, order_indices, family_indices, genus_indices, species_indices, images_count_by_class, images_count_by_order, images_count_by_family, images_count_by_genus, images_count_by_species
 
 def create_class_to_labels(path_to_csv_tree, path_to_temporary_class_to_labels_file, verbose=False):
   """
